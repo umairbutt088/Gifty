@@ -14,10 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard } from '@/components';
+import { BrandBanner, GeometricBackground, GlassCard, Spacer } from '@/components';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { resetPassword, signIn } from '@/lib';
+import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
+  const canSubmit = isValidEmail(email) && password.length > 0 && !loading;
 
   async function handleLogin() {
     if (!canSubmit) return;
@@ -38,23 +39,23 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message);
+      setError(getAuthErrorMessage(authError));
       return;
     }
 
-    router.replace('/explore');
+    router.replace('/home');
   }
 
   async function handleForgotPassword() {
-    if (!email.trim()) {
-      Alert.alert('Enter your email', 'Add your email above, then tap Forgot password again.');
+    if (!isValidEmail(email)) {
+      Alert.alert('Enter your email', 'Add a valid email above, then tap Forgot password again.');
       return;
     }
 
     const { error: resetError } = await resetPassword(email);
 
     if (resetError) {
-      Alert.alert('Could not send reset email', resetError.message);
+      Alert.alert('Could not send reset email', getAuthErrorMessage(resetError));
       return;
     }
 
@@ -73,7 +74,7 @@ export default function LoginScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-
+            <Spacer.Column numberOfSpaces={5} />
             <View style={styles.header}>
               <BrandBanner />
               <Text style={styles.title}>Welcome back</Text>
@@ -91,14 +92,13 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  editable={!loading}
                   style={styles.input}
                 />
               </View>
 
               <View style={styles.field}>
-                <View style={styles.passwordHeader}>
-                  <Text style={styles.fieldLabel}>Password</Text>
-                </View>
+                <Text style={styles.fieldLabel}>Password</Text>
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
@@ -106,10 +106,12 @@ export default function LoginScreen() {
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry
                   autoComplete="current-password"
+                  editable={!loading}
                   style={styles.input}
                 />
               </View>
-              <Pressable onPress={handleForgotPassword}>
+
+              <Pressable onPress={handleForgotPassword} disabled={loading}>
                 <Text style={styles.forgotPassword}>Forgot password?</Text>
               </Pressable>
 
@@ -177,7 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     marginTop: Spacing.one,
-    textTransform: 'capitalize',
   },
   formCard: {
     padding: Spacing.four,
@@ -185,11 +186,6 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: Spacing.one,
-  },
-  passwordHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   fieldLabel: {
     color: Colors.textSecondary,

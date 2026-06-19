@@ -22,6 +22,7 @@ import {
 } from '@/components';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
 import { signUp } from '@/lib';
 import type { UserRole } from '@/types/user';
 
@@ -39,13 +40,18 @@ export default function SignupScreen() {
   const canSubmit =
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
-    email.trim().length > 0 &&
+    isValidEmail(email) &&
     password.length >= 6 &&
     passwordsMatch &&
     !loading;
 
   async function handleSignup() {
     if (!canSubmit) return;
+
+    if (!isValidEmail(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -61,18 +67,19 @@ export default function SignupScreen() {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message);
+      setError(getAuthErrorMessage(authError));
       return;
     }
 
     if (data.session) {
-      router.replace('/explore');
+      router.replace('/home');
       return;
     }
 
     Alert.alert(
       'Check your email',
-      'We sent a confirmation link to finish creating your account.',
+      'We sent a confirmation link. After confirming, sign in with your email and password.',
+      [{ text: 'Go to sign in', onPress: () => router.push('/login') }],
     );
   }
 
@@ -107,6 +114,7 @@ export default function SignupScreen() {
                     placeholderTextColor={Colors.textMuted}
                     autoCapitalize="words"
                     autoComplete="given-name"
+                    editable={!loading}
                     style={styles.input}
                   />
                 </View>
@@ -120,6 +128,7 @@ export default function SignupScreen() {
                     placeholderTextColor={Colors.textMuted}
                     autoCapitalize="words"
                     autoComplete="family-name"
+                    editable={!loading}
                     style={styles.input}
                   />
                 </View>
@@ -135,6 +144,7 @@ export default function SignupScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  editable={!loading}
                   style={styles.input}
                 />
               </View>
@@ -148,6 +158,7 @@ export default function SignupScreen() {
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry
                   autoComplete="new-password"
+                  editable={!loading}
                   style={styles.input}
                 />
               </View>
@@ -161,6 +172,7 @@ export default function SignupScreen() {
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry
                   autoComplete="new-password"
+                  editable={!loading}
                   style={[
                     styles.input,
                     confirmPassword.length > 0 && !passwordsMatch && styles.inputError,

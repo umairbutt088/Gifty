@@ -1,0 +1,111 @@
+import type { Session, User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+
+import { Colors } from '@/constants/colors';
+import { getSession, onAuthStateChange, signOut as supabaseSignOut } from '@/lib/auth';
+import { fetchProfile, getProfileFromUser, type AuthProfile } from '@/lib/profile';
+
+type AuthContextValue = {
+  session: Session | null;
+  user: User | null;
+  profile: AuthProfile | null;
+  isLoading: boolean;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const user = session?.user ?? null;
+
+  async function loadProfile(nextUser: User | null) {
+    if (!nextUser) {
+      setProfile(null);
+      return;
+    }
+
+    const dbProfile = await fetchProfile(nextUser.id);
+    setProfile(dbProfile ?? getProfileFromUser(nextUser));
+  }
+
+  async function refreshProfile() {
+    await loadProfile(user);
+  }
+
+  useEffect(() => {
+    let mounted = true;
+
+    getSession().then(async ({ data }) => {
+      if (!mounted) return;
+
+      setSession(data.session);
+      await loadProfile(data.session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    const { data: subscription } = onAuthStateChange(async (_event, nextSession) => {
+      setSession(nextSession);
+      await loadProfile(nextSession?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function signOut() {
+    await supabaseSignOut();
+    setProfile(null);
+  }
+
+  const value = useMemo(
+    () => ({
+      session,
+      user,
+      profile,
+      isLoading,
+      signOut,
+      refreshProfile,
+    }),
+    [session, user, profile, isLoading],
+  );
+
+  return (
+    <AuthContext.Provider value={value}>
+      {isLoading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={Colors.accent} />
+        </View>
+      ) : (
+        children
+      )}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+
+  return context;
+}
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
+});
