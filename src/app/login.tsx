@@ -14,49 +14,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  BrandBanner,
-  GeometricBackground,
-  GlassCard,
-  RoleTabBar,
-} from '@/components';
+import { BrandBanner, GeometricBackground, GlassCard } from '@/components';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { signUp } from '@/lib';
-import type { UserRole } from '@/types/user';
+import { resetPassword, signIn } from '@/lib';
 
-export default function SignupScreen() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('buyer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const passwordsMatch = password === confirmPassword;
-  const canSubmit =
-    firstName.trim().length > 0 &&
-    lastName.trim().length > 0 &&
-    email.trim().length > 0 &&
-    password.length >= 6 &&
-    passwordsMatch &&
-    !loading;
+  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
 
-  async function handleSignup() {
+  async function handleLogin() {
     if (!canSubmit) return;
 
     setLoading(true);
     setError(null);
 
-    const { data, error: authError } = await signUp({
-      firstName,
-      lastName,
-      email,
-      password,
-      role,
-    });
+    const { error: authError } = await signIn({ email, password });
 
     setLoading(false);
 
@@ -65,15 +42,23 @@ export default function SignupScreen() {
       return;
     }
 
-    if (data.session) {
-      router.replace('/explore');
+    router.replace('/explore');
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      Alert.alert('Enter your email', 'Add your email above, then tap Forgot password again.');
       return;
     }
 
-    Alert.alert(
-      'Check your email',
-      'We sent a confirmation link to finish creating your account.',
-    );
+    const { error: resetError } = await resetPassword(email);
+
+    if (resetError) {
+      Alert.alert('Could not send reset email', resetError.message);
+      return;
+    }
+
+    Alert.alert('Check your email', 'We sent a password reset link if an account exists.');
   }
 
   return (
@@ -88,43 +73,14 @@ export default function SignupScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <RoleTabBar selectedRole={role} onSelectRole={setRole} />
 
             <View style={styles.header}>
               <BrandBanner />
-              <Text style={styles.title}>Create your account</Text>
-              <Text style={styles.subtitle}>Fill in your details to get started as a {role}.</Text>
+              <Text style={styles.title}>Welcome back</Text>
+              <Text style={styles.subtitle}>Sign in to your Gifty account.</Text>
             </View>
 
             <GlassCard style={styles.formCard}>
-              <View style={styles.nameRow}>
-                <View style={[styles.field, styles.halfField]}>
-                  <Text style={styles.fieldLabel}>First name</Text>
-                  <TextInput
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    placeholder="Jane"
-                    placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="words"
-                    autoComplete="given-name"
-                    style={styles.input}
-                  />
-                </View>
-
-                <View style={[styles.field, styles.halfField]}>
-                  <Text style={styles.fieldLabel}>Last name</Text>
-                  <TextInput
-                    value={lastName}
-                    onChangeText={setLastName}
-                    placeholder="Doe"
-                    placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="words"
-                    autoComplete="family-name"
-                    style={styles.input}
-                  />
-                </View>
-              </View>
-
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Email</Text>
                 <TextInput
@@ -140,41 +96,27 @@ export default function SignupScreen() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Password</Text>
+                <View style={styles.passwordHeader}>
+                  <Text style={styles.fieldLabel}>Password</Text>
+                </View>
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="At least 6 characters"
+                  placeholder="Enter your password"
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   style={styles.input}
                 />
               </View>
-
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Confirm password</Text>
-                <TextInput
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Re-enter your password"
-                  placeholderTextColor={Colors.textMuted}
-                  secureTextEntry
-                  autoComplete="new-password"
-                  style={[
-                    styles.input,
-                    confirmPassword.length > 0 && !passwordsMatch && styles.inputError,
-                  ]}
-                />
-                {confirmPassword.length > 0 && !passwordsMatch ? (
-                  <Text style={styles.errorText}>Passwords do not match</Text>
-                ) : null}
-              </View>
+              <Pressable onPress={handleForgotPassword}>
+                <Text style={styles.forgotPassword}>Forgot password?</Text>
+              </Pressable>
 
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <Pressable
-                onPress={handleSignup}
+                onPress={handleLogin}
                 disabled={!canSubmit}
                 style={({ pressed }) => [
                   styles.button,
@@ -184,15 +126,15 @@ export default function SignupScreen() {
                 {loading ? (
                   <ActivityIndicator color={Colors.text} />
                 ) : (
-                  <Text style={styles.buttonText}>Create account</Text>
+                  <Text style={styles.buttonText}>Sign in</Text>
                 )}
               </Pressable>
             </GlassCard>
 
             <Text style={styles.footer}>
-              Already have an account?{' '}
-              <Link href="/login" style={styles.footerLink}>
-                Sign in
+              Don&apos;t have an account?{' '}
+              <Link href="/" style={styles.footerLink}>
+                Create account
               </Link>
             </Text>
           </ScrollView>
@@ -241,20 +183,28 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.three,
   },
-  nameRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  halfField: {
-    flex: 1,
-  },
   field: {
     gap: Spacing.one,
+  },
+  passwordHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   fieldLabel: {
     color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '500',
+  },
+  forgotPassword: {
+    color: Colors.accentLight,
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'right',
+  },
+  errorText: {
+    color: 'rgba(220, 130, 130, 0.9)',
+    fontSize: 12,
   },
   input: {
     backgroundColor: Colors.input,
@@ -265,13 +215,6 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.select({ ios: 14, default: 12 }),
     color: Colors.text,
     fontSize: 16,
-  },
-  inputError: {
-    borderColor: 'rgba(220, 100, 100, 0.6)',
-  },
-  errorText: {
-    color: 'rgba(220, 130, 130, 0.9)',
-    fontSize: 12,
   },
   button: {
     backgroundColor: Colors.button,
