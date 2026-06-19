@@ -2,6 +2,7 @@ import { StyleSheet, View, type ViewProps } from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 type GlassCardProps = ViewProps & {
   selected?: boolean;
@@ -9,12 +10,21 @@ type GlassCardProps = ViewProps & {
 };
 
 export function GlassCard({ style, selected, variant = 'panel', ...props }: GlassCardProps) {
+  const theme = useScreenTheme();
+
   return (
     <View
       style={[
         styles.card,
-        variant === 'nested' && styles.cardNested,
-        selected && styles.cardSelected,
+        {
+          backgroundColor: theme.surface,
+          borderColor: theme.surfaceBorder,
+        },
+        variant === 'nested' && { backgroundColor: theme.surfaceNested },
+        selected && {
+          backgroundColor: theme.surfaceSelected,
+          borderColor: theme.surfaceSelectedBorder,
+        },
         style,
       ]}
       {...props}
@@ -24,17 +34,8 @@ export function GlassCard({ style, selected, variant = 'panel', ...props }: Glas
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
     borderRadius: Spacing.four,
     overflow: 'hidden',
-  },
-  cardNested: {
-    backgroundColor: Colors.surfaceNested,
-  },
-  cardSelected: {
-    backgroundColor: Colors.surfaceSelected,
-    borderColor: Colors.surfaceSelectedBorder,
   },
 });

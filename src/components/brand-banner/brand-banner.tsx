@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LayoutChangeEvent, Platform, StyleSheet, View, type TextStyle, type ViewStyle } from 'react-native';
+import { LayoutChangeEvent, Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   FadeInDown,
@@ -12,8 +12,9 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { GradientText } from './gradient-text';
-import { Colors, getLinearGradientSteps } from '@/constants/colors';
+import { getLinearGradientSteps } from '@/constants/colors';
 import { Fonts } from '@/constants/theme';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 const BANNER_GRADIENT_STOPS = 36;
 const WORDMARK = 'gifty';
@@ -25,12 +26,8 @@ export type BrandBannerProps = {
   showTagline?: boolean;
 };
 
-function BannerGradient() {
-  const stops = getLinearGradientSteps(
-    Colors.brandBanner.gradientStart,
-    Colors.brandBanner.gradientEnd,
-    BANNER_GRADIENT_STOPS,
-  );
+function BannerGradient({ gradientStart, gradientEnd }: { gradientStart: string; gradientEnd: string }) {
+  const stops = getLinearGradientSteps(gradientStart, gradientEnd, BANNER_GRADIENT_STOPS);
 
   return (
     <Animated.View style={styles.gradientRow}>
@@ -73,7 +70,15 @@ function ShimmerOverlay({ width }: { width: number }) {
   );
 }
 
-function AnimatedRing({ style, delay = 0 }: { style: ViewStyle; delay?: number }) {
+function AnimatedRing({
+  style,
+  delay = 0,
+  ringColor,
+}: {
+  style: ViewStyle;
+  delay?: number;
+  ringColor: string;
+}) {
   const opacity = useSharedValue(0.35);
 
   useEffect(() => {
@@ -94,10 +99,10 @@ function AnimatedRing({ style, delay = 0 }: { style: ViewStyle; delay?: number }
     opacity: opacity.value,
   }));
 
-  return <Animated.View style={[styles.ring, style, ringStyle]} />;
+  return <Animated.View style={[styles.ring, { borderColor: ringColor }, style, ringStyle]} />;
 }
 
-function AccentDot() {
+function AccentDot({ color }: { color: string }) {
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -115,22 +120,24 @@ function AccentDot() {
     transform: [{ scale: scale.value }],
   }));
 
-  return <Animated.View style={[styles.accentDot, dotStyle]} />;
+  return <Animated.View style={[styles.accentDot, { backgroundColor: color }, dotStyle]} />;
 }
 
-function DecorativeRings() {
+function DecorativeRings({ ringColor, accentColor }: { ringColor: string; accentColor: string }) {
   return (
     <>
-      <AnimatedRing style={styles.ringBottomOuter} delay={0} />
-      <AnimatedRing style={styles.ringBottomInner} delay={400} />
-      <AnimatedRing style={styles.ringTopOuter} delay={200} />
-      <AnimatedRing style={styles.ringTopInner} delay={600} />
-      <AccentDot />
+      <AnimatedRing style={styles.ringBottomOuter} delay={0} ringColor={ringColor} />
+      <AnimatedRing style={styles.ringBottomInner} delay={400} ringColor={ringColor} />
+      <AnimatedRing style={styles.ringTopOuter} delay={200} ringColor={ringColor} />
+      <AnimatedRing style={styles.ringTopInner} delay={600} ringColor={ringColor} />
+      <AccentDot color={accentColor} />
     </>
   );
 }
 
 export function BrandBanner({ showTagline = true }: BrandBannerProps) {
+  const theme = useScreenTheme();
+  const banner = theme.brandBanner;
   const [bannerWidth, setBannerWidth] = useState(0);
 
   function handleLayout(event: LayoutChangeEvent) {
@@ -138,13 +145,13 @@ export function BrandBanner({ showTagline = true }: BrandBannerProps) {
   }
 
   const wordmarkColors = getLinearGradientSteps(
-    Colors.brandBanner.wordmarkGradientStart,
-    Colors.brandBanner.wordmarkGradientEnd,
+    banner.wordmarkGradientStart,
+    banner.wordmarkGradientEnd,
     WORDMARK.length,
   );
   const taglineColors = getLinearGradientSteps(
-    Colors.brandBanner.taglineGradientStart,
-    Colors.brandBanner.taglineGradientEnd,
+    banner.taglineGradientStart,
+    banner.taglineGradientEnd,
     TAGLINE.length,
   );
 
@@ -155,9 +162,9 @@ export function BrandBanner({ showTagline = true }: BrandBannerProps) {
       style={styles.banner}
       accessibilityRole="image"
       accessibilityLabel="Gifty brand banner">
-      <BannerGradient />
+      <BannerGradient gradientStart={banner.gradientStart} gradientEnd={banner.gradientEnd} />
       <ShimmerOverlay width={bannerWidth} />
-      <DecorativeRings />
+      <DecorativeRings ringColor={banner.ring} accentColor={theme.brandGradient.start} />
 
       <Animated.View style={styles.content}>
         <GradientText
@@ -220,7 +227,6 @@ const styles = StyleSheet.create({
   ring: {
     position: 'absolute',
     borderWidth: 1,
-    borderColor: Colors.brandBanner.ring,
     backgroundColor: 'transparent',
   },
   ringBottomOuter: {
@@ -258,7 +264,6 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: Colors.brandGradient.start,
     marginTop: -3.5,
   },
   content: {
