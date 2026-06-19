@@ -4,6 +4,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   user_already_registered: 'An account with this email already exists. Try signing in.',
   weak_password: 'Password is too weak. Use at least 6 characters.',
   over_request_rate_limit: 'Too many attempts. Please wait a moment and try again.',
+  otp_expired: 'This reset link has expired. Request a new one from the sign in screen.',
 };
 
 export function getAuthErrorMessage(error: { message: string; code?: string } | null): string {
@@ -25,6 +26,10 @@ export function getAuthErrorMessage(error: { message: string; code?: string } | 
 
   if (normalized.includes('user already registered')) {
     return AUTH_ERROR_MESSAGES.user_already_registered;
+  }
+
+  if (normalized.includes('invalid or has expired') || normalized.includes('otp_expired')) {
+    return AUTH_ERROR_MESSAGES.otp_expired;
   }
 
   return error.message;

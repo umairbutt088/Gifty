@@ -19,6 +19,7 @@ import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { resetPassword, signIn } from '@/lib';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
+import { getPasswordResetRedirectUrl, getSupabaseRedirectAllowList } from '@/lib/auth-linking';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -52,6 +53,7 @@ export default function LoginScreen() {
       return;
     }
 
+    const redirectUrl = getPasswordResetRedirectUrl();
     const { error: resetError } = await resetPassword(email);
 
     if (resetError) {
@@ -59,7 +61,15 @@ export default function LoginScreen() {
       return;
     }
 
-    Alert.alert('Check your email', 'We sent a password reset link if an account exists.');
+    if (__DEV__) {
+      console.log('[auth] password reset redirectTo:', redirectUrl);
+      console.log('[auth] add to Supabase Redirect URLs:', getSupabaseRedirectAllowList());
+    }
+
+    Alert.alert(
+      'Check your email',
+      'We sent a password reset link. Open it on the same device where Gifty is installed (simulator Mail or your phone — not Chrome on your Mac). Request a fresh link if the previous one expired.',
+    );
   }
 
   return (

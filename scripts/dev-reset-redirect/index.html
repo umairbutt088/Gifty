@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Opening Gifty…</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 40rem;
+        margin: 3rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+        color: #111;
+      }
+      .ok {
+        color: #0a7;
+      }
+      .err {
+        color: #c33;
+      }
+      code {
+        word-break: break-all;
+        display: block;
+        background: #f4f4f4;
+        padding: 0.75rem;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Opening Gifty…</h1>
+    <p id="status">Sending your reset session to the simulator…</p>
+    <p id="fallback" hidden>
+      If the app did not open, run this in Terminal (simulator must be running):
+    </p>
+    <code id="command" hidden></code>
+    <script>
+      var hash = window.location.hash || '';
+      var status = document.getElementById('status');
+
+      if (!hash || !hash.includes('access_token')) {
+        status.textContent =
+          'No reset token in this URL. Request a new password reset email from the Gifty app.';
+        status.className = 'err';
+      } else {
+        fetch('/open-in-simulator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hash: hash }),
+        })
+          .then(function (res) {
+            return res.json();
+          })
+          .then(function (data) {
+            if (data.ok) {
+              status.textContent = 'Opened Gifty in the simulator. Choose a new password there.';
+              status.className = 'ok';
+              return;
+            }
+            status.textContent = data.error || 'Could not open the simulator.';
+            status.className = 'err';
+            showFallback();
+          })
+          .catch(function () {
+            var target = 'gifty://reset-password' + hash;
+            window.location.replace(target);
+            status.textContent = 'Trying to open the app directly…';
+            showFallback();
+          });
+      }
+
+      function showFallback() {
+        var cmd = 'yarn open-reset-in-simulator "' + window.location.href + '"';
+        document.getElementById('command').textContent = cmd;
+        document.getElementById('fallback').hidden = false;
+        document.getElementById('command').hidden = false;
+      }
+    </script>
+  </body>
+</html>
