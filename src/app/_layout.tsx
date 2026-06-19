@@ -3,7 +3,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { AnimatedSplashOverlay } from '@/components';
+import { AuthGate } from '@/components/auth-gate';
 import { Colors } from '@/constants/colors';
+import { AuthProvider } from '@/providers/auth-provider';
 
 const GiftyTheme = {
   ...DarkTheme,
@@ -19,16 +21,20 @@ const GiftyTheme = {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={GiftyTheme}>
-      <StatusBar style="light" />
-      <AnimatedSplashOverlay />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-          animation: 'fade',
-        }}
-      />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={GiftyTheme}>
+        <StatusBar style="light" />
+        <AnimatedSplashOverlay />
+        <AuthGate>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: Colors.background },
+              animation: 'fade',
+            }}
+          />
+        </AuthGate>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

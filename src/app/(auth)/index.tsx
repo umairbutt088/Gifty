@@ -14,51 +14,73 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard } from '@/components';
+import {
+  BrandBanner,
+  GeometricBackground,
+  GlassCard,
+  RoleTabBar,
+} from '@/components';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { resetPassword, signIn } from '@/lib';
+import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
+import { signUp } from '@/lib';
+import type { UserRole } from '@/types/user';
 
-export default function LoginScreen() {
+export default function SignupScreen() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<UserRole>('buyer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
+  const passwordsMatch = password === confirmPassword;
+  const canSubmit =
+    firstName.trim().length > 0 &&
+    lastName.trim().length > 0 &&
+    isValidEmail(email) &&
+    password.length >= 6 &&
+    passwordsMatch &&
+    !loading;
 
-  async function handleLogin() {
+  async function handleSignup() {
     if (!canSubmit) return;
+
+    if (!isValidEmail(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
-    const { error: authError } = await signIn({ email, password });
+    const { data, error: authError } = await signUp({
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+    });
 
     setLoading(false);
 
     if (authError) {
-      setError(authError.message);
+      setError(getAuthErrorMessage(authError));
       return;
     }
 
-    router.replace('/explore');
-  }
-
-  async function handleForgotPassword() {
-    if (!email.trim()) {
-      Alert.alert('Enter your email', 'Add your email above, then tap Forgot password again.');
+    if (data.session) {
+      router.replace('/home');
       return;
     }
 
-    const { error: resetError } = await resetPassword(email);
-
-    if (resetError) {
-      Alert.alert('Could not send reset email', resetError.message);
-      return;
-    }
-
-    Alert.alert('Check your email', 'We sent a password reset link if an account exists.');
+    Alert.alert(
+      'Check your email',
+      'We sent a confirmation link. After confirming, sign in with your email and password.',
+      [{ text: 'Go to sign in', onPress: () => router.push('/login') }],
+    );
   }
 
   return (
@@ -73,14 +95,45 @@ export default function LoginScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
+            <RoleTabBar selectedRole={role} onSelectRole={setRole} />
 
             <View style={styles.header}>
               <BrandBanner />
-              <Text style={styles.title}>Welcome back</Text>
-              <Text style={styles.subtitle}>Sign in to your Gifty account.</Text>
+              <Text style={styles.title}>Create your account</Text>
+              <Text style={styles.subtitle}>Fill in your details to get started as a {role}.</Text>
             </View>
 
             <GlassCard style={styles.formCard}>
+              <View style={styles.nameRow}>
+                <View style={[styles.field, styles.halfField]}>
+                  <Text style={styles.fieldLabel}>First name</Text>
+                  <TextInput
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    placeholder="Jane"
+                    placeholderTextColor={Colors.textMuted}
+                    autoCapitalize="words"
+                    autoComplete="given-name"
+                    editable={!loading}
+                    style={styles.input}
+                  />
+                </View>
+
+                <View style={[styles.field, styles.halfField]}>
+                  <Text style={styles.fieldLabel}>Last name</Text>
+                  <TextInput
+                    value={lastName}
+                    onChangeText={setLastName}
+                    placeholder="Doe"
+                    placeholderTextColor={Colors.textMuted}
+                    autoCapitalize="words"
+                    autoComplete="family-name"
+                    editable={!loading}
+                    style={styles.input}
+                  />
+                </View>
+              </View>
+
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Email</Text>
                 <TextInput
@@ -91,32 +144,49 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  editable={!loading}
                   style={styles.input}
                 />
               </View>
 
               <View style={styles.field}>
-                <View style={styles.passwordHeader}>
-                  <Text style={styles.fieldLabel}>Password</Text>
-                </View>
+                <Text style={styles.fieldLabel}>Password</Text>
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Enter your password"
+                  placeholder="At least 6 characters"
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry
-                  autoComplete="current-password"
+                  autoComplete="new-password"
+                  editable={!loading}
                   style={styles.input}
                 />
               </View>
-              <Pressable onPress={handleForgotPassword}>
-                <Text style={styles.forgotPassword}>Forgot password?</Text>
-              </Pressable>
+
+              <View style={styles.field}>
+                <Text style={styles.fieldLabel}>Confirm password</Text>
+                <TextInput
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Re-enter your password"
+                  placeholderTextColor={Colors.textMuted}
+                  secureTextEntry
+                  autoComplete="new-password"
+                  editable={!loading}
+                  style={[
+                    styles.input,
+                    confirmPassword.length > 0 && !passwordsMatch && styles.inputError,
+                  ]}
+                />
+                {confirmPassword.length > 0 && !passwordsMatch ? (
+                  <Text style={styles.errorText}>Passwords do not match</Text>
+                ) : null}
+              </View>
 
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <Pressable
-                onPress={handleLogin}
+                onPress={handleSignup}
                 disabled={!canSubmit}
                 style={({ pressed }) => [
                   styles.button,
@@ -126,15 +196,15 @@ export default function LoginScreen() {
                 {loading ? (
                   <ActivityIndicator color={Colors.text} />
                 ) : (
-                  <Text style={styles.buttonText}>Sign in</Text>
+                  <Text style={styles.buttonText}>Create account</Text>
                 )}
               </Pressable>
             </GlassCard>
 
             <Text style={styles.footer}>
-              Don&apos;t have an account?{' '}
-              <Link href="/" style={styles.footerLink}>
-                Create account
+              Already have an account?{' '}
+              <Link href="/login" style={styles.footerLink}>
+                Sign in
               </Link>
             </Text>
           </ScrollView>
@@ -183,28 +253,20 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.three,
   },
+  nameRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  halfField: {
+    flex: 1,
+  },
   field: {
     gap: Spacing.one,
-  },
-  passwordHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   fieldLabel: {
     color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '500',
-  },
-  forgotPassword: {
-    color: Colors.accentLight,
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'right',
-  },
-  errorText: {
-    color: 'rgba(220, 130, 130, 0.9)',
-    fontSize: 12,
   },
   input: {
     backgroundColor: Colors.input,
@@ -215,6 +277,13 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.select({ ios: 14, default: 12 }),
     color: Colors.text,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: 'rgba(220, 100, 100, 0.6)',
+  },
+  errorText: {
+    color: 'rgba(220, 130, 130, 0.9)',
+    fontSize: 12,
   },
   button: {
     backgroundColor: Colors.button,

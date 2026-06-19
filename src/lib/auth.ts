@@ -1,3 +1,4 @@
+import { getPasswordResetRedirectUrl } from '@/lib/auth-linking';
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/types/user';
 
@@ -40,8 +41,16 @@ export async function signOut() {
 }
 
 export async function resetPassword(email: string) {
-  return supabase.auth.resetPasswordForEmail(email.trim());
+  return supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: getPasswordResetRedirectUrl(),
+  });
 }
+
+export async function updatePassword(password: string) {
+  return supabase.auth.updateUser({ password });
+}
+
+export { getPasswordResetRedirectUrl } from '@/lib/auth-linking';
 
 export function getSession() {
   return supabase.auth.getSession();
