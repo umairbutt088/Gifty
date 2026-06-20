@@ -12,4 +12,15 @@ export { ThemedText, type ThemedTextProps } from './themed-text';
 export { ThemedView, type ThemedViewProps } from './themed-view';
 export { Collapsible } from './ui/collapsible';
 export { WebBadge } from './web-badge';
+export {
+  DashboardHeader,
+  EmptyState,
+  MenuRow,
+  PrimaryButton,
+  RoleBadge,
+  ScreenShell,
+  SectionTitle,
+  StatCard,
+  StatGrid,
+} from './dashboard';
 

@@ -23,6 +23,6 @@ export {
   updateProfile,
   type AuthProfile,
 } from '@/lib/profile';
-export { Env } from '@/lib/env';
+export { getRoleHomeHref, getRoleFromSegments } from '@/lib/role-routes';
 export { supabase } from '@/lib/supabase';
 export type { ProfileRow } from '@/types/database';

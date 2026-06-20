@@ -17,12 +17,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BrandBanner, GeometricBackground, GlassCard } from '@/components';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { getRoleHomeHref } from '@/lib/role-routes';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { updatePassword } from '@/lib';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function ResetPasswordScreen() {
-  const { session, isPasswordRecovery, recoveryLinkError, clearPasswordRecovery } = useAuth();
+  const { session, profile, isPasswordRecovery, recoveryLinkError, clearPasswordRecovery } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,7 @@ export default function ResetPasswordScreen() {
     clearPasswordRecovery();
 
     Alert.alert('Password updated', 'Your password has been changed. You can continue using Gifty.', [
-      { text: 'Continue', onPress: () => router.replace('/home') },
+      { text: 'Continue', onPress: () => router.replace(getRoleHomeHref(profile?.role ?? 'buyer')) },
     ]);
   }
 
@@ -72,7 +73,7 @@ export default function ResetPasswordScreen() {
                 Request a new reset email from the sign in screen, then open the link on the same
                 phone where Gifty is installed.
               </Text>
-              <Link href="/login" style={styles.linkButtonText}>
+              <Link href="/" style={styles.linkButtonText}>
                 Back to sign in
               </Link>
             </GlassCard>
@@ -95,7 +96,7 @@ export default function ResetPasswordScreen() {
                 Open the password reset link from your email on this device, or request a new one
                 from the sign in screen.
               </Text>
-              <Link href="/login" style={styles.linkButtonText}>
+              <Link href="/" style={styles.linkButtonText}>
                 Back to sign in
               </Link>
             </GlassCard>
