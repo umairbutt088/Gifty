@@ -3,6 +3,7 @@ import { LayoutChangeEvent, Platform, Pressable, StyleSheet, Text, View } from '
 
 import { NotchedShape } from '@/components/notched-shape';
 import { Colors } from '@/constants/colors';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 import type { UserRole } from '@/types/user';
 
 const ROLES = [
@@ -22,9 +23,10 @@ type RoleTabProps = {
   selected: boolean;
   tabWidth: number;
   onPress: () => void;
+  theme: ReturnType<typeof useScreenTheme>;
 };
 
-function RoleTab({ label, selected, tabWidth, onPress }: RoleTabProps) {
+function RoleTab({ label, selected, tabWidth, onPress, theme }: RoleTabProps) {
   const shapeWidth = Math.max(tabWidth - TAB_INSET_H * 2, 0);
   const shapeHeight = BAR_HEIGHT - TAB_INSET_V * 2;
 
@@ -38,10 +40,10 @@ function RoleTab({ label, selected, tabWidth, onPress }: RoleTabProps) {
             width={shapeWidth}
             height={shapeHeight}
             chamfer={INNER_CHAMFER}
-            fill={Colors.tabActiveFillTop}
-            fillSecondary={Colors.tabActiveFillBottom}
-            stroke={Colors.tabActiveBorder}
-            cornerAccent={Colors.tabCornerAccent}
+            fill={theme.tabActiveFillTop}
+            fillSecondary={theme.tabActiveFillBottom}
+            stroke={theme.tabActiveBorder}
+            cornerAccent={theme.tabCornerAccent}
             showCornerAccents
           />
         </View>
@@ -57,6 +59,7 @@ type RoleTabBarProps = {
 };
 
 export function RoleTabBar({ selectedRole, onSelectRole }: RoleTabBarProps) {
+  const theme = useScreenTheme();
   const [barWidth, setBarWidth] = useState(0);
 
   function handleLayout(event: LayoutChangeEvent) {
@@ -73,9 +76,9 @@ export function RoleTabBar({ selectedRole, onSelectRole }: RoleTabBarProps) {
             width={barWidth}
             height={BAR_HEIGHT}
             chamfer={OUTER_CHAMFER}
-            fill={Colors.tabTrack}
-            stroke={Colors.surfaceBorder}
-            cornerAccent={Colors.tabCornerAccent}
+            fill={theme.tabTrack}
+            stroke={theme.surfaceBorder}
+            cornerAccent={theme.tabCornerAccent}
             showCornerAccents
           />
           <View style={styles.tabsRow}>
@@ -86,6 +89,7 @@ export function RoleTabBar({ selectedRole, onSelectRole }: RoleTabBarProps) {
                 tabWidth={tabWidth}
                 selected={selectedRole === item.role}
                 onPress={() => onSelectRole(item.role)}
+                theme={theme}
               />
             ))}
           </View>

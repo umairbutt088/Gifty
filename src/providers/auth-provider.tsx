@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { Colors } from '@/constants/colors';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 import { getSession, onAuthStateChange, signOut as supabaseSignOut } from '@/lib/auth';
 import { createSessionFromUrl, isAuthCallbackUrl } from '@/lib/auth-linking';
 import { fetchProfile, getProfileFromUser, type AuthProfile } from '@/lib/profile';
@@ -25,6 +26,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const theme = useScreenTheme();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -161,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={value}>
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color={Colors.accent} />
+          <ActivityIndicator size="large" color={theme.accent} />
         </View>
       ) : (
         children
