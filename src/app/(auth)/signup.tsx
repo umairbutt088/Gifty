@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -16,13 +15,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandBanner, GeometricBackground, GlassCard, RoleTabBar } from '@/components';
 import { Colors } from '@/constants/colors';
-import { Spacing } from '@/constants/theme';
+import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
 import { getRoleHomeHref } from '@/lib/role-routes';
 import { signUp } from '@/lib';
 import type { UserRole } from '@/types/user';
 
 export default function SignupScreen() {
+  const styles = useThemedAuthStyles();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -96,7 +96,9 @@ export default function SignupScreen() {
             <View style={styles.header}>
               <BrandBanner />
               <Text style={styles.title}>Create your account</Text>
-              <Text style={styles.subtitle}>Fill in your details to get started as a {role}.</Text>
+              <Text style={[styles.subtitle, { textTransform: 'capitalize' }]}>
+                Fill in your details to get started as a {role}.
+              </Text>
             </View>
 
             <GlassCard style={styles.formCard}>
@@ -197,7 +199,7 @@ export default function SignupScreen() {
               </Pressable>
             </GlassCard>
 
-            <Text style={styles.footer}>
+            <Text style={styles.footerText}>
               Already have an account?{' '}
               <Link href="/" style={styles.footerLink}>
                 Sign in
@@ -209,105 +211,3 @@ export default function SignupScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.five,
-    gap: Spacing.four,
-  },
-  header: {
-    gap: Spacing.three,
-    alignItems: 'stretch',
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 32,
-    fontWeight: '700',
-    lineHeight: 38,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: Spacing.one,
-    textTransform: 'capitalize',
-  },
-  formCard: {
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  halfField: {
-    flex: 1,
-  },
-  field: {
-    gap: Spacing.one,
-  },
-  fieldLabel: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  input: {
-    backgroundColor: Colors.input,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Platform.select({ ios: 14, default: 12 }),
-    color: Colors.text,
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: 'rgba(220, 100, 100, 0.6)',
-  },
-  errorText: {
-    color: 'rgba(220, 130, 130, 0.9)',
-    fontSize: 12,
-  },
-  button: {
-    backgroundColor: Colors.button,
-    borderWidth: 1,
-    borderColor: Colors.buttonBorder,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    marginTop: Spacing.one,
-  },
-  buttonDisabled: {
-    backgroundColor: Colors.buttonDisabled,
-  },
-  buttonPressed: {
-    backgroundColor: Colors.buttonPressed,
-  },
-  buttonText: {
-    color: Colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footer: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  footerLink: {
-    color: Colors.accentLight,
-    fontWeight: '500',
-  },
-});

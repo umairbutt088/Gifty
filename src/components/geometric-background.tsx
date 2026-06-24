@@ -1,6 +1,7 @@
 import { StyleSheet, useWindowDimensions, View, type ViewProps } from 'react-native';
 
-import { BackgroundShapes, Colors, type BackgroundShape } from '@/constants/colors';
+import { Colors, type BackgroundShape } from '@/constants/colors';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 type LayeredShapeProps = BackgroundShape & {
   screenWidth: number;
@@ -61,10 +62,11 @@ type GeometricBackgroundProps = ViewProps;
 
 export function GeometricBackground({ style, ...props }: GeometricBackgroundProps) {
   const { width, height } = useWindowDimensions();
+  const theme = useScreenTheme();
 
   return (
     <View style={[styles.container, style]} {...props}>
-      {BackgroundShapes.map((shape) => (
+      {theme.backgroundShapes.map((shape) => (
         <LayeredShape key={shape.id} {...shape} screenWidth={width} screenHeight={height} />
       ))}
       <View pointerEvents="none" style={styles.grainOverlay} />
