@@ -1,12 +1,20 @@
-import { Link } from 'expo-router';
-import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BrandBanner, GeometricBackground, GlassCard } from '@/components';
+import { GlassCard } from '@/components';
+import {
+  DashboardHeader,
+  MenuRow,
+  PrimaryButton,
+  ScreenShell,
+  SectionTitle,
+} from '@/components/dashboard';
 import { ThemeOptions, type ScreenThemeVariant } from '@/constants/color-themes';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { getRoleHomeHref } from '@/lib/role-routes';
+import { useAuth } from '@/providers/auth-provider';
 import { useAppTheme, useScreenTheme } from '@/providers/screen-theme-provider';
 
 type ThemeSwatchProps = {
@@ -50,108 +58,76 @@ function ThemeSwatch({ label, description, preview, selected, onPress }: ThemeSw
 }
 
 export default function SettingsScreen() {
+  const { profile, user, signOut } = useAuth();
   const { variant, setThemeVariant } = useAppTheme();
-  const theme = useScreenTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const [signingOut, setSigningOut] = useState(false);
 
-  function handleSelect(next: ScreenThemeVariant) {
+  async function handleSignOut() {
+    setSigningOut(true);
+    await signOut();
+    setSigningOut(false);
+    router.replace('/');
+  }
+
+  function handleSelectTheme(next: ScreenThemeVariant) {
     void setThemeVariant(next);
   }
 
   return (
-    <View style={styles.root}>
-      <GeometricBackground />
+    <ScreenShell>
+      <DashboardHeader
+        title="Settings"
+        subtitle={user?.email ?? undefined}
+        role={profile?.role}
+        showBanner={false}
+      />
 
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          <BrandBanner showTagline={false} />
+      <SectionTitle>Appearance</SectionTitle>
+      <GlassCard style={styles.themeCard}>
+        <Text style={styles.themeHint}>
+          Choose a gradient theme. It applies across the whole app instantly.
+        </Text>
+        <View style={styles.swatchList}>
+          {ThemeOptions.map((option) => (
+            <ThemeSwatch
+              key={option.variant}
+              label={option.label}
+              description={option.description}
+              preview={option.preview}
+              selected={variant === option.variant}
+              onPress={() => handleSelectTheme(option.variant)}
+            />
+          ))}
+        </View>
+      </GlassCard>
 
-          <View style={styles.header}>
-            <Text style={styles.title}>Appearance</Text>
-            <Text style={styles.subtitle}>
-              Choose a gradient theme. It applies across the whole app instantly.
-            </Text>
-          </View>
+      <SectionTitle>Account</SectionTitle>
+      {profile ? (
+        <MenuRow
+          title="Back to dashboard"
+          description="Return to your role home screen"
+          href={getRoleHomeHref(profile.role)}
+        />
+      ) : null}
 
-          <GlassCard style={styles.card}>
-            <Text style={styles.sectionTitle}>Theme</Text>
-            <View style={styles.swatchList}>
-              {ThemeOptions.map((option) => (
-                <ThemeSwatch
-                  key={option.variant}
-                  label={option.label}
-                  description={option.description}
-                  preview={option.preview}
-                  selected={variant === option.variant}
-                  onPress={() => handleSelect(option.variant)}
-                />
-              ))}
-            </View>
-          </GlassCard>
-
-          <Link href="/home" style={styles.backLink}>
-            Back to home
-          </Link>
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+      <PrimaryButton label="Sign out" loading={signingOut} onPress={handleSignOut} variant="secondary" />
+    </ScreenShell>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useScreenTheme>) {
-  return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: Colors.background,
-    },
-    safeArea: {
-      flex: 1,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      paddingHorizontal: Spacing.four,
-      paddingTop: Spacing.two,
-      paddingBottom: Spacing.five,
-      gap: Spacing.four,
-    },
-    header: {
-      gap: Spacing.one,
-    },
-    title: {
-      color: Colors.text,
-      fontSize: 28,
-      fontWeight: '700',
-      lineHeight: 34,
-    },
-    subtitle: {
-      color: Colors.textSecondary,
-      fontSize: 15,
-      lineHeight: 22,
-    },
-    card: {
-      padding: Spacing.four,
-      gap: Spacing.three,
-    },
-    sectionTitle: {
-      color: Colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    swatchList: {
-      gap: Spacing.two,
-    },
-    backLink: {
-      color: theme.accentLight,
-      fontSize: 15,
-      fontWeight: '600',
-      textAlign: 'center',
-    },
-  });
-}
-
 const styles = StyleSheet.create({
+  themeCard: {
+    padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  themeHint: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  swatchList: {
+    gap: Spacing.two,
+  },
   swatch: {
     borderWidth: 1,
     borderRadius: Spacing.three,

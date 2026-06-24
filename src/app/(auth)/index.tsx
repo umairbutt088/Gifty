@@ -13,51 +13,31 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard, RoleTabBar } from '@/components';
+import { BrandBanner, GeometricBackground, GlassCard, Spacer } from '@/components';
 import { Colors } from '@/constants/colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
-import { signUp } from '@/lib';
+import { getPasswordResetRedirectUrl, getSupabaseRedirectAllowList } from '@/lib/auth-linking';
+import { getRoleHomeHref } from '@/lib/role-routes';
+import { resetPassword, signIn } from '@/lib';
 import type { UserRole } from '@/types/user';
 
-export default function SignupScreen() {
+export default function LoginScreen() {
   const styles = useThemedAuthStyles();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('buyer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const passwordsMatch = password === confirmPassword;
-  const canSubmit =
-    firstName.trim().length > 0 &&
-    lastName.trim().length > 0 &&
-    isValidEmail(email) &&
-    password.length >= 6 &&
-    passwordsMatch &&
-    !loading;
+  const canSubmit = isValidEmail(email) && password.length > 0 && !loading;
 
-  async function handleSignup() {
+  async function handleLogin() {
     if (!canSubmit) return;
-
-    if (!isValidEmail(email)) {
-      setError('Enter a valid email address.');
-      return;
-    }
 
     setLoading(true);
     setError(null);
 
-    const { data, error: authError } = await signUp({
-      firstName,
-      lastName,
-      email,
-      password,
-      role,
-    });
+    const { data, error: authError } = await signIn({ email, password });
 
     setLoading(false);
 
@@ -66,15 +46,32 @@ export default function SignupScreen() {
       return;
     }
 
-    if (data.session) {
-      router.replace('/home');
+    const role = (data.user?.user_metadata?.role as UserRole | undefined) ?? 'buyer';
+    router.replace(getRoleHomeHref(role));
+  }
+
+  async function handleForgotPassword() {
+    if (!isValidEmail(email)) {
+      Alert.alert('Enter your email', 'Add a valid email above, then tap Forgot password again.');
       return;
+    }
+
+    const redirectUrl = getPasswordResetRedirectUrl();
+    const { error: resetError } = await resetPassword(email);
+
+    if (resetError) {
+      Alert.alert('Could not send reset email', getAuthErrorMessage(resetError));
+      return;
+    }
+
+    if (__DEV__) {
+      console.log('[auth] password reset redirectTo:', redirectUrl);
+      console.log('[auth] add to Supabase Redirect URLs:', getSupabaseRedirectAllowList());
     }
 
     Alert.alert(
       'Check your email',
-      'We sent a confirmation link. After confirming, sign in with your email and password.',
-      [{ text: 'Go to sign in', onPress: () => router.push('/login') }],
+      'We sent a password reset link. Open it on the same device where Gifty is installed (simulator Mail or your phone — not Chrome on your Mac). Request a fresh link if the previous one expired.',
     );
   }
 
@@ -90,47 +87,14 @@ export default function SignupScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <RoleTabBar selectedRole={role} onSelectRole={setRole} />
-
+            <Spacer.Column numberOfSpaces={5} />
             <View style={styles.header}>
               <BrandBanner />
-              <Text style={[styles.title, { fontSize: 32, lineHeight: 38 }]}>Create your account</Text>
-              <Text style={[styles.subtitle, { textTransform: 'capitalize' }]}>
-                Fill in your details to get started as a {role}.
-              </Text>
+              <Text style={styles.title}>Welcome back</Text>
+              <Text style={styles.subtitle}>Sign in to your Gifty account.</Text>
             </View>
 
             <GlassCard style={styles.formCard}>
-              <View style={styles.nameRow}>
-                <View style={[styles.field, styles.halfField]}>
-                  <Text style={styles.fieldLabel}>First name</Text>
-                  <TextInput
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    placeholder="Jane"
-                    placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="words"
-                    autoComplete="given-name"
-                    editable={!loading}
-                    style={styles.input}
-                  />
-                </View>
-
-                <View style={[styles.field, styles.halfField]}>
-                  <Text style={styles.fieldLabel}>Last name</Text>
-                  <TextInput
-                    value={lastName}
-                    onChangeText={setLastName}
-                    placeholder="Doe"
-                    placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="words"
-                    autoComplete="family-name"
-                    editable={!loading}
-                    style={styles.input}
-                  />
-                </View>
-              </View>
-
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Email</Text>
                 <TextInput
@@ -151,39 +115,23 @@ export default function SignupScreen() {
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="At least 6 characters"
+                  placeholder="Enter your password"
                   placeholderTextColor={Colors.textMuted}
                   secureTextEntry
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   editable={!loading}
                   style={styles.input}
                 />
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Confirm password</Text>
-                <TextInput
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Re-enter your password"
-                  placeholderTextColor={Colors.textMuted}
-                  secureTextEntry
-                  autoComplete="new-password"
-                  editable={!loading}
-                  style={[
-                    styles.input,
-                    confirmPassword.length > 0 && !passwordsMatch && styles.inputError,
-                  ]}
-                />
-                {confirmPassword.length > 0 && !passwordsMatch ? (
-                  <Text style={styles.errorText}>Passwords do not match</Text>
-                ) : null}
-              </View>
+              <Pressable onPress={handleForgotPassword} disabled={loading}>
+                <Text style={styles.forgotPassword}>Forgot password?</Text>
+              </Pressable>
 
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <Pressable
-                onPress={handleSignup}
+                onPress={handleLogin}
                 disabled={!canSubmit}
                 style={({ pressed }) => [
                   styles.button,
@@ -193,15 +141,15 @@ export default function SignupScreen() {
                 {loading ? (
                   <ActivityIndicator color={Colors.text} />
                 ) : (
-                  <Text style={styles.buttonText}>Create account</Text>
+                  <Text style={styles.buttonText}>Sign in</Text>
                 )}
               </Pressable>
             </GlassCard>
 
             <Text style={styles.footerText}>
-              Already have an account?{' '}
-              <Link href="/login" style={styles.footerLink}>
-                Sign in
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" style={styles.footerLink}>
+                Create account
               </Link>
             </Text>
           </ScrollView>
