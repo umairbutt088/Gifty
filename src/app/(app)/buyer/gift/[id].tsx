@@ -11,6 +11,8 @@ export default function BuyerGiftDetailScreen() {
         title="Gift details"
         subtitle={`Listing #${id ?? '—'}`}
         showBanner={false}
+        showBack
+        backHref="/buyer/browse"
       />
       <EmptyState
         title="Image gallery & description"

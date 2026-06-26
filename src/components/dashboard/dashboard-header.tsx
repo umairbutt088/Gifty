@@ -1,8 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { router, type Href } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrandBanner } from '@/components/brand-banner';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 import { RoleBadge } from './role-badge';
 
@@ -11,6 +14,9 @@ type DashboardHeaderProps = {
   subtitle?: string;
   role?: string;
   showBanner?: boolean;
+  showBack?: boolean;
+  backHref?: Href;
+  onBack?: () => void;
 };
 
 export function DashboardHeader({
@@ -18,10 +24,40 @@ export function DashboardHeader({
   subtitle,
   role,
   showBanner = false,
+  showBack = false,
+  backHref,
+  onBack,
 }: DashboardHeaderProps) {
+  const theme = useScreenTheme();
+
+  function handleBack() {
+    if (onBack) {
+      onBack();
+      return;
+    }
+
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    if (backHref) {
+      router.replace(backHref);
+    }
+  }
+
   return (
     <View style={styles.header}>
       {showBanner ? <BrandBanner showTagline={false} /> : null}
+      {showBack ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={handleBack}
+          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}>
+          <SymbolView name="chevron.left" tintColor={theme.accentLight} size={22} weight="semibold" />
+        </Pressable>
+      ) : null}
       {role ? <RoleBadge role={role} /> : null}
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -33,6 +69,15 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.three,
     alignItems: 'stretch',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginLeft: -Spacing.one,
+    padding: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  backButtonPressed: {
+    opacity: 0.7,
   },
   title: {
     color: Colors.text,

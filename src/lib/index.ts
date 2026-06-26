@@ -23,6 +23,32 @@ export {
   updateProfile,
   type AuthProfile,
 } from '@/lib/profile';
+export { createGift, deleteGift, fetchGiftById, fetchVendorGifts, updateGift } from '@/lib/gifts';
+export { formatDeliveryCities, formatMoney, parseDeliveryCities, parsePriceToCents } from '@/lib/format';
 export { getRoleHomeHref, getRoleFromSegments } from '@/lib/role-routes';
 export { supabase } from '@/lib/supabase';
+export {
+  countNewVendorOrders,
+  fetchVendorOrderById,
+  fetchVendorOrders,
+  getNextOrderAction,
+  getVendorEarningsSummary,
+  updateVendorOrderStatus,
+} from '@/lib/vendor-orders';
+export {
+  fetchVendorStore,
+  isVendorStoreOnboarded,
+  upsertVendorStore,
+} from '@/lib/vendor-store';
 export type { ProfileRow } from '@/types/database';
+export type {
+  GiftCategory,
+  GiftInput,
+  GiftRow,
+  GiftStatus,
+  VendorOrderRow,
+  VendorOrderStatus,
+  VendorOrderWithGift,
+  VendorStoreInput,
+  VendorStoreRow,
+} from '@/types/vendor';
