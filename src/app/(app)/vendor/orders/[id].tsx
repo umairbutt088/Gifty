@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
 import { formatMoney } from '@/lib/format';
+import { getOrCreateConversationForOrder } from '@/lib/chat';
 import {
   fetchVendorOrderById,
   getNextOrderAction,
@@ -28,6 +29,7 @@ export default function VendorOrderDetailScreen() {
   const [order, setOrder] = useState<VendorOrderWithGift | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [openingChat, setOpeningChat] = useState(false);
 
   const loadOrder = useCallback(async () => {
     if (!id) return;
@@ -56,6 +58,21 @@ export default function VendorOrderDetailScreen() {
 
     await loadOrder();
     await refreshNewOrderCount();
+  }
+
+  async function handleOpenChat() {
+    if (!order || !profile) return;
+
+    setOpeningChat(true);
+    const { data, error } = await getOrCreateConversationForOrder(order.id, profile.id);
+    setOpeningChat(false);
+
+    if (error || !data) {
+      Alert.alert('Could not open chat', error?.message ?? 'Try again.');
+      return;
+    }
+
+    router.push(`/vendor/chat/${data.id}`);
   }
 
   function handleReject() {
@@ -123,6 +140,13 @@ export default function VendorOrderDetailScreen() {
           onPress={() => void handleStatusUpdate(nextAction.nextStatus)}
         />
       ) : null}
+
+      <PrimaryButton
+        label="Message buyer"
+        variant="secondary"
+        loading={openingChat}
+        onPress={() => void handleOpenChat()}
+      />
 
       {order.status === 'new' ? (
         <PrimaryButton

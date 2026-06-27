@@ -28,7 +28,9 @@ export default function BuyerOrdersTabScreen() {
           message="When you buy a gift, order history and tracking will show up on this screen."
         />
       ) : (
-        orders.map((order) => <OrderListItem key={order.id} order={order} />)
+        orders.map((order) => (
+          <OrderListItem key={order.id} order={order} href={`/buyer/orders/${order.id}`} />
+        ))
       )}
     </ScreenShell>
   );

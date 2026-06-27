@@ -26,6 +26,24 @@ export async function fetchBuyerOrders(buyerId: string): Promise<VendorOrderWith
   return data as VendorOrderWithGift[];
 }
 
+export async function fetchBuyerOrderById(
+  orderId: string,
+  buyerId: string,
+): Promise<VendorOrderWithGift | null> {
+  const { data, error } = await supabase
+    .from('vendor_orders')
+    .select('*, gift:gifts(id, title, image_urls)')
+    .eq('id', orderId)
+    .eq('buyer_id', buyerId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as VendorOrderWithGift;
+}
+
 export function subscribeBuyerOrderUpdates(
   buyerId: string,
   onUpdate: (order: VendorOrderRow) => void,
