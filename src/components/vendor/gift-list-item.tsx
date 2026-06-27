@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Link, type Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
@@ -12,56 +12,83 @@ import type { GiftRow } from '@/types/vendor';
 
 type GiftListItemProps = {
   gift: GiftRow;
-  href: Href;
+  href?: Href;
+  deleted?: boolean;
 };
 
-export function GiftListItem({ gift, href }: GiftListItemProps) {
+function formatDeletedDate(value: string | null): string {
+  if (!value) return 'Recently deleted';
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
+export function GiftListItem({ gift, href, deleted = false }: GiftListItemProps) {
   const categoryLabel =
     GIFT_CATEGORIES.find((item) => item.value === gift.category)?.label ?? gift.category;
   const imageUrl = gift.image_urls[0];
 
-  return (
-    <Link href={href} asChild>
-      <Pressable style={({ pressed }) => [pressed && styles.pressed]}>
-        <GlassCard style={styles.card}>
-          <View style={styles.imageWrap}>
-            {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
-            ) : (
-              <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>Gift</Text>
-              </View>
-            )}
+  const content = (
+    <GlassCard style={[styles.card, deleted && styles.cardDeleted]}>
+      <View style={styles.imageWrap}>
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+        ) : (
+          <View style={styles.placeholder}>
+            <Text style={styles.placeholderText}>{deleted ? 'No photos' : 'Gift'}</Text>
           </View>
+        )}
+      </View>
 
-          <View style={styles.body}>
-            <View style={styles.topRow}>
-              <Text style={styles.title} numberOfLines={1}>
-                {gift.title}
-              </Text>
-              <StatusBadge status={gift.status} kind="gift" />
-            </View>
-            <Text style={styles.meta}>
-              {formatMoney(gift.price_cents)} · {categoryLabel} · Stock {gift.stock}
-            </Text>
-          </View>
-        </GlassCard>
-      </Pressable>
-    </Link>
+      <View style={styles.body}>
+        <View style={styles.topRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            {gift.title}
+          </Text>
+          {!deleted ? <StatusBadge status={gift.status} kind="gift" /> : null}
+        </View>
+        <Text style={styles.meta}>
+          {deleted
+            ? `Deleted ${formatDeletedDate(gift.deleted_at)} · ${formatMoney(gift.price_cents)}`
+            : `${formatMoney(gift.price_cents)} · ${categoryLabel} · Stock ${gift.stock}`}
+        </Text>
+      </View>
+    </GlassCard>
+  );
+
+  if (deleted || !href) {
+    return <View>{content}</View>;
+  }
+
+  return (
+    <Pressable onPress={() => router.push(href)} style={({ pressed }) => [pressed && styles.pressed]}>
+      {content}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    overflow: 'hidden',
+    alignItems: 'center',
+    padding: Spacing.two,
+    gap: Spacing.two,
+  },
+  cardDeleted: {
+    opacity: 0.92,
   },
   pressed: {
     opacity: 0.92,
   },
   imageWrap: {
-    width: 88,
-    height: 88,
+    width: 80,
+    height: 80,
+    borderRadius: Spacing.two,
+    overflow: 'hidden',
+    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -80,7 +107,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    padding: Spacing.three,
+    paddingVertical: Spacing.one,
     gap: Spacing.two,
     justifyContent: 'center',
   },

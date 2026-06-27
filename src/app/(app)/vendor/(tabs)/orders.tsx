@@ -1,11 +1,11 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 import { OrderListItem, SegmentBar } from '@/components/vendor';
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { matchesOrderFilter, ORDER_FILTER_TABS, type OrderFilter } from '@/constants/vendor';
-import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { fetchVendorOrders } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
@@ -60,7 +60,7 @@ export default function VendorOrdersTabScreen() {
           showsVerticalScrollIndicator={false}>
           {loading ? (
             <View style={styles.loading}>
-              <ActivityIndicator color={Colors.accent} />
+              <ThemedActivityIndicator />
             </View>
           ) : isEmpty ? (
             <EmptyState

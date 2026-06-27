@@ -1,7 +1,15 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type PressableProps,
+} from 'react-native';
 
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 type PrimaryButtonProps = PressableProps & {
   label: string;
@@ -16,22 +24,45 @@ export function PrimaryButton({
   variant = 'primary',
   ...props
 }: PrimaryButtonProps) {
+  const theme = useScreenTheme();
   const isDisabled = disabled || loading;
+  const isPrimary = variant === 'primary';
+  const labelColor = isDisabled ? Colors.textMuted : Colors.text;
 
   return (
     <Pressable
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.button,
-        variant === 'secondary' && styles.buttonSecondary,
-        isDisabled && styles.buttonDisabled,
+        isPrimary && !isDisabled && styles.buttonPrimary,
+        isPrimary && !isDisabled && { borderColor: theme.buttonBorder },
+        isPrimary && isDisabled && {
+          backgroundColor: theme.buttonDisabled,
+          borderColor: theme.buttonBorder,
+        },
+        !isPrimary && {
+          backgroundColor: theme.surfaceNested,
+          borderColor: theme.surfaceBorder,
+        },
         pressed && !isDisabled && styles.buttonPressed,
       ]}
       {...props}>
+      {isPrimary && !isDisabled ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.gradientLayer,
+            {
+              experimental_backgroundImage: `linear-gradient(180deg, ${theme.accent}, ${theme.accentDark}, ${theme.tabActiveFillBottom})`,
+            },
+          ]}
+        />
+      ) : null}
+
       {loading ? (
-        <ActivityIndicator color={Colors.text} />
+        <ThemedActivityIndicator muted={isDisabled} />
       ) : (
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -39,25 +70,23 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: Colors.button,
     borderWidth: 1,
-    borderColor: Colors.buttonBorder,
     borderRadius: Spacing.two,
     paddingVertical: Spacing.three,
     alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  buttonSecondary: {
-    backgroundColor: Colors.surfaceNested,
-    borderColor: Colors.surfaceBorder,
-  },
-  buttonDisabled: {
-    backgroundColor: Colors.buttonDisabled,
+  buttonPrimary: {
+    backgroundColor: 'transparent',
   },
   buttonPressed: {
-    backgroundColor: Colors.buttonPressed,
+    opacity: 0.88,
+  },
+  gradientLayer: {
+    ...StyleSheet.absoluteFill,
   },
   label: {
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '600',
   },

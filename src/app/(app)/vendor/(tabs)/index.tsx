@@ -1,16 +1,17 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { Alert, View } from 'react-native';
 
 import {
   DashboardHeader,
   EmptyState,
+  MenuRow,
   PrimaryButton,
   ScreenShell,
 } from '@/components/dashboard';
-import { GiftListItem } from '@/components/vendor';
-import { Colors } from '@/constants/colors';
-import { fetchVendorGifts } from '@/lib/gifts';
+import { SwipeableGiftListItem } from '@/components/vendor';
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { softDeleteGift, fetchVendorGifts } from '@/lib/gifts';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function VendorGiftsScreen() {
@@ -33,6 +34,17 @@ export default function VendorGiftsScreen() {
     }, [loadGifts]),
   );
 
+  async function handleDeleteGift(giftId: string) {
+    const { error } = await softDeleteGift(giftId);
+
+    if (error) {
+      Alert.alert('Could not delete', error.message);
+      return;
+    }
+
+    setGifts((current) => current.filter((gift) => gift.id !== giftId));
+  }
+
   return (
     <ScreenShell>
       <DashboardHeader
@@ -42,10 +54,15 @@ export default function VendorGiftsScreen() {
       />
 
       <PrimaryButton label="Add gift" onPress={() => router.push('/vendor/gift/new')} />
+      <MenuRow
+        title="Deleted gifts"
+        description="View and restore removed listings"
+        href="/vendor/gifts/deleted"
+      />
 
       {loading ? (
         <View style={{ paddingVertical: 24 }}>
-          <ActivityIndicator color={Colors.accent} />
+          <ThemedActivityIndicator />
         </View>
       ) : gifts.length === 0 ? (
         <EmptyState
@@ -54,7 +71,12 @@ export default function VendorGiftsScreen() {
         />
       ) : (
         gifts.map((gift) => (
-          <GiftListItem key={gift.id} gift={gift} href={`/vendor/gift/${gift.id}`} />
+          <SwipeableGiftListItem
+            key={gift.id}
+            gift={gift}
+            href={`/vendor/gift/${gift.id}`}
+            onDelete={handleDeleteGift}
+          />
         ))
       )}
     </ScreenShell>

@@ -4,11 +4,13 @@ export { BrandBanner, GradientText, type BrandBannerProps, type GradientTextProp
 export { ExternalLink } from './external-link';
 export { GeometricBackground } from './geometric-background';
 export { GlassCard } from './glass-card';
+export { ImageGalleryViewer } from './image-gallery-viewer';
 export { HintRow } from './hint-row';
 export { NotchedShape, type NotchedShapeProps } from './notched-shape';
 export { RoleTabBar } from './role-tabs';
 export { Spacer } from './spacer';
 export { ThemedText, type ThemedTextProps } from './themed-text';
+export { ThemedActivityIndicator } from './themed-activity-indicator';
 export { ThemedView, type ThemedViewProps } from './themed-view';
 export { Collapsible } from './ui/collapsible';
 export { WebBadge } from './web-badge';

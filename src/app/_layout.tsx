@@ -2,6 +2,8 @@ import { DarkTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, type ReactNode } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components';
 import { AuthGate } from '@/components/auth-gate';
@@ -32,22 +34,30 @@ function NavigationThemeProvider({ children }: { children: ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <AppThemeProvider>
-      <AuthProvider>
-        <NavigationThemeProvider>
-          <StatusBar style="light" />
-          <AnimatedSplashOverlay />
-          <AuthGate>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: Colors.background },
-                animation: 'fade',
-              }}
-            />
-          </AuthGate>
-        </NavigationThemeProvider>
-      </AuthProvider>
-    </AppThemeProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <AppThemeProvider>
+        <AuthProvider>
+          <NavigationThemeProvider>
+            <StatusBar style="light" />
+            <AnimatedSplashOverlay />
+            <AuthGate>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: Colors.background },
+                  animation: 'fade',
+                }}
+              />
+            </AuthGate>
+          </NavigationThemeProvider>
+        </AuthProvider>
+      </AppThemeProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+});

@@ -1,14 +1,44 @@
 import { Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Platform, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { Platform, StyleSheet, type TextProps } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 import { Colors } from '@/constants/colors';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
+const SELECTED_SCALE = 1.14;
+const TAB_SPRING = { damping: 14, stiffness: 180 };
+
 type TabIconName = 'gift' | 'shippingbox' | 'bubble' | 'person';
 
-function TabIcon({ name, color }: { name: TabIconName; color: string }) {
+function useSelectedScale(focused: boolean) {
+  const scale = useSharedValue(focused ? SELECTED_SCALE : 1);
+
+  useEffect(() => {
+    scale.value = withSpring(focused ? SELECTED_SCALE : 1, TAB_SPRING);
+  }, [focused, scale]);
+
+  return useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+}
+
+function TabIcon({
+  name,
+  color,
+  focused,
+}: {
+  name: TabIconName;
+  color: string;
+  focused: boolean;
+}) {
+  const animatedStyle = useSelectedScale(focused);
   const symbolName =
     name === 'gift'
       ? 'gift.fill'
@@ -18,7 +48,30 @@ function TabIcon({ name, color }: { name: TabIconName; color: string }) {
           ? 'bubble.left.and.bubble.right.fill'
           : 'person.fill';
 
-  return <SymbolView name={symbolName} tintColor={color as string} size={22} />;
+  return (
+    <Animated.View style={animatedStyle}>
+      <SymbolView name={symbolName} tintColor={color} size={22} />
+    </Animated.View>
+  );
+}
+
+function TabLabel({
+  focused,
+  color,
+  children,
+}: {
+  focused: boolean;
+  color: string;
+  children: TextProps['children'];
+}) {
+  const animatedStyle = useSelectedScale(focused);
+
+  return (
+    <Animated.Text
+      style={[styles.tabLabel, { color }, focused && styles.tabLabelSelected, animatedStyle]}>
+      {children}
+    </Animated.Text>
+  );
 }
 
 export default function VendorTabsLayout() {
@@ -32,13 +85,19 @@ export default function VendorTabsLayout() {
         tabBarActiveTintColor: theme.accentLight,
         tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabLabel,
+        tabBarLabel: ({ focused, color, children }) => (
+          <TabLabel focused={focused} color={String(color)}>
+            {children}
+          </TabLabel>
+        ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Gifts',
-          tabBarIcon: ({ color }) => <TabIcon name="gift" color={String(color)} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="gift" color={String(color)} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -46,21 +105,27 @@ export default function VendorTabsLayout() {
         options={{
           title: 'Orders',
           tabBarBadge: newOrderCount > 0 ? newOrderCount : undefined,
-          tabBarIcon: ({ color }) => <TabIcon name="shippingbox" color={String(color)} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="shippingbox" color={String(color)} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color }) => <TabIcon name="bubble" color={String(color)} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="bubble" color={String(color)} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <TabIcon name="person" color={String(color)} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="person" color={String(color)} focused={focused} />
+          ),
         }}
       />
     </Tabs>
@@ -78,5 +143,8 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  tabLabelSelected: {
+    fontWeight: '700',
   },
 });

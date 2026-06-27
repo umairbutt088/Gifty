@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 
 import {
   DashboardHeader,
@@ -9,6 +9,7 @@ import {
   SectionTitle,
 } from '@/components/dashboard';
 import { StatusBadge } from '@/components/vendor';
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
 import { formatMoney } from '@/lib/format';
 import {
@@ -71,7 +72,7 @@ export default function VendorOrderDetailScreen() {
   if (loading) {
     return (
       <ScreenShell scroll={false}>
-        <ActivityIndicator color={Colors.accent} style={{ marginTop: 48 }} />
+        <ThemedActivityIndicator style={{ marginTop: 48 }} />
       </ScreenShell>
     );
   }

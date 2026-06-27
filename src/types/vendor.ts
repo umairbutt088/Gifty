@@ -41,6 +41,7 @@ export type GiftRow = {
   stock: number;
   status: GiftStatus;
   image_urls: string[];
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };

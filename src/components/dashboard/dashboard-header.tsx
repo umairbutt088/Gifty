@@ -1,5 +1,6 @@
 import { router, type Href } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrandBanner } from '@/components/brand-banner';
@@ -17,6 +18,7 @@ type DashboardHeaderProps = {
   showBack?: boolean;
   backHref?: Href;
   onBack?: () => void;
+  trailing?: ReactNode;
 };
 
 export function DashboardHeader({
@@ -27,6 +29,7 @@ export function DashboardHeader({
   showBack = false,
   backHref,
   onBack,
+  trailing,
 }: DashboardHeaderProps) {
   const theme = useScreenTheme();
 
@@ -59,7 +62,12 @@ export function DashboardHeader({
         </Pressable>
       ) : null}
       {role ? <RoleBadge role={role} /> : null}
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.titleRow}>
+        <Text style={[styles.title, trailing ? styles.titleWithTrailing : null]} numberOfLines={2}>
+          {title}
+        </Text>
+        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+      </View>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
   );
@@ -79,11 +87,24 @@ const styles = StyleSheet.create({
   backButtonPressed: {
     opacity: 0.7,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
   title: {
     color: Colors.text,
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 34,
+    flexShrink: 1,
+  },
+  titleWithTrailing: {
+    flex: 1,
+  },
+  trailing: {
+    flexShrink: 0,
   },
   subtitle: {
     color: Colors.textSecondary,

@@ -154,10 +154,6 @@ export function GiftImagePicker({
         <Pressable onPress={showSourcePicker}>
           <Text style={styles.hint}>Tap to pick from gallery or camera</Text>
         </Pressable>
-      ) : canAddMore ? (
-        <Pressable onPress={showSourcePicker}>
-          <Text style={styles.changeLink}>Add more photos</Text>
-        </Pressable>
       ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -242,11 +238,6 @@ const styles = StyleSheet.create({
   hint: {
     color: Colors.textSecondary,
     fontSize: 13,
-  },
-  changeLink: {
-    color: Colors.accentLight,
-    fontSize: 14,
-    fontWeight: '600',
   },
   error: {
     color: '#E05D5D',

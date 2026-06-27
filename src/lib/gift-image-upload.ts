@@ -104,3 +104,28 @@ export async function resolveGiftImageUrls(
 
   return { urls, error: null };
 }
+
+export function getGiftImageStoragePath(publicUrl: string): string | null {
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const index = publicUrl.indexOf(marker);
+  if (index === -1) return null;
+
+  const path = publicUrl.slice(index + marker.length).split('?')[0];
+  return path ? decodeURIComponent(path) : null;
+}
+
+export async function deleteGiftImagesFromStorage(
+  imageUrls: string[],
+): Promise<{ error: Error | null }> {
+  const paths = imageUrls
+    .map(getGiftImageStoragePath)
+    .filter((path): path is string => Boolean(path));
+
+  if (paths.length === 0) {
+    return { error: null };
+  }
+
+  const { error } = await supabase.storage.from(BUCKET).remove(paths);
+
+  return { error: error ? new Error(error.message) : null };
+}

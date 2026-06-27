@@ -7,7 +7,7 @@ import {
   PrimaryButton,
   ScreenShell,
 } from '@/components/dashboard';
-import { FormField, GiftImagePicker, type GiftImageSelection } from '@/components/vendor';
+import { FormField, GiftImagePicker, GiftStatusPicker, type GiftImageSelection } from '@/components/vendor';
 import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
@@ -16,7 +16,7 @@ import { resolveGiftImageUrls } from '@/lib/gift-image-upload';
 import { parsePriceToCents } from '@/lib/format';
 import { useAuth } from '@/providers/auth-provider';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
-import type { GiftCategory } from '@/types/vendor';
+import type { GiftCategory, GiftStatus } from '@/types/vendor';
 
 export default function VendorGiftNewScreen() {
   const { profile } = useAuth();
@@ -27,6 +27,7 @@ export default function VendorGiftNewScreen() {
   const [stock, setStock] = useState('1');
   const [images, setImages] = useState<GiftImageSelection[]>([]);
   const [category, setCategory] = useState<GiftCategory>('flowers');
+  const [status, setStatus] = useState<GiftStatus>('draft');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export default function VendorGiftNewScreen() {
       category,
       stock: stockCount,
       imageUrls: urls,
-      status: 'live',
+      status,
     });
 
     setLoading(false);
@@ -86,7 +87,7 @@ export default function VendorGiftNewScreen() {
       return;
     }
 
-    Alert.alert('Gift listed', 'Your gift is now live for buyers.', [
+    Alert.alert('Gift created', 'Your gift listing has been saved.', [
       { text: 'View gift', onPress: () => router.replace(`/vendor/gift/${data.id}`) },
     ]);
   }
@@ -153,9 +154,11 @@ export default function VendorGiftNewScreen() {
         </ScrollView>
       </View>
 
+      <GiftStatusPicker value={status} onChange={setStatus} disabled={loading} />
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <PrimaryButton label="Publish gift" loading={loading} onPress={() => void handleCreate()} />
+      <PrimaryButton label="Create gift" loading={loading} onPress={() => void handleCreate()} />
     </ScreenShell>
   );
 }

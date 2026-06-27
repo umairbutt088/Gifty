@@ -23,7 +23,17 @@ export {
   updateProfile,
   type AuthProfile,
 } from '@/lib/profile';
-export { createGift, deleteGift, fetchGiftById, fetchVendorGifts, updateGift } from '@/lib/gifts';
+export {
+  createGift,
+  deleteGift,
+  fetchDeletedVendorGifts,
+  fetchGiftById,
+  fetchVendorGifts,
+  permanentlyDeleteGift,
+  restoreGift,
+  softDeleteGift,
+  updateGift,
+} from '@/lib/gifts';
 export { formatDeliveryCities, formatMoney, parseDeliveryCities, parsePriceToCents } from '@/lib/format';
 export { getRoleHomeHref, getRoleFromSegments } from '@/lib/role-routes';
 export { supabase } from '@/lib/supabase';

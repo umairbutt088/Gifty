@@ -1,26 +1,25 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   DashboardHeader,
   PrimaryButton,
   ScreenShell,
 } from '@/components/dashboard';
-import { FormField, GiftImagePicker, StatusBadge, type GiftImageSelection } from '@/components/vendor';
-import { GIFT_CATEGORIES, GIFT_STATUS_LABELS } from '@/constants/vendor';
+import { FormField, GiftImagePicker, GiftStatusPicker, type GiftImageSelection } from '@/components/vendor';
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { formatMoney, parsePriceToCents } from '@/lib/format';
-import { deleteGift, fetchGiftById, updateGift } from '@/lib/gifts';
+import { parsePriceToCents } from '@/lib/format';
+import { softDeleteGift, fetchGiftById, updateGift } from '@/lib/gifts';
 import { resolveGiftImageUrls } from '@/lib/gift-image-upload';
 import { useAuth } from '@/providers/auth-provider';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 import type { GiftCategory, GiftRow, GiftStatus } from '@/types/vendor';
 
-const STATUSES = Object.keys(GIFT_STATUS_LABELS) as GiftStatus[];
-
-export default function VendorGiftDetailScreen() {
+export default function VendorGiftEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const theme = useScreenTheme();
@@ -114,21 +113,24 @@ export default function VendorGiftDetailScreen() {
       return;
     }
 
-    setGift(data);
-    setImages(data.image_urls.map((uri) => ({ uri })));
-    Alert.alert('Saved', 'Gift listing updated.');
+    Alert.alert('Saved', 'Gift listing updated.', [
+      { text: 'Done', onPress: () => router.replace(`/vendor/gift/${gift.id}`) },
+    ]);
   }
 
   async function handleDelete() {
     if (!gift) return;
 
-    Alert.alert('Delete gift', 'This cannot be undone.', [
+    Alert.alert(
+      'Delete gift',
+      'Move this gift to Deleted gifts? You can restore it later with photos intact.',
+      [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          const { error: deleteError } = await deleteGift(gift.id);
+          const { error: deleteError } = await softDeleteGift(gift.id);
           if (deleteError) {
             Alert.alert('Could not delete', deleteError.message);
             return;
@@ -142,7 +144,7 @@ export default function VendorGiftDetailScreen() {
   if (loading) {
     return (
       <ScreenShell scroll={false}>
-        <ActivityIndicator color={Colors.accent} style={{ marginTop: 48 }} />
+        <ThemedActivityIndicator style={{ marginTop: 48 }} />
       </ScreenShell>
     );
   }
@@ -159,13 +161,11 @@ export default function VendorGiftDetailScreen() {
     <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
       <DashboardHeader
         title="Edit gift"
-        subtitle={formatMoney(gift.price_cents)}
+        subtitle="Update photos, price, and details."
         showBanner={false}
         showBack
-        backHref="/vendor"
+        backHref={`/vendor/gift/${gift.id}`}
       />
-
-      <StatusBadge status={status} kind="gift" />
 
       <GiftImagePicker value={images} onChange={setImages} error={imageError} />
 
@@ -205,30 +205,7 @@ export default function VendorGiftDetailScreen() {
         </ScrollView>
       </View>
 
-      <View style={styles.field}>
-        <Text style={styles.label}>Status</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          {STATUSES.map((item) => {
-            const selected = item === status;
-            return (
-              <Pressable
-                key={item}
-                onPress={() => setStatus(item)}
-                style={[
-                  styles.chip,
-                  {
-                    backgroundColor: selected ? theme.surfaceSelected : theme.surface,
-                    borderColor: selected ? theme.surfaceSelectedBorder : theme.surfaceBorder,
-                  },
-                ]}>
-                <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
-                  {GIFT_STATUS_LABELS[item]}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <GiftStatusPicker value={status} onChange={setStatus} disabled={saving} />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 

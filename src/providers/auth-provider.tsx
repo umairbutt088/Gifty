@@ -2,10 +2,10 @@ import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
-import { useScreenTheme } from '@/providers/screen-theme-provider';
 import { getSession, onAuthStateChange, signOut as supabaseSignOut } from '@/lib/auth';
 import { createSessionFromUrl, isAuthCallbackUrl } from '@/lib/auth-linking';
 import { fetchProfile, getProfileFromUser, type AuthProfile } from '@/lib/profile';
@@ -26,7 +26,6 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const theme = useScreenTheme();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={value}>
       {isLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color={theme.accent} />
+          <ThemedActivityIndicator size="large" />
         </View>
       ) : (
         children
