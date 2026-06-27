@@ -1,7 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard, RoleTabBar } from '@/components';
+import { BrandBanner, GeometricBackground, GlassCard, RoleTabBar, ThemedActivityIndicator } from '@/components';
 import { Colors } from '@/constants/colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
@@ -192,7 +191,7 @@ export default function SignupScreen() {
                   pressed && canSubmit && styles.buttonPressed,
                 ]}>
                 {loading ? (
-                  <ActivityIndicator color={Colors.text} />
+                  <ThemedActivityIndicator />
                 ) : (
                   <Text style={styles.buttonText}>Create account</Text>
                 )}

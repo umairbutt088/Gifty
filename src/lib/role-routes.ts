@@ -12,7 +12,7 @@ export const ROLE_ROUTE_PREFIX: Record<UserRole, string> = {
 export function getRoleHomeHref(role: UserRole): Href {
   switch (role) {
     case 'vendor':
-      return '/vendor/products';
+      return '/vendor';
     case 'admin':
       return '/admin/overview';
     case 'buyer':

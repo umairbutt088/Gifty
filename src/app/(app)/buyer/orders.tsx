@@ -1,4 +1,4 @@
-import { DashboardHeader, EmptyState, MenuRow, ScreenShell } from '@/components/dashboard';
+import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 
 export default function BuyerOrdersScreen() {
   return (
@@ -7,12 +7,13 @@ export default function BuyerOrdersScreen() {
         title="My orders"
         subtitle="Purchases you make will appear here."
         showBanner={false}
+        showBack
+        backHref="/buyer/browse"
       />
       <EmptyState
         title="No orders yet"
         message="When you buy a gift, order history and tracking will show up on this screen."
       />
-      <MenuRow title="Back to browse" href="/buyer/browse" />
     </ScreenShell>
   );
 }

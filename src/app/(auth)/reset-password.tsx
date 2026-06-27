@@ -1,7 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard } from '@/components';
+import { BrandBanner, GeometricBackground, GlassCard, ThemedActivityIndicator } from '@/components';
 import { Colors } from '@/constants/colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
@@ -170,7 +169,7 @@ export default function ResetPasswordScreen() {
                   pressed && canSubmit && styles.buttonPressed,
                 ]}>
                 {loading ? (
-                  <ActivityIndicator color={Colors.text} />
+                  <ThemedActivityIndicator />
                 ) : (
                   <Text style={styles.buttonText}>Update password</Text>
                 )}

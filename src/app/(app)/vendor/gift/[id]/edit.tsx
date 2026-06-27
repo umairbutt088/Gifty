@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -8,32 +8,58 @@ import {
   ScreenShell,
 } from '@/components/dashboard';
 import { FormField, GiftImagePicker, GiftStatusPicker, type GiftImageSelection } from '@/components/vendor';
+import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { createGift } from '@/lib/gifts';
-import { resolveGiftImageUrls } from '@/lib/gift-image-upload';
 import { parsePriceToCents } from '@/lib/format';
+import { softDeleteGift, fetchGiftById, updateGift } from '@/lib/gifts';
+import { resolveGiftImageUrls } from '@/lib/gift-image-upload';
 import { useAuth } from '@/providers/auth-provider';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
-import type { GiftCategory, GiftStatus } from '@/types/vendor';
+import type { GiftCategory, GiftRow, GiftStatus } from '@/types/vendor';
 
-export default function VendorGiftNewScreen() {
+export default function VendorGiftEditScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const theme = useScreenTheme();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [stock, setStock] = useState('1');
-  const [images, setImages] = useState<GiftImageSelection[]>([]);
-  const [category, setCategory] = useState<GiftCategory>('flowers');
-  const [status, setStatus] = useState<GiftStatus>('draft');
-  const [loading, setLoading] = useState(false);
+  const [gift, setGift] = useState<GiftRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
-  async function handleCreate() {
-    if (!profile) return;
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [stock, setStock] = useState('');
+  const [images, setImages] = useState<GiftImageSelection[]>([]);
+  const [category, setCategory] = useState<GiftCategory>('other');
+  const [status, setStatus] = useState<GiftStatus>('live');
+
+  useEffect(() => {
+    if (!id) return;
+
+    fetchGiftById(id).then((row) => {
+      if (!row) {
+        setLoading(false);
+        return;
+      }
+
+      setGift(row);
+      setTitle(row.title);
+      setDescription(row.description ?? '');
+      setPrice((row.price_cents / 100).toFixed(2));
+      setStock(String(row.stock));
+      setImages(row.image_urls.map((uri) => ({ uri })));
+      setCategory(row.category);
+      setStatus(row.status);
+      setLoading(false);
+    });
+  }, [id]);
+
+  async function handleSave() {
+    if (!gift || !profile) return;
 
     const priceCents = parsePriceToCents(price);
     const stockCount = Number.parseInt(stock, 10);
@@ -58,82 +84,107 @@ export default function VendorGiftNewScreen() {
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     setError(null);
     setImageError(null);
 
     const { urls, error: uploadError } = await resolveGiftImageUrls(profile.id, images);
 
     if (uploadError) {
-      setLoading(false);
+      setSaving(false);
       setImageError(uploadError.message);
       return;
     }
 
-    const { data, error: createError } = await createGift(profile.id, {
+    const { data, error: saveError } = await updateGift(gift.id, {
       title,
       description,
       priceCents,
-      category,
       stock: stockCount,
-      imageUrls: urls,
+      category,
       status,
+      imageUrls: urls,
     });
 
-    setLoading(false);
+    setSaving(false);
 
-    if (createError || !data) {
-      setError(createError?.message ?? 'Could not create gift.');
+    if (saveError || !data) {
+      setError(saveError?.message ?? 'Could not save gift.');
       return;
     }
 
-    Alert.alert('Gift created', 'Your gift listing has been saved.', [
-      { text: 'View gift', onPress: () => router.replace(`/vendor/gift/${data.id}`) },
+    Alert.alert('Saved', 'Gift listing updated.', [
+      { text: 'Done', onPress: () => router.replace(`/vendor/gift/${gift.id}`) },
     ]);
+  }
+
+  async function handleDelete() {
+    if (!gift) return;
+
+    Alert.alert(
+      'Delete gift',
+      'Move this gift to Deleted gifts? You can restore it later with photos intact.',
+      [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const { error: deleteError } = await softDeleteGift(gift.id);
+          if (deleteError) {
+            Alert.alert('Could not delete', deleteError.message);
+            return;
+          }
+          router.replace('/vendor');
+        },
+      },
+    ]);
+  }
+
+  if (loading) {
+    return (
+      <ScreenShell scroll={false}>
+        <ThemedActivityIndicator style={{ marginTop: 48 }} />
+      </ScreenShell>
+    );
+  }
+
+  if (!gift || gift.vendor_id !== profile?.id) {
+    return (
+      <ScreenShell>
+        <DashboardHeader title="Gift not found" showBanner={false} showBack backHref="/vendor" />
+      </ScreenShell>
+    );
   }
 
   return (
     <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
       <DashboardHeader
-        title="Add a gift"
-        subtitle="Photos, title, price, category, and stock."
+        title="Edit gift"
+        subtitle="Update photos, price, and details."
         showBanner={false}
         showBack
-        backHref="/vendor"
+        backHref={`/vendor/gift/${gift.id}`}
       />
 
       <GiftImagePicker value={images} onChange={setImages} error={imageError} />
 
-      <FormField label="Title" value={title} onChangeText={setTitle} placeholder="Rose bouquet" />
+      <FormField label="Title" value={title} onChangeText={setTitle} />
       <FormField
         label="Description"
         value={description}
         onChangeText={setDescription}
-        placeholder="Describe the gift experience."
         multiline
         style={styles.multiline}
       />
-      <FormField
-        label="Price"
-        value={price}
-        onChangeText={setPrice}
-        placeholder="49.99"
-        keyboardType="decimal-pad"
-      />
-      <FormField
-        label="Stock"
-        value={stock}
-        onChangeText={setStock}
-        placeholder="10"
-        keyboardType="number-pad"
-      />
+      <FormField label="Price" value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+      <FormField label="Stock" value={stock} onChangeText={setStock} keyboardType="number-pad" />
 
       <View style={styles.field}>
         <Text style={styles.label}>Category</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {GIFT_CATEGORIES.map((item) => {
             const selected = item.value === category;
-
             return (
               <Pressable
                 key={item.value}
@@ -154,11 +205,12 @@ export default function VendorGiftNewScreen() {
         </ScrollView>
       </View>
 
-      <GiftStatusPicker value={status} onChange={setStatus} disabled={loading} />
+      <GiftStatusPicker value={status} onChange={setStatus} disabled={saving} />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <PrimaryButton label="Create gift" loading={loading} onPress={() => void handleCreate()} />
+      <PrimaryButton label="Save changes" loading={saving} onPress={() => void handleSave()} />
+      <PrimaryButton label="Delete gift" variant="secondary" onPress={() => void handleDelete()} />
     </ScreenShell>
   );
 }
