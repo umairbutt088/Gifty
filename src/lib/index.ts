@@ -28,12 +28,15 @@ export {
   deleteGift,
   fetchDeletedVendorGifts,
   fetchGiftById,
+  fetchLiveGiftById,
+  fetchLiveGifts,
   fetchVendorGifts,
   permanentlyDeleteGift,
   restoreGift,
   softDeleteGift,
   updateGift,
 } from '@/lib/gifts';
+export { createBuyerOrder, fetchBuyerOrders, type BuyerOrderInput } from '@/lib/buyer-orders';
 export { formatDeliveryCities, formatMoney, parseDeliveryCities, parsePriceToCents } from '@/lib/format';
 export { getRoleHomeHref, getRoleFromSegments } from '@/lib/role-routes';
 export { supabase } from '@/lib/supabase';

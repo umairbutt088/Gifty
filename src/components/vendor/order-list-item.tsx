@@ -10,32 +10,42 @@ import type { VendorOrderWithGift } from '@/types/vendor';
 
 type OrderListItemProps = {
   order: VendorOrderWithGift;
-  href: Href;
+  href?: Href;
 };
 
+function OrderCard({ order }: { order: VendorOrderWithGift }) {
+  return (
+    <GlassCard style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.giftTitle} numberOfLines={1}>
+          {order.gift?.title ?? 'Gift order'}
+        </Text>
+        <StatusBadge status={order.status} kind="order" />
+      </View>
+
+      <Text style={styles.recipient}>For {order.recipient_name}</Text>
+      <Text style={styles.meta}>
+        {formatMoney(order.total_cents)} · Qty {order.quantity}
+        {order.delivery_date ? ` · ${order.delivery_date}` : ''}
+      </Text>
+      {order.gift_message ? (
+        <Text style={styles.message} numberOfLines={2}>
+          “{order.gift_message}”
+        </Text>
+      ) : null}
+    </GlassCard>
+  );
+}
+
 export function OrderListItem({ order, href }: OrderListItemProps) {
+  if (!href) {
+    return <OrderCard order={order} />;
+  }
+
   return (
     <Link href={href} asChild>
       <Pressable style={({ pressed }) => [pressed && styles.pressed]}>
-        <GlassCard style={styles.card}>
-          <View style={styles.header}>
-            <Text style={styles.giftTitle} numberOfLines={1}>
-              {order.gift?.title ?? 'Gift order'}
-            </Text>
-            <StatusBadge status={order.status} kind="order" />
-          </View>
-
-          <Text style={styles.recipient}>For {order.recipient_name}</Text>
-          <Text style={styles.meta}>
-            {formatMoney(order.total_cents)} · Qty {order.quantity}
-            {order.delivery_date ? ` · ${order.delivery_date}` : ''}
-          </Text>
-          {order.gift_message ? (
-            <Text style={styles.message} numberOfLines={2}>
-              “{order.gift_message}”
-            </Text>
-          ) : null}
-        </GlassCard>
+        <OrderCard order={order} />
       </Pressable>
     </Link>
   );

@@ -1,5 +1,11 @@
 import { Stack } from 'expo-router';
 
+import { CartProvider } from '@/providers/cart-provider';
+
 export default function BuyerLayout() {
-  return <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />;
+  return (
+    <CartProvider>
+      <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />
+    </CartProvider>
+  );
 }
