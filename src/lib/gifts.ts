@@ -32,6 +32,39 @@ export async function fetchDeletedVendorGifts(vendorId: string): Promise<GiftRow
   return data as GiftRow[];
 }
 
+export async function fetchLiveGifts(): Promise<GiftRow[]> {
+  const { data, error } = await supabase
+    .from('gifts')
+    .select('*')
+    .eq('status', 'live')
+    .is('deleted_at', null)
+    .gt('stock', 0)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as GiftRow[];
+}
+
+export async function fetchLiveGiftById(giftId: string): Promise<GiftRow | null> {
+  const { data, error } = await supabase
+    .from('gifts')
+    .select('*')
+    .eq('id', giftId)
+    .eq('status', 'live')
+    .is('deleted_at', null)
+    .gt('stock', 0)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as GiftRow;
+}
+
 export async function fetchGiftById(giftId: string): Promise<GiftRow | null> {
   const { data, error } = await supabase
     .from('gifts')

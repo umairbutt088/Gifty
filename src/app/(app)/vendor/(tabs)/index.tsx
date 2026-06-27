@@ -1,5 +1,5 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router } from 'expo-router';
+import { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 
 import {
@@ -11,28 +11,22 @@ import {
 } from '@/components/dashboard';
 import { SwipeableGiftListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { useListRefresh } from '@/hooks/use-list-refresh';
 import { softDeleteGift, fetchVendorGifts } from '@/lib/gifts';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function VendorGiftsScreen() {
   const { profile } = useAuth();
-  const [gifts, setGifts] = useState<Awaited<ReturnType<typeof fetchVendorGifts>>>([]);
-  const [loading, setLoading] = useState(true);
 
   const loadGifts = useCallback(async () => {
-    if (!profile) return;
-
-    setLoading(true);
-    const rows = await fetchVendorGifts(profile.id);
-    setGifts(rows);
-    setLoading(false);
+    if (!profile) return [];
+    return fetchVendorGifts(profile.id);
   }, [profile]);
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadGifts();
-    }, [loadGifts]),
-  );
+  const { items: gifts, setItems: setGifts, loading, refreshControl } = useListRefresh({
+    enabled: Boolean(profile),
+    load: loadGifts,
+  });
 
   async function handleDeleteGift(giftId: string) {
     const { error } = await softDeleteGift(giftId);
@@ -46,7 +40,7 @@ export default function VendorGiftsScreen() {
   }
 
   return (
-    <ScreenShell>
+    <ScreenShell scrollProps={{ refreshControl }}>
       <DashboardHeader
         title="Gifts"
         subtitle="List gifts with photos, price, category, and stock for buyers to send."

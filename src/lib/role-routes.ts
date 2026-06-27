@@ -17,7 +17,7 @@ export function getRoleHomeHref(role: UserRole): Href {
       return '/admin/overview';
     case 'buyer':
     default:
-      return '/buyer/browse';
+      return '/buyer';
   }
 }
 

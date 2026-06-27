@@ -14,6 +14,7 @@ type GiftListItemProps = {
   gift: GiftRow;
   href?: Href;
   deleted?: boolean;
+  showStatus?: boolean;
 };
 
 function formatDeletedDate(value: string | null): string {
@@ -26,7 +27,7 @@ function formatDeletedDate(value: string | null): string {
   }).format(new Date(value));
 }
 
-export function GiftListItem({ gift, href, deleted = false }: GiftListItemProps) {
+export function GiftListItem({ gift, href, deleted = false, showStatus = true }: GiftListItemProps) {
   const categoryLabel =
     GIFT_CATEGORIES.find((item) => item.value === gift.category)?.label ?? gift.category;
   const imageUrl = gift.image_urls[0];
@@ -48,12 +49,14 @@ export function GiftListItem({ gift, href, deleted = false }: GiftListItemProps)
           <Text style={styles.title} numberOfLines={1}>
             {gift.title}
           </Text>
-          {!deleted ? <StatusBadge status={gift.status} kind="gift" /> : null}
+          {!deleted && showStatus ? <StatusBadge status={gift.status} kind="gift" /> : null}
         </View>
         <Text style={styles.meta}>
           {deleted
             ? `Deleted ${formatDeletedDate(gift.deleted_at)} · ${formatMoney(gift.price_cents)}`
-            : `${formatMoney(gift.price_cents)} · ${categoryLabel} · Stock ${gift.stock}`}
+            : showStatus
+              ? `${formatMoney(gift.price_cents)} · ${categoryLabel} · Stock ${gift.stock}`
+              : `${formatMoney(gift.price_cents)} · ${categoryLabel} · ${gift.stock} left`}
         </Text>
       </View>
     </GlassCard>

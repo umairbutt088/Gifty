@@ -1,39 +1,35 @@
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 import { OrderListItem, SegmentBar } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { useListRefresh } from '@/hooks/use-list-refresh';
 import { matchesOrderFilter, ORDER_FILTER_TABS, type OrderFilter } from '@/constants/vendor';
 import { Spacing } from '@/constants/theme';
 import { fetchVendorOrders } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
-import type { VendorOrderWithGift } from '@/types/vendor';
 
 export default function VendorOrdersTabScreen() {
   const { profile } = useAuth();
   const { refreshNewOrderCount } = useVendorStore();
-  const [orders, setOrders] = useState<VendorOrderWithGift[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderFilter>('all');
 
   const loadOrders = useCallback(async () => {
-    if (!profile) return;
+    if (!profile) return [];
+    return fetchVendorOrders(profile.id);
+  }, [profile]);
 
-    setLoading(true);
-    const rows = await fetchVendorOrders(profile.id);
-    setOrders(rows);
-    setLoading(false);
+  const handleLoaded = useCallback(async () => {
     await refreshNewOrderCount();
-  }, [profile, refreshNewOrderCount]);
+  }, [refreshNewOrderCount]);
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadOrders();
-    }, [loadOrders]),
-  );
+  const { items: orders, loading, refreshControl } = useListRefresh({
+    enabled: Boolean(profile),
+    load: loadOrders,
+    onLoaded: handleLoaded,
+  });
 
   const filteredOrders = useMemo(
     () => orders.filter((order) => matchesOrderFilter(order.status, filter)),
@@ -57,7 +53,8 @@ export default function VendorOrdersTabScreen() {
         <ScrollView
           style={styles.list}
           contentContainerStyle={[styles.listContent, isEmpty && styles.listContentEmpty]}
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}>
           {loading ? (
             <View style={styles.loading}>
               <ThemedActivityIndicator />
