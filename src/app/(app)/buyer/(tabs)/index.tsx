@@ -1,33 +1,25 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router } from 'expo-router';
+import { useCallback } from 'react';
 import { View } from 'react-native';
 
 import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 import { GiftListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { useListRefresh } from '@/hooks/use-list-refresh';
 import { fetchLiveGifts } from '@/lib/gifts';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function BuyerGiftsTabScreen() {
   const { profile } = useAuth();
-  const [gifts, setGifts] = useState<Awaited<ReturnType<typeof fetchLiveGifts>>>([]);
-  const [loading, setLoading] = useState(true);
 
-  const loadGifts = useCallback(async () => {
-    setLoading(true);
-    const rows = await fetchLiveGifts();
-    setGifts(rows);
-    setLoading(false);
-  }, []);
+  const loadGifts = useCallback(async () => fetchLiveGifts(), []);
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadGifts();
-    }, [loadGifts]),
-  );
+  const { items: gifts, loading, refreshControl } = useListRefresh({
+    load: loadGifts,
+  });
 
   return (
-    <ScreenShell>
+    <ScreenShell scrollProps={{ refreshControl }}>
       <DashboardHeader
         title="Discover gifts"
         subtitle="Browse live gifts from vendors and tap to view details."

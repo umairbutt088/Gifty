@@ -1,6 +1,7 @@
 import { fetchLiveGiftById } from '@/lib/gifts';
 import { supabase } from '@/lib/supabase';
 import type { VendorOrderRow, VendorOrderWithGift } from '@/types/vendor';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type BuyerOrderInput = {
   giftId: string;
@@ -23,6 +24,37 @@ export async function fetchBuyerOrders(buyerId: string): Promise<VendorOrderWith
   }
 
   return data as VendorOrderWithGift[];
+}
+
+export function subscribeBuyerOrderUpdates(
+  buyerId: string,
+  onUpdate: (order: VendorOrderRow) => void,
+): RealtimeChannel {
+  const channelName = `buyer-orders:${buyerId}`;
+
+  const existing = supabase
+    .getChannels()
+    .find((channel) => channel.topic === `realtime:${channelName}`);
+
+  if (existing) {
+    void supabase.removeChannel(existing);
+  }
+
+  return supabase
+    .channel(channelName)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'vendor_orders',
+        filter: `buyer_id=eq.${buyerId}`,
+      },
+      (payload) => {
+        onUpdate(payload.new as VendorOrderRow);
+      },
+    )
+    .subscribe();
 }
 
 export async function createBuyerOrder(

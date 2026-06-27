@@ -12,6 +12,7 @@ import {
 } from '@/components/dashboard';
 import { GlassCard } from '@/components/glass-card';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
@@ -49,24 +50,20 @@ export default function BuyerCartTabScreen() {
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
+  const syncCart = useCallback(async () => {
+    const current = itemsRef.current;
+    if (current.length === 0) return;
+
+    const nextItems = await refreshCartItems(current);
+    replaceItems(nextItems);
+  }, [replaceItems]);
+
+  const { refreshControl } = usePullToRefresh(syncCart);
+
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-
-      void (async () => {
-        const current = itemsRef.current;
-        if (current.length === 0) return;
-
-        const nextItems = await refreshCartItems(current);
-        if (!cancelled) {
-          replaceItems(nextItems);
-        }
-      })();
-
-      return () => {
-        cancelled = true;
-      };
-    }, [replaceItems]),
+      void syncCart();
+    }, [syncCart]),
   );
 
   if (!isReady) {
@@ -78,7 +75,7 @@ export default function BuyerCartTabScreen() {
   }
 
   return (
-    <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
+    <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled', refreshControl }}>
       <DashboardHeader
         title="Your cart"
         subtitle={

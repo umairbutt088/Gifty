@@ -1,5 +1,4 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 
 import {
@@ -9,28 +8,22 @@ import {
 } from '@/components/dashboard';
 import { SwipeableDeletedGiftListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
+import { useListRefresh } from '@/hooks/use-list-refresh';
 import { fetchDeletedVendorGifts, permanentlyDeleteGift, restoreGift } from '@/lib/gifts';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function VendorDeletedGiftsScreen() {
   const { profile } = useAuth();
-  const [gifts, setGifts] = useState<Awaited<ReturnType<typeof fetchDeletedVendorGifts>>>([]);
-  const [loading, setLoading] = useState(true);
 
   const loadDeletedGifts = useCallback(async () => {
-    if (!profile) return;
-
-    setLoading(true);
-    const rows = await fetchDeletedVendorGifts(profile.id);
-    setGifts(rows);
-    setLoading(false);
+    if (!profile) return [];
+    return fetchDeletedVendorGifts(profile.id);
   }, [profile]);
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadDeletedGifts();
-    }, [loadDeletedGifts]),
-  );
+  const { items: gifts, setItems: setGifts, loading, refreshControl } = useListRefresh({
+    enabled: Boolean(profile),
+    load: loadDeletedGifts,
+  });
 
   async function handleRestoreGift(giftId: string) {
     const { error } = await restoreGift(giftId);
@@ -55,7 +48,7 @@ export default function VendorDeletedGiftsScreen() {
   }
 
   return (
-    <ScreenShell>
+    <ScreenShell scrollProps={{ refreshControl }}>
       <DashboardHeader
         title="Deleted gifts"
         subtitle="Swipe left to restore or permanently delete. Photos are removed only on permanent delete."
