@@ -33,5 +33,5 @@ export function useBuyerOrdersList() {
     };
   }, [buyerId, setItems]);
 
-  return { orders, loading, refreshControl };
+  return { orders, setOrders: setItems, loading, refreshControl };
 }

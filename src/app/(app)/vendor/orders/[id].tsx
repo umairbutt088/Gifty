@@ -16,6 +16,7 @@ import { getOrCreateConversationForOrder } from '@/lib/chat';
 import {
   fetchVendorOrderById,
   getNextOrderAction,
+  softDeleteVendorOrder,
   updateVendorOrderStatus,
 } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
@@ -84,6 +85,35 @@ export default function VendorOrderDetailScreen() {
         onPress: () => void handleStatusUpdate('rejected'),
       },
     ]);
+  }
+
+  function handleDeleteOrder() {
+    if (!order) return;
+
+    Alert.alert(
+      'Delete order',
+      'Move this order to Deleted orders? You can restore it later.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              const { error } = await softDeleteVendorOrder(order.id);
+
+              if (error) {
+                Alert.alert('Could not delete', error.message);
+                return;
+              }
+
+              await refreshNewOrderCount();
+              router.replace('/vendor/orders');
+            })();
+          },
+        },
+      ],
+    );
   }
 
   if (loading) {
@@ -156,6 +186,8 @@ export default function VendorOrderDetailScreen() {
           onPress={handleReject}
         />
       ) : null}
+
+      <PrimaryButton label="Delete order" variant="secondary" onPress={handleDeleteOrder} />
     </ScreenShell>
   );
 }

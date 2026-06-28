@@ -1,14 +1,29 @@
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 
-import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
-import { OrderListItem } from '@/components/vendor';
+import { DashboardHeader, EmptyState, MenuRow, ScreenShell } from '@/components/dashboard';
+import { SwipeableOrderListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useBuyerOrdersList } from '@/hooks/use-buyer-orders-list';
+import { softDeleteBuyerOrder } from '@/lib/buyer-orders';
 import { useAuth } from '@/providers/auth-provider';
+import type { VendorOrderWithGift } from '@/types/vendor';
 
 export default function BuyerOrdersTabScreen() {
   const { profile } = useAuth();
-  const { orders, loading, refreshControl } = useBuyerOrdersList();
+  const { orders, loading, refreshControl, setOrders } = useBuyerOrdersList();
+
+  async function handleDeleteOrder(orderId: string) {
+    const { error } = await softDeleteBuyerOrder(orderId);
+
+    if (error) {
+      Alert.alert('Could not delete', error.message);
+      return;
+    }
+
+    setOrders((current: VendorOrderWithGift[]) =>
+      current.filter((order) => order.id !== orderId),
+    );
+  }
 
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
@@ -16,6 +31,12 @@ export default function BuyerOrdersTabScreen() {
         title="My orders"
         subtitle="Track purchases and delivery status."
         role={profile?.role}
+      />
+
+      <MenuRow
+        title="Deleted orders"
+        description="View and restore removed orders"
+        href="/buyer/orders/deleted"
       />
 
       {loading ? (
@@ -29,7 +50,12 @@ export default function BuyerOrdersTabScreen() {
         />
       ) : (
         orders.map((order) => (
-          <OrderListItem key={order.id} order={order} href={`/buyer/orders/${order.id}`} />
+          <SwipeableOrderListItem
+            key={order.id}
+            order={order}
+            href={`/buyer/orders/${order.id}`}
+            onDelete={handleDeleteOrder}
+          />
         ))
       )}
     </ScreenShell>

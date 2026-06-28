@@ -12,7 +12,7 @@ import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { fetchBuyerOrderById } from '@/lib/buyer-orders';
+import { fetchBuyerOrderById, softDeleteBuyerOrder } from '@/lib/buyer-orders';
 import { getOrCreateConversationForOrder } from '@/lib/chat';
 import { formatMoney } from '@/lib/format';
 import { useAuth } from '@/providers/auth-provider';
@@ -51,6 +51,34 @@ export default function BuyerOrderDetailScreen() {
     }
 
     router.push(`/buyer/chat/${data.id}`);
+  }
+
+  function handleDeleteOrder() {
+    if (!order) return;
+
+    Alert.alert(
+      'Remove order',
+      'Remove this order from your list? You can restore it from Deleted orders.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              const { error } = await softDeleteBuyerOrder(order.id);
+
+              if (error) {
+                Alert.alert('Could not remove', error.message);
+                return;
+              }
+
+              router.replace('/buyer/orders');
+            })();
+          },
+        },
+      ],
+    );
   }
 
   if (loading) {
@@ -101,6 +129,8 @@ export default function BuyerOrderDetailScreen() {
         loading={openingChat}
         onPress={() => void handleOpenChat()}
       />
+
+      <PrimaryButton label="Remove from list" variant="secondary" onPress={handleDeleteOrder} />
     </ScreenShell>
   );
 }

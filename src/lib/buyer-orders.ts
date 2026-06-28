@@ -17,7 +17,23 @@ export async function fetchBuyerOrders(buyerId: string): Promise<VendorOrderWith
     .from('vendor_orders')
     .select('*, gift:gifts(id, title, image_urls)')
     .eq('buyer_id', buyerId)
+    .is('buyer_deleted_at', null)
     .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as VendorOrderWithGift[];
+}
+
+export async function fetchDeletedBuyerOrders(buyerId: string): Promise<VendorOrderWithGift[]> {
+  const { data, error } = await supabase
+    .from('vendor_orders')
+    .select('*, gift:gifts(id, title, image_urls)')
+    .eq('buyer_id', buyerId)
+    .not('buyer_deleted_at', 'is', null)
+    .order('buyer_deleted_at', { ascending: false });
 
   if (error || !data) {
     return [];
@@ -35,6 +51,7 @@ export async function fetchBuyerOrderById(
     .select('*, gift:gifts(id, title, image_urls)')
     .eq('id', orderId)
     .eq('buyer_id', buyerId)
+    .is('buyer_deleted_at', null)
     .maybeSingle();
 
   if (error || !data) {
@@ -42,6 +59,41 @@ export async function fetchBuyerOrderById(
   }
 
   return data as VendorOrderWithGift;
+}
+
+export async function softDeleteBuyerOrder(orderId: string): Promise<{ error: Error | null }> {
+  const { data: order, error: fetchError } = await supabase
+    .from('vendor_orders')
+    .select('id')
+    .eq('id', orderId)
+    .is('buyer_deleted_at', null)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { error: new Error(fetchError.message) };
+  }
+
+  if (!order) {
+    return { error: new Error('Order not found.') };
+  }
+
+  const { error } = await supabase
+    .from('vendor_orders')
+    .update({ buyer_deleted_at: new Date().toISOString() })
+    .eq('id', orderId)
+    .is('buyer_deleted_at', null);
+
+  return { error: error ? new Error(error.message) : null };
+}
+
+export async function restoreBuyerOrder(orderId: string): Promise<{ error: Error | null }> {
+  const { error } = await supabase
+    .from('vendor_orders')
+    .update({ buyer_deleted_at: null })
+    .eq('id', orderId)
+    .not('buyer_deleted_at', 'is', null);
+
+  return { error: error ? new Error(error.message) : null };
 }
 
 export function subscribeBuyerOrderUpdates(

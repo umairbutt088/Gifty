@@ -58,6 +58,8 @@ export type VendorOrderRow = {
   recipient_address: string | null;
   gift_message: string | null;
   delivery_date: string | null;
+  buyer_deleted_at: string | null;
+  vendor_deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
