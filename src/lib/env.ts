@@ -7,7 +7,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+const appUrl = process.env.EXPO_PUBLIC_APP_URL ?? 'http://localhost:8081';
+
 export const Env = {
   supabaseUrl,
   supabaseAnonKey,
+  appUrl,
 } as const;

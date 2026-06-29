@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
-import { OrderListItem, SegmentBar } from '@/components/vendor';
+import { DashboardHeader, EmptyState, MenuRow, ScreenShell } from '@/components/dashboard';
+import { SegmentBar, SwipeableOrderListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useListRefresh } from '@/hooks/use-list-refresh';
 import { matchesOrderFilter, ORDER_FILTER_TABS, type OrderFilter } from '@/constants/vendor';
 import { Spacing } from '@/constants/theme';
-import { fetchVendorOrders } from '@/lib/vendor-orders';
+import { fetchVendorOrders, softDeleteVendorOrder } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 
@@ -25,7 +25,7 @@ export default function VendorOrdersTabScreen() {
     await refreshNewOrderCount();
   }, [refreshNewOrderCount]);
 
-  const { items: orders, loading, refreshControl } = useListRefresh({
+  const { items: orders, setItems: setOrders, loading, refreshControl } = useListRefresh({
     enabled: Boolean(profile),
     load: loadOrders,
     onLoaded: handleLoaded,
@@ -38,6 +38,18 @@ export default function VendorOrdersTabScreen() {
 
   const isEmpty = !loading && filteredOrders.length === 0;
 
+  async function handleDeleteOrder(orderId: string) {
+    const { error } = await softDeleteVendorOrder(orderId);
+
+    if (error) {
+      Alert.alert('Could not delete', error.message);
+      return;
+    }
+
+    setOrders((current) => current.filter((order) => order.id !== orderId));
+    await refreshNewOrderCount();
+  }
+
   return (
     <ScreenShell scroll={false} style={styles.shell}>
       <View style={styles.container}>
@@ -48,6 +60,11 @@ export default function VendorOrdersTabScreen() {
             role={profile?.role}
           />
           <SegmentBar options={ORDER_FILTER_TABS} value={filter} onChange={setFilter} />
+          <MenuRow
+            title="Deleted orders"
+            description="View and restore removed orders"
+            href="/vendor/orders/deleted"
+          />
         </View>
 
         <ScrollView
@@ -66,7 +83,12 @@ export default function VendorOrdersTabScreen() {
             />
           ) : (
             filteredOrders.map((order) => (
-              <OrderListItem key={order.id} order={order} href={`/vendor/orders/${order.id}`} />
+              <SwipeableOrderListItem
+                key={order.id}
+                order={order}
+                href={`/vendor/orders/${order.id}`}
+                onDelete={handleDeleteOrder}
+              />
             ))
           )}
         </ScrollView>

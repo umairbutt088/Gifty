@@ -56,8 +56,18 @@ export type VendorOrderRow = {
   total_cents: number;
   recipient_name: string;
   recipient_address: string | null;
+  recipient_phone: string | null;
+  recipient_email: string | null;
+  notify_recipient: boolean;
+  delivery_token: string;
   gift_message: string | null;
   delivery_date: string | null;
+  recipient_confirmed_at: string | null;
+  recipient_confirmation_note: string | null;
+  recipient_notified_shipped_at: string | null;
+  recipient_notified_delivered_at: string | null;
+  buyer_deleted_at: string | null;
+  vendor_deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -12,9 +12,11 @@ import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
 import { formatMoney } from '@/lib/format';
+import { getOrCreateConversationForOrder } from '@/lib/chat';
 import {
   fetchVendorOrderById,
   getNextOrderAction,
+  softDeleteVendorOrder,
   updateVendorOrderStatus,
 } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
@@ -28,6 +30,7 @@ export default function VendorOrderDetailScreen() {
   const [order, setOrder] = useState<VendorOrderWithGift | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [openingChat, setOpeningChat] = useState(false);
 
   const loadOrder = useCallback(async () => {
     if (!id) return;
@@ -58,6 +61,21 @@ export default function VendorOrderDetailScreen() {
     await refreshNewOrderCount();
   }
 
+  async function handleOpenChat() {
+    if (!order || !profile) return;
+
+    setOpeningChat(true);
+    const { data, error } = await getOrCreateConversationForOrder(order.id, profile.id);
+    setOpeningChat(false);
+
+    if (error || !data) {
+      Alert.alert('Could not open chat', error?.message ?? 'Try again.');
+      return;
+    }
+
+    router.push(`/vendor/chat/${data.id}`);
+  }
+
   function handleReject() {
     Alert.alert('Reject order', 'The buyer will be notified that this order cannot be fulfilled.', [
       { text: 'Cancel', style: 'cancel' },
@@ -67,6 +85,35 @@ export default function VendorOrderDetailScreen() {
         onPress: () => void handleStatusUpdate('rejected'),
       },
     ]);
+  }
+
+  function handleDeleteOrder() {
+    if (!order) return;
+
+    Alert.alert(
+      'Delete order',
+      'Move this order to Deleted orders? You can restore it later.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              const { error } = await softDeleteVendorOrder(order.id);
+
+              if (error) {
+                Alert.alert('Could not delete', error.message);
+                return;
+              }
+
+              await refreshNewOrderCount();
+              router.replace('/vendor/orders');
+            })();
+          },
+        },
+      ],
+    );
   }
 
   if (loading) {
@@ -109,6 +156,19 @@ export default function VendorOrderDetailScreen() {
         {order.recipient_address ? (
           <Text style={{ color: Colors.textSecondary }}>Address: {order.recipient_address}</Text>
         ) : null}
+        {order.recipient_phone ? (
+          <Text style={{ color: Colors.textSecondary }}>Recipient phone: {order.recipient_phone}</Text>
+        ) : null}
+        {order.recipient_email ? (
+          <Text style={{ color: Colors.textSecondary }}>Recipient email: {order.recipient_email}</Text>
+        ) : null}
+        {/* Hidden until RECIPIENT_NOTIFICATIONS_ENABLED — see recipient-delivery.ts */}
+        {order.recipient_confirmed_at ? (
+          <Text style={{ color: Colors.text, fontWeight: '600' }}>
+            Recipient confirmed delivery on{' '}
+            {new Date(order.recipient_confirmed_at).toLocaleString()}
+          </Text>
+        ) : null}
         {order.gift_message ? (
           <Text style={{ color: Colors.text, fontStyle: 'italic' }}>
             Message: “{order.gift_message}”
@@ -124,6 +184,13 @@ export default function VendorOrderDetailScreen() {
         />
       ) : null}
 
+      <PrimaryButton
+        label="Message buyer"
+        variant="secondary"
+        loading={openingChat}
+        onPress={() => void handleOpenChat()}
+      />
+
       {order.status === 'new' ? (
         <PrimaryButton
           label="Reject order"
@@ -132,6 +199,8 @@ export default function VendorOrderDetailScreen() {
           onPress={handleReject}
         />
       ) : null}
+
+      <PrimaryButton label="Delete order" variant="secondary" onPress={handleDeleteOrder} />
     </ScreenShell>
   );
 }

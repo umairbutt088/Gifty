@@ -11,24 +11,39 @@ import type { VendorOrderWithGift } from '@/types/vendor';
 type OrderListItemProps = {
   order: VendorOrderWithGift;
   href?: Href;
+  deleted?: boolean;
+  deletedAt?: string | null;
 };
 
-function OrderCard({ order }: { order: VendorOrderWithGift }) {
+function formatDeletedDate(value: string | null | undefined): string {
+  if (!value) return 'Recently deleted';
+
+  return new Date(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function OrderCard({ order, deleted = false, deletedAt }: OrderListItemProps) {
   return (
-    <GlassCard style={styles.card}>
+    <GlassCard style={[styles.card, deleted && styles.cardDeleted]}>
       <View style={styles.header}>
         <Text style={styles.giftTitle} numberOfLines={1}>
           {order.gift?.title ?? 'Gift order'}
         </Text>
-        <StatusBadge status={order.status} kind="order" />
+        {!deleted ? <StatusBadge status={order.status} kind="order" /> : null}
       </View>
 
       <Text style={styles.recipient}>For {order.recipient_name}</Text>
       <Text style={styles.meta}>
-        {formatMoney(order.total_cents)} · Qty {order.quantity}
-        {order.delivery_date ? ` · ${order.delivery_date}` : ''}
+        {deleted
+          ? `Deleted ${formatDeletedDate(deletedAt)} · ${formatMoney(order.total_cents)}`
+          : `${formatMoney(order.total_cents)} · Qty ${order.quantity}${
+              order.delivery_date ? ` · ${order.delivery_date}` : ''
+            }`}
       </Text>
-      {order.gift_message ? (
+      {!deleted && order.gift_message ? (
         <Text style={styles.message} numberOfLines={2}>
           “{order.gift_message}”
         </Text>
@@ -37,9 +52,9 @@ function OrderCard({ order }: { order: VendorOrderWithGift }) {
   );
 }
 
-export function OrderListItem({ order, href }: OrderListItemProps) {
-  if (!href) {
-    return <OrderCard order={order} />;
+export function OrderListItem({ order, href, deleted = false, deletedAt }: OrderListItemProps) {
+  if (deleted || !href) {
+    return <OrderCard order={order} deleted={deleted} deletedAt={deletedAt} />;
   }
 
   return (
@@ -55,6 +70,9 @@ const styles = StyleSheet.create({
   card: {
     padding: Spacing.three,
     gap: Spacing.two,
+  },
+  cardDeleted: {
+    opacity: 0.88,
   },
   pressed: {
     opacity: 0.92,

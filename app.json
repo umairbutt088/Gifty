@@ -52,7 +52,8 @@
           "photosPermission": "Allow Gifty to access your photos for gift listings.",
           "cameraPermission": "Allow Gifty to use your camera for gift photos."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

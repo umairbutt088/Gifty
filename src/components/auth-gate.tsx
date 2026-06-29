@@ -14,8 +14,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === '(auth)';
     const onResetPasswordScreen = segments[1] === 'reset-password';
+    const onPublicRecipientRoute = segments[0] === 'r';
 
-    if (!session && !inAuthGroup && !recoveryLinkError) {
+    if (!session && !inAuthGroup && !recoveryLinkError && !onPublicRecipientRoute) {
       router.replace('/');
       return;
     }

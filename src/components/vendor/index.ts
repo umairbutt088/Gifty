@@ -5,6 +5,8 @@ export { GiftListItem } from './gift-list-item';
 export { SwipeableDeletedGiftListItem } from './swipeable-deleted-gift-list-item';
 export { SwipeableGiftListItem } from './swipeable-gift-list-item';
 export { OrderListItem } from './order-list-item';
+export { SwipeableDeletedOrderListItem } from './swipeable-deleted-order-list-item';
+export { SwipeableOrderListItem } from './swipeable-order-list-item';
 export { SegmentBar } from './segment-bar';
 export { StatusBadge } from './status-badge';
 export { VendorGate } from './vendor-gate';
