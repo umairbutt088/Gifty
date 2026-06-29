@@ -156,6 +156,19 @@ export default function VendorOrderDetailScreen() {
         {order.recipient_address ? (
           <Text style={{ color: Colors.textSecondary }}>Address: {order.recipient_address}</Text>
         ) : null}
+        {order.recipient_phone ? (
+          <Text style={{ color: Colors.textSecondary }}>Recipient phone: {order.recipient_phone}</Text>
+        ) : null}
+        {order.recipient_email ? (
+          <Text style={{ color: Colors.textSecondary }}>Recipient email: {order.recipient_email}</Text>
+        ) : null}
+        {/* Hidden until RECIPIENT_NOTIFICATIONS_ENABLED — see recipient-delivery.ts */}
+        {order.recipient_confirmed_at ? (
+          <Text style={{ color: Colors.text, fontWeight: '600' }}>
+            Recipient confirmed delivery on{' '}
+            {new Date(order.recipient_confirmed_at).toLocaleString()}
+          </Text>
+        ) : null}
         {order.gift_message ? (
           <Text style={{ color: Colors.text, fontStyle: 'italic' }}>
             Message: “{order.gift_message}”

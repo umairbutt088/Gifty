@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Share, StyleSheet, Text, View } from 'react-native';
 
 import {
   DashboardHeader,
@@ -15,6 +15,7 @@ import { Spacing } from '@/constants/theme';
 import { fetchBuyerOrderById, softDeleteBuyerOrder } from '@/lib/buyer-orders';
 import { getOrCreateConversationForOrder } from '@/lib/chat';
 import { formatMoney } from '@/lib/format';
+import { buildRecipientLink } from '@/lib/recipient-delivery';
 import { useAuth } from '@/providers/auth-provider';
 import type { VendorOrderWithGift } from '@/types/vendor';
 
@@ -51,6 +52,17 @@ export default function BuyerOrderDetailScreen() {
     }
 
     router.push(`/buyer/chat/${data.id}`);
+  }
+
+  async function handleShareRecipientLink() {
+    if (!order) return;
+
+    const link = buildRecipientLink(order.delivery_token);
+
+    await Share.share({
+      title: 'Gift delivery link',
+      message: `Track and confirm your gift delivery: ${link}`,
+    });
   }
 
   function handleDeleteOrder() {
@@ -119,10 +131,29 @@ export default function BuyerOrderDetailScreen() {
         {order.recipient_address ? (
           <Text style={styles.meta}>Address: {order.recipient_address}</Text>
         ) : null}
+        {order.recipient_phone ? (
+          <Text style={styles.meta}>Recipient phone: {order.recipient_phone}</Text>
+        ) : null}
+        {order.recipient_email ? (
+          <Text style={styles.meta}>Recipient email: {order.recipient_email}</Text>
+        ) : null}
+        {/* Hidden until RECIPIENT_NOTIFICATIONS_ENABLED — see recipient-delivery.ts */}
+        {order.recipient_confirmed_at ? (
+          <Text style={styles.confirmed}>
+            Recipient confirmed delivery on{' '}
+            {new Date(order.recipient_confirmed_at).toLocaleString()}
+          </Text>
+        ) : null}
         {order.gift_message ? (
           <Text style={styles.message}>Message: “{order.gift_message}”</Text>
         ) : null}
       </View>
+
+      <PrimaryButton
+        label="Share delivery link"
+        variant="secondary"
+        onPress={() => void handleShareRecipientLink()}
+      />
 
       <PrimaryButton
         label="Message vendor"
@@ -147,5 +178,10 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: 15,
     fontStyle: 'italic',
+  },
+  confirmed: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { notifyRecipientOfDelivery } from '@/lib/recipient-delivery';
 import type { VendorOrderStatus, VendorOrderRow, VendorOrderWithGift } from '@/types/vendor';
 
 const ORDER_SELECT = '*, gift:gifts(id, title, image_urls)';
@@ -74,6 +75,10 @@ export async function updateVendorOrderStatus(
     .is('vendor_deleted_at', null)
     .select('*')
     .single();
+
+  if (!error && data && (status === 'shipped' || status === 'delivered')) {
+    void notifyRecipientOfDelivery(orderId, status);
+  }
 
   return {
     data: (data as VendorOrderRow | null) ?? null,

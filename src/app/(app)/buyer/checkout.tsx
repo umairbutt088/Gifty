@@ -9,11 +9,17 @@ import {
   SectionTitle,
 } from '@/components/dashboard';
 import { GlassCard } from '@/components/glass-card';
+// import { DatePickerField } from '@/components/date-picker-field';
+import { NativeDatePickerField } from '@/components/native-date-picker-field';
 import { FormField } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { createBuyerOrders } from '@/lib/buyer-orders';
+import {
+  createBuyerOrders,
+  getRecipientDeliveryFieldErrors,
+  type RecipientDeliveryFieldErrors,
+} from '@/lib/buyer-orders';
 import { formatMoney } from '@/lib/format';
 import { useAuth } from '@/providers/auth-provider';
 import { useCart } from '@/providers/cart-provider';
@@ -23,8 +29,12 @@ export default function BuyerCheckoutScreen() {
   const { items, isReady, subtotalCents, clearCart } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<RecipientDeliveryFieldErrors>({});
 
   const [recipientName, setRecipientName] = useState('');
+  const [recipientPhone, setRecipientPhone] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [notifyRecipient] = useState(false);
   const [recipientAddress, setRecipientAddress] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
@@ -32,8 +42,26 @@ export default function BuyerCheckoutScreen() {
   async function handlePlaceOrder() {
     if (!profile || items.length === 0) return;
 
+    const delivery = {
+      recipientName,
+      recipientPhone,
+      recipientEmail,
+      notifyRecipient,
+      recipientAddress,
+      giftMessage,
+      deliveryDate,
+    };
+
+    const nextFieldErrors = getRecipientDeliveryFieldErrors(delivery);
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setFieldErrors(nextFieldErrors);
+      setError(null);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
+    setFieldErrors({});
 
     const { orders, error: orderError } = await createBuyerOrders(
       profile.id,
@@ -42,12 +70,7 @@ export default function BuyerCheckoutScreen() {
         quantity: item.quantity,
         title: item.title,
       })),
-      {
-        recipientName,
-        recipientAddress,
-        giftMessage,
-        deliveryDate,
-      },
+      delivery,
     );
 
     setSubmitting(false);
@@ -131,9 +154,55 @@ export default function BuyerCheckoutScreen() {
       <FormField
         label="Recipient name"
         value={recipientName}
-        onChangeText={setRecipientName}
+        onChangeText={(text) => {
+          setRecipientName(text);
+          if (fieldErrors.recipientName) {
+            setFieldErrors((current) => ({ ...current, recipientName: undefined }));
+          }
+        }}
         placeholder="Who receives the gift?"
+        error={fieldErrors.recipientName}
       />
+      <FormField
+        label="Recipient phone"
+        value={recipientPhone}
+        onChangeText={(text) => {
+          setRecipientPhone(text);
+          if (fieldErrors.recipientPhone) {
+            setFieldErrors((current) => ({ ...current, recipientPhone: undefined }));
+          }
+        }}
+        placeholder="+1 555 123 4567"
+        keyboardType="phone-pad"
+        autoComplete="tel"
+        error={fieldErrors.recipientPhone}
+      />
+      <FormField
+        label="Recipient email"
+        value={recipientEmail}
+        onChangeText={(text) => {
+          setRecipientEmail(text);
+          if (fieldErrors.recipientEmail) {
+            setFieldErrors((current) => ({ ...current, recipientEmail: undefined }));
+          }
+        }}
+        placeholder="recipient@email.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+        error={fieldErrors.recipientEmail}
+      />
+      {/* Recipient SMS/email notifications — enable when RECIPIENT_NOTIFICATIONS_ENABLED is true.
+      <View style={styles.notifyRow}>
+        <View style={styles.notifyCopy}>
+          <Text style={styles.notifyLabel}>Notify recipient</Text>
+          <Text style={styles.notifyHint}>
+            Send SMS and email when the gift ships and is delivered.
+          </Text>
+        </View>
+        <Switch value={notifyRecipient} onValueChange={setNotifyRecipient} />
+      </View>
+      */}
       <FormField
         label="Delivery address"
         value={recipientAddress}
@@ -150,11 +219,20 @@ export default function BuyerCheckoutScreen() {
         multiline
         style={styles.multiline}
       />
-      <FormField
+      {/* Custom modal picker kept for comparison — swap back by uncommenting below.
+      <DatePickerField
+        label="Preferred delivery date (custom modal)"
+        value={deliveryDate}
+        onChange={setDeliveryDate}
+        hint="Optional. Vendors will try to deliver on or near this date."
+      />
+      */}
+
+      <NativeDatePickerField
         label="Preferred delivery date"
         value={deliveryDate}
-        onChangeText={setDeliveryDate}
-        placeholder="YYYY-MM-DD (optional)"
+        onChange={setDeliveryDate}
+        hint="Optional. Vendors will try to deliver on or near this date."
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -219,6 +297,26 @@ const styles = StyleSheet.create({
   multiline: {
     minHeight: 88,
     textAlignVertical: 'top',
+  },
+  notifyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  notifyCopy: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  notifyLabel: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  notifyHint: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
   },
   error: {
     color: '#E05D5D',

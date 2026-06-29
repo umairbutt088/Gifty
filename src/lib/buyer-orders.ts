@@ -1,4 +1,8 @@
 import { fetchLiveGiftById } from '@/lib/gifts';
+import {
+  normalizeRecipientEmail,
+  normalizeRecipientPhone,
+} from '@/lib/recipient-delivery';
 import { supabase } from '@/lib/supabase';
 import type { VendorOrderRow, VendorOrderWithGift } from '@/types/vendor';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -8,6 +12,9 @@ export type BuyerOrderInput = {
   quantity?: number;
   recipientName: string;
   recipientAddress?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  notifyRecipient?: boolean;
   giftMessage?: string;
   deliveryDate?: string;
 };
@@ -127,6 +134,59 @@ export function subscribeBuyerOrderUpdates(
     .subscribe();
 }
 
+export type BuyerOrderDelivery = Omit<BuyerOrderInput, 'giftId' | 'quantity'>;
+
+function buildRecipientFields(delivery: BuyerOrderDelivery) {
+  const recipientPhone = delivery.recipientPhone
+    ? normalizeRecipientPhone(delivery.recipientPhone)
+    : null;
+  const recipientEmail = delivery.recipientEmail
+    ? normalizeRecipientEmail(delivery.recipientEmail)
+    : null;
+  const notifyRecipient = Boolean(
+    delivery.notifyRecipient && (recipientPhone || recipientEmail),
+  );
+
+  return { recipientPhone, recipientEmail, notifyRecipient };
+}
+
+export type RecipientDeliveryFieldErrors = {
+  recipientName?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+};
+
+export function getRecipientDeliveryFieldErrors(
+  delivery: BuyerOrderDelivery,
+): RecipientDeliveryFieldErrors {
+  const errors: RecipientDeliveryFieldErrors = {};
+
+  if (!delivery.recipientName.trim()) {
+    errors.recipientName = 'Recipient name is required.';
+  }
+
+  const phone = delivery.recipientPhone ? normalizeRecipientPhone(delivery.recipientPhone) : '';
+  const email = delivery.recipientEmail ? normalizeRecipientEmail(delivery.recipientEmail) : '';
+
+  if (!phone) {
+    errors.recipientPhone = 'Recipient phone is required.';
+  }
+
+  if (!email) {
+    errors.recipientEmail = 'Recipient email is required.';
+  }
+
+  return errors;
+}
+
+function validateRecipientDelivery(delivery: BuyerOrderDelivery): Error | null {
+  const errors = getRecipientDeliveryFieldErrors(delivery);
+  const firstError =
+    errors.recipientName ?? errors.recipientPhone ?? errors.recipientEmail;
+
+  return firstError ? new Error(firstError) : null;
+}
+
 export async function createBuyerOrder(
   buyerId: string,
   input: BuyerOrderInput,
@@ -138,14 +198,17 @@ export async function createBuyerOrder(
   }
 
   const quantity = input.quantity ?? 1;
+  const validationError = validateRecipientDelivery(input);
 
-  if (!input.recipientName.trim()) {
-    return { data: null, error: new Error('Recipient name is required.') };
+  if (validationError) {
+    return { data: null, error: validationError };
   }
 
   if (quantity < 1 || quantity > gift.stock) {
     return { data: null, error: new Error('Not enough stock for this gift.') };
   }
+
+  const { recipientPhone, recipientEmail, notifyRecipient } = buildRecipientFields(input);
 
   const { data, error } = await supabase
     .from('vendor_orders')
@@ -157,6 +220,9 @@ export async function createBuyerOrder(
       total_cents: gift.price_cents * quantity,
       recipient_name: input.recipientName.trim(),
       recipient_address: input.recipientAddress?.trim() || null,
+      recipient_phone: recipientPhone,
+      recipient_email: recipientEmail,
+      notify_recipient: notifyRecipient,
       gift_message: input.giftMessage?.trim() || null,
       delivery_date: input.deliveryDate?.trim() || null,
       status: 'new',
@@ -176,8 +242,6 @@ export type CartOrderLine = {
   title?: string;
 };
 
-export type BuyerOrderDelivery = Omit<BuyerOrderInput, 'giftId' | 'quantity'>;
-
 export async function createBuyerOrders(
   buyerId: string,
   items: CartOrderLine[],
@@ -187,9 +251,12 @@ export async function createBuyerOrders(
     return { orders: [], error: new Error('Your cart is empty.') };
   }
 
-  if (!delivery.recipientName.trim()) {
-    return { orders: [], error: new Error('Recipient name is required.') };
+  const validationError = validateRecipientDelivery(delivery);
+  if (validationError) {
+    return { orders: [], error: validationError };
   }
+
+  const { recipientPhone, recipientEmail, notifyRecipient } = buildRecipientFields(delivery);
 
   const validatedLines: {
     gift: NonNullable<Awaited<ReturnType<typeof fetchLiveGiftById>>>;
@@ -229,6 +296,9 @@ export async function createBuyerOrders(
         total_cents: line.gift.price_cents * line.quantity,
         recipient_name: delivery.recipientName.trim(),
         recipient_address: delivery.recipientAddress?.trim() || null,
+        recipient_phone: recipientPhone,
+        recipient_email: recipientEmail,
+        notify_recipient: notifyRecipient,
         gift_message: delivery.giftMessage?.trim() || null,
         delivery_date: delivery.deliveryDate?.trim() || null,
         status: 'new',
