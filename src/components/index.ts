@@ -2,7 +2,7 @@ export { AnimatedIcon, AnimatedSplashOverlay } from './animated-icon';
 export { default as AppTabs } from './app-tabs';
 export { BrandBanner, GradientText, type BrandBannerProps, type GradientTextProps } from './brand-banner';
 export { ExternalLink } from './external-link';
-export { GeometricBackground } from './geometric-background';
+export { GeometricBackground, ScreenBackground } from './screen-background';
 export { GlassCard } from './glass-card';
 export { ImageGalleryViewer } from './image-gallery-viewer';
 export { HintRow } from './hint-row';

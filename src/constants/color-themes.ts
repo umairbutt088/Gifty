@@ -65,7 +65,7 @@ type HueFamily = {
   600: string;
 };
 
-type ThemePalette = {
+export type ThemePalette = {
   hero: HueFamily;
   depth: HueFamily;
   accent: HueFamily;
@@ -73,7 +73,7 @@ type ThemePalette = {
   anchor: HueFamily;
 };
 
-function buildBackgroundShapes(p: ThemePalette): readonly BackgroundShape[] {
+export function buildBackgroundShapesFromPalette(p: ThemePalette): readonly BackgroundShape[] {
   return [
     {
       id: 'hero',
@@ -190,7 +190,7 @@ function buildTheme(
     buttonBorder: `${accentHex}66`,
     buttonPressed: `${palette.hero[200]}F2`,
     buttonDisabled: `${palette.hero[200]}59`,
-    backgroundShapes: buildBackgroundShapes(palette),
+    backgroundShapes: buildBackgroundShapesFromPalette(palette),
   };
 }
 
@@ -336,6 +336,34 @@ const plumPalette: ThemePalette = {
   accent: { 100: '#D8A0F8', 200: '#B880E8', 300: '#9860D0', 400: '#7848B0', 500: '#583090', 600: '#381870' },
   shadow: { 100: '#6840A0', 200: '#503080', 300: '#382060', 400: '#241440', 500: '#140C28', 600: '#080614' },
   anchor: { 100: '#281040', 200: '#180828', 300: '#0C0418', 400: '#06020C', 500: '#030106', 600: '#000000' },
+};
+
+/** Gifty signature pink #FF2A68 — background-only palette */
+export const hotPinkPalette: ThemePalette = {
+  hero: { 100: '#FF6A98', 200: '#FF2A68', 300: '#E81878', 400: '#C01068', 500: '#900850', 600: '#600438' },
+  depth: { 100: '#A81888', 200: '#781070', 300: '#500858', 400: '#301038', 500: '#180820', 600: '#0C0410' },
+  accent: { 100: '#FF5088', 200: '#FF2A68', 300: '#D82078', 400: '#A81888', 500: '#781070', 600: '#500858' },
+  shadow: { 100: '#C838A8', 200: '#A81888', 300: '#7B2CBF', 400: '#581890', 500: '#381060', 600: '#200838' },
+  anchor: { 100: '#301030', 200: '#200820', 300: '#120414', 400: '#08020A', 500: '#040006', 600: '#000000' },
+};
+
+export const ThemePalettes: Record<ScreenThemeVariant, ThemePalette> = {
+  gifty: giftyPalette,
+  teal: tealPalette,
+  rose: rosePalette,
+  blush: blushPalette,
+  coral: coralPalette,
+  mauve: mauvePalette,
+  gold: goldPalette,
+  lavender: lavenderPalette,
+  ocean: oceanPalette,
+  emerald: emeraldPalette,
+  sunset: sunsetPalette,
+  berry: berryPalette,
+  mint: mintPalette,
+  midnight: midnightPalette,
+  peach: peachPalette,
+  plum: plumPalette,
 };
 
 export const ScreenThemes: Record<ScreenThemeVariant, ScreenTheme> = {

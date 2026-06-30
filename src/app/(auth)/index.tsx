@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard, Spacer, ThemedActivityIndicator } from '@/components';
+import { BrandBanner, GlassCard, Spacer, ThemedActivityIndicator } from '@/components';
+import { ScreenBackground } from '@/components/screen-background';
 import { Colors } from '@/constants/colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
@@ -76,7 +77,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <GeometricBackground />
+      <ScreenBackground />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
