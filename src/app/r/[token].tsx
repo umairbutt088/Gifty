@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton, SectionTitle } from '@/components/dashboard';
 import { FormField } from '@/components/vendor';
 import { GlassCard } from '@/components/glass-card';
-import { GeometricBackground } from '@/components/geometric-background';
+import { ScreenBackground } from '@/components/screen-background';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { ORDER_STATUS_LABELS } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
@@ -73,7 +73,7 @@ export default function RecipientGiftScreen() {
 
   return (
     <View style={styles.root}>
-      <GeometricBackground />
+      <ScreenBackground />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           {loading ? (

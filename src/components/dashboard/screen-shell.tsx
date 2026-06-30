@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { GeometricBackground } from '@/components/geometric-background';
+import { ScreenBackground } from '@/components/screen-background';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 
@@ -31,7 +31,7 @@ export function ScreenShell({
 
   return (
     <View style={[styles.root, style]} {...props}>
-      <GeometricBackground />
+      <ScreenBackground />
       <SafeAreaView style={styles.safeArea}>{content}</SafeAreaView>
     </View>
   );

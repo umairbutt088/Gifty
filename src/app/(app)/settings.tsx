@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components';
+import { BackgroundPreview } from '@/components/screen-background';
 import {
   DashboardHeader,
   MenuRow,
@@ -10,6 +11,7 @@ import {
   ScreenShell,
   SectionTitle,
 } from '@/components/dashboard';
+import { BackgroundOptions, type ScreenBackgroundVariant } from '@/constants/background-styles';
 import { ThemeOptions, type ScreenThemeVariant } from '@/constants/color-themes';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
@@ -57,9 +59,49 @@ function ThemeSwatch({ label, description, preview, selected, onPress }: ThemeSw
   );
 }
 
+function BackgroundSwatch({
+  label,
+  description,
+  variant,
+  selected,
+  onPress,
+}: {
+  label: string;
+  description: string;
+  variant: ScreenBackgroundVariant;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const theme = useScreenTheme();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.swatch,
+        {
+          borderColor: selected ? theme.accent : theme.surfaceBorder,
+          backgroundColor: selected ? theme.surfaceSelected : theme.surface,
+        },
+        pressed && styles.swatchPressed,
+      ]}>
+      <BackgroundPreview variant={variant} selected={selected} />
+      <View style={styles.swatchText}>
+        <Text style={styles.swatchLabel}>{label}</Text>
+        <Text style={styles.swatchDescription}>{description}</Text>
+      </View>
+      {selected ? (
+        <View style={[styles.selectedBadge, { backgroundColor: theme.accent }]}>
+          <Text style={styles.selectedBadgeText}>Active</Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
 export default function SettingsScreen() {
   const { profile, user, signOut } = useAuth();
-  const { variant, setThemeVariant } = useAppTheme();
+  const { variant, backgroundVariant, setThemeVariant, setBackgroundVariant } = useAppTheme();
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
@@ -71,6 +113,10 @@ export default function SettingsScreen() {
 
   function handleSelectTheme(next: ScreenThemeVariant) {
     void setThemeVariant(next);
+  }
+
+  function handleSelectBackground(next: ScreenBackgroundVariant) {
+    void setBackgroundVariant(next);
   }
 
   return (
@@ -85,8 +131,10 @@ export default function SettingsScreen() {
       <SectionTitle>Appearance</SectionTitle>
       <GlassCard style={styles.themeCard}>
         <Text style={styles.themeHint}>
-          Choose a gradient theme. It applies across the whole app instantly.
+          Pick a color theme for accents and UI. Pick a background for the layout pattern — it
+          uses the same theme colors.
         </Text>
+        <Text style={styles.groupLabel}>Color theme</Text>
         <View style={styles.swatchList}>
           {ThemeOptions.map((option) => (
             <ThemeSwatch
@@ -96,6 +144,19 @@ export default function SettingsScreen() {
               preview={option.preview}
               selected={variant === option.variant}
               onPress={() => handleSelectTheme(option.variant)}
+            />
+          ))}
+        </View>
+        <Text style={styles.groupLabel}>Background style</Text>
+        <View style={styles.swatchList}>
+          {BackgroundOptions.map((option) => (
+            <BackgroundSwatch
+              key={option.variant}
+              label={option.label}
+              description={option.description}
+              variant={option.variant}
+              selected={backgroundVariant === option.variant}
+              onPress={() => handleSelectBackground(option.variant)}
             />
           ))}
         </View>
@@ -124,6 +185,14 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
+  },
+  groupLabel: {
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    marginTop: Spacing.one,
   },
   swatchList: {
     gap: Spacing.two,

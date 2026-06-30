@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandBanner, GeometricBackground, GlassCard, ThemedActivityIndicator } from '@/components';
+import { BrandBanner, GlassCard, ThemedActivityIndicator } from '@/components';
+import { ScreenBackground } from '@/components/screen-background';
 import { Colors } from '@/constants/colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
@@ -61,7 +62,7 @@ export default function ResetPasswordScreen() {
   if (recoveryLinkError) {
     return (
       <View style={styles.root}>
-        <GeometricBackground />
+        <ScreenBackground />
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <BrandBanner showTagline={false} />
@@ -85,7 +86,7 @@ export default function ResetPasswordScreen() {
   if (!session || !isPasswordRecovery) {
     return (
       <View style={styles.root}>
-        <GeometricBackground />
+        <ScreenBackground />
         <SafeAreaView style={styles.safeArea}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <BrandBanner showTagline={false} />
@@ -107,7 +108,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <View style={styles.root}>
-      <GeometricBackground />
+      <ScreenBackground />
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
