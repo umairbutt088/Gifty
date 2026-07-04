@@ -4,9 +4,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
 import { StatusBadge } from '@/components/vendor/status-badge';
-import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { formatMoney } from '@/lib/format';
 import type { GiftRow } from '@/types/vendor';
 
@@ -27,6 +27,15 @@ function formatDeletedDate(value: string | null): string {
   }).format(new Date(value));
 }
 
+function GiftMetaBullet({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.bulletRow}>
+      <Text style={styles.bulletLabel}>{label}</Text>
+      <Text style={styles.bulletValue}>{value}</Text>
+    </View>
+  );
+}
+
 export function GiftListItem({ gift, href, deleted = false, showStatus = true }: GiftListItemProps) {
   const categoryLabel =
     GIFT_CATEGORIES.find((item) => item.value === gift.category)?.label ?? gift.category;
@@ -34,14 +43,16 @@ export function GiftListItem({ gift, href, deleted = false, showStatus = true }:
 
   const content = (
     <GlassCard style={[styles.card, deleted && styles.cardDeleted]}>
-      <View style={styles.imageWrap}>
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>{deleted ? 'No photos' : 'Gift'}</Text>
-          </View>
-        )}
+      <View style={styles.imageColumn}>
+        <View style={styles.imageWrap}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+          ) : (
+            <View style={styles.placeholder}>
+              <Text style={styles.placeholderText}>{deleted ? 'No photos' : 'Gift'}</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -51,13 +62,23 @@ export function GiftListItem({ gift, href, deleted = false, showStatus = true }:
           </Text>
           {!deleted && showStatus ? <StatusBadge status={gift.status} kind="gift" /> : null}
         </View>
-        <Text style={styles.meta}>
-          {deleted
-            ? `Deleted ${formatDeletedDate(gift.deleted_at)} · ${formatMoney(gift.price_cents)}`
-            : showStatus
-              ? `${formatMoney(gift.price_cents)} · ${categoryLabel} · Stock ${gift.stock}`
-              : `${formatMoney(gift.price_cents)} · ${categoryLabel} · ${gift.stock} left`}
-        </Text>
+        <View style={styles.details}>
+          {deleted ? (
+            <>
+              <GiftMetaBullet label="Deleted" value={formatDeletedDate(gift.deleted_at)} />
+              <GiftMetaBullet label="Price" value={formatMoney(gift.price_cents)} />
+            </>
+          ) : (
+            <>
+              <GiftMetaBullet label="Price" value={formatMoney(gift.price_cents)} />
+              <GiftMetaBullet label="Category" value={categoryLabel} />
+              <GiftMetaBullet
+                label="Stock"
+                value={showStatus ? `${gift.stock} in stock` : `${gift.stock} left`}
+              />
+            </>
+          )}
+        </View>
       </View>
     </GlassCard>
   );
@@ -76,9 +97,9 @@ export function GiftListItem({ gift, href, deleted = false, showStatus = true }:
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.two,
-    gap: Spacing.two,
+    alignItems: 'stretch',
+    padding: Spacing.three,
+    gap: Spacing.three,
   },
   cardDeleted: {
     opacity: 0.92,
@@ -86,10 +107,14 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.92,
   },
+  imageColumn: {
+    width: 88,
+    justifyContent: 'center',
+  },
   imageWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: Spacing.two,
+    width: 88,
+    height: 88,
+    borderRadius: Spacing.three,
     overflow: 'hidden',
     backgroundColor: Colors.surfaceNested,
   },
@@ -110,24 +135,45 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    paddingVertical: Spacing.one,
     gap: Spacing.two,
-    justifyContent: 'center',
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
   title: {
     flex: 1,
     color: Colors.text,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
   },
-  meta: {
+  details: {
+    gap: Spacing.one,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  bullet: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  bulletLabel: {
     color: Colors.textSecondary,
     fontSize: 13,
+    lineHeight: 20,
+    minWidth: 64,
+  },
+  bulletValue: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 20,
   },
 });

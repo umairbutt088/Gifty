@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Share, StyleSheet, View } from 'react-native';
 
 import {
   DashboardHeader,
+  OrderDetailsCard,
   PrimaryButton,
   ScreenShell,
   SectionTitle,
@@ -11,11 +12,9 @@ import {
 import { CartHeaderButton } from '@/components/buyer';
 import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { fetchBuyerOrderById, softDeleteBuyerOrder } from '@/lib/buyer-orders';
 import { getOrCreateConversationForOrder } from '@/lib/chat';
-import { formatMoney } from '@/lib/format';
 import { buildRecipientLink } from '@/lib/recipient-delivery';
 import { useAuth } from '@/providers/auth-provider';
 import type { VendorOrderWithGift } from '@/types/vendor';
@@ -114,42 +113,20 @@ export default function BuyerOrderDetailScreen() {
     <ScreenShell>
       <DashboardHeader
         title={order.gift?.title ?? 'Gift order'}
-        subtitle={`For ${order.recipient_name}`}
+        subtitle={`Gift for ${order.recipient_name}`}
         showBanner={false}
         showBack
         backHref="/buyer/orders"
-        trailing={<CartHeaderButton />}
+        trailing={
+          <View style={styles.headerTrailing}>
+            <CartHeaderButton />
+            <StatusBadge status={order.status} kind="order" />
+          </View>
+        }
       />
 
-      <StatusBadge status={order.status} kind="order" />
-
-      <SectionTitle>Order details</SectionTitle>
-      <View style={styles.details}>
-        <Text style={styles.meta}>Total: {formatMoney(order.total_cents)}</Text>
-        <Text style={styles.meta}>Quantity: {order.quantity}</Text>
-        {order.delivery_date ? (
-          <Text style={styles.meta}>Delivery date: {order.delivery_date}</Text>
-        ) : null}
-        {order.recipient_address ? (
-          <Text style={styles.meta}>Address: {order.recipient_address}</Text>
-        ) : null}
-        {order.recipient_phone ? (
-          <Text style={styles.meta}>Recipient phone: {order.recipient_phone}</Text>
-        ) : null}
-        {order.recipient_email ? (
-          <Text style={styles.meta}>Recipient email: {order.recipient_email}</Text>
-        ) : null}
-        {/* Hidden until RECIPIENT_NOTIFICATIONS_ENABLED — see recipient-delivery.ts */}
-        {order.recipient_confirmed_at ? (
-          <Text style={styles.confirmed}>
-            Recipient confirmed delivery on{' '}
-            {new Date(order.recipient_confirmed_at).toLocaleString()}
-          </Text>
-        ) : null}
-        {order.gift_message ? (
-          <Text style={styles.message}>Message: “{order.gift_message}”</Text>
-        ) : null}
-      </View>
+      <SectionTitle>Delivery details</SectionTitle>
+      <OrderDetailsCard order={order} />
 
       <PrimaryButton
         label="Share delivery link"
@@ -169,21 +146,9 @@ export default function BuyerOrderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  details: {
-    gap: Spacing.two,
-  },
-  meta: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-  },
-  message: {
-    color: Colors.text,
-    fontSize: 15,
-    fontStyle: 'italic',
-  },
-  confirmed: {
-    color: Colors.text,
-    fontSize: 15,
-    fontWeight: '600',
+  headerTrailing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
   },
 });

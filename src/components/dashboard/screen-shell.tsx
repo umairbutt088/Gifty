@@ -1,9 +1,15 @@
 import { ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/screen-background';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+
+/** Pull headers slightly closer to the notch while keeping content readable. */
+const TOP_INSET_TRIM = 14;
+
+/** Horizontal padding used by ScreenShell scroll content and full-bleed screens. */
+export const SCREEN_HORIZONTAL_PADDING = Spacing.three;
 
 type ScreenShellProps = ViewProps & {
   scroll?: boolean;
@@ -18,6 +24,14 @@ export function ScreenShell({
   children,
   ...props
 }: ScreenShellProps) {
+  const insets = useSafeAreaInsets();
+  const safeAreaPadding = {
+    paddingTop: Math.max(insets.top - TOP_INSET_TRIM, Spacing.one),
+    paddingBottom: insets.bottom,
+    paddingLeft: insets.left,
+    paddingRight: insets.right,
+  };
+
   const content = scroll ? (
     <ScrollView
       contentContainerStyle={styles.scrollContent}
@@ -33,7 +47,7 @@ export function ScreenShell({
   return (
     <View style={[styles.root, style]} {...props}>
       <ScreenBackground />
-      <SafeAreaView style={styles.safeArea}>{content}</SafeAreaView>
+      <View style={[styles.safeArea, safeAreaPadding]}>{content}</View>
     </View>
   );
 }
@@ -48,7 +62,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: SCREEN_HORIZONTAL_PADDING,
     paddingBottom: Spacing.five,
     gap: Spacing.four,
   },

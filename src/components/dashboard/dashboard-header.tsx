@@ -10,6 +10,13 @@ import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 import { RoleBadge } from './role-badge';
 
+/** Shared header metrics — keep tab and stack headers aligned. */
+const TOOLBAR_MIN_HEIGHT = 44;
+const SIDE_LEADING_WIDTH = 32;
+const SIDE_TRAILING_MIN_WIDTH = 32;
+const TITLE_FONT_SIZE = 22;
+const TITLE_LINE_HEIGHT = 26;
+
 type DashboardHeaderProps = {
   title: string;
   subtitle?: string;
@@ -51,24 +58,16 @@ export function DashboardHeader({
     }
   }
 
-  if (variant === 'tab') {
-    return (
-      <View style={styles.tabToolbar}>
-        <Text style={styles.tabTitle} numberOfLines={1}>
-          {title}
-        </Text>
-        {role ? <RoleBadge role={role} /> : null}
-      </View>
-    );
-  }
+  const trailingContent =
+    variant === 'tab' ? (role ? <RoleBadge role={role} /> : null) : (trailing ?? null);
 
   return (
-    <View style={styles.header}>
-      {showBanner ? <BrandBanner showTagline={false} /> : null}
+    <View style={styles.headerShell}>
+      {variant === 'default' && showBanner ? <BrandBanner showTagline={false} /> : null}
 
       <View style={styles.toolbar}>
-        <View style={styles.sideSlot}>
-          {showBack ? (
+        {variant === 'default' && showBack ? (
+          <View style={styles.sideSlotLeading}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
@@ -81,58 +80,61 @@ export function DashboardHeader({
                 weight="semibold"
               />
             </Pressable>
-          ) : null}
-        </View>
+          </View>
+        ) : null}
 
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
 
-        <View style={styles.sideSlot}>{trailing ?? null}</View>
+        {trailingContent ? (
+          <View style={styles.sideSlotTrailing}>{trailingContent}</View>
+        ) : null}
       </View>
 
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      {variant === 'default' && subtitle ? (
+        <Text
+          style={[styles.subtitle, showBack && styles.subtitleWithBack]}
+          numberOfLines={2}>
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  headerShell: {
     gap: Spacing.two,
     alignItems: 'stretch',
-  },
-  tabToolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-    minHeight: 36,
-  },
-  tabTitle: {
-    flex: 1,
-    flexShrink: 1,
-    color: Colors.text,
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 26,
+    marginHorizontal: -Spacing.one,
   },
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    minHeight: 44,
+    gap: Spacing.one,
+    minHeight: TOOLBAR_MIN_HEIGHT,
   },
-  sideSlot: {
-    width: 44,
-    alignItems: 'center',
+  sideSlotLeading: {
+    width: SIDE_LEADING_WIDTH,
+    height: TOOLBAR_MIN_HEIGHT,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  sideSlotTrailing: {
+    minWidth: SIDE_TRAILING_MIN_WIDTH,
+    minHeight: TOOLBAR_MIN_HEIGHT,
+    flexShrink: 0,
+    alignItems: 'flex-end',
     justifyContent: 'center',
   },
   iconButton: {
-    width: 44,
-    height: 44,
+    width: SIDE_LEADING_WIDTH,
+    height: TOOLBAR_MIN_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Spacing.two,
+    marginLeft: -Spacing.one,
   },
   iconButtonPressed: {
     opacity: 0.7,
@@ -140,14 +142,17 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     color: Colors.text,
-    fontSize: 22,
+    fontSize: TITLE_FONT_SIZE,
     fontWeight: '700',
-    lineHeight: 28,
+    lineHeight: TITLE_LINE_HEIGHT,
   },
   subtitle: {
     color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
-    paddingHorizontal: Spacing.one,
+    paddingLeft: Spacing.one,
+  },
+  subtitleWithBack: {
+    paddingLeft: SIDE_LEADING_WIDTH + Spacing.one,
   },
 });

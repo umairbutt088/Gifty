@@ -103,6 +103,31 @@ export async function restoreBuyerOrder(orderId: string): Promise<{ error: Error
   return { error: error ? new Error(error.message) : null };
 }
 
+export async function permanentlyDeleteBuyerOrder(orderId: string): Promise<{ error: Error | null }> {
+  const { data: order, error: fetchError } = await supabase
+    .from('vendor_orders')
+    .select('id')
+    .eq('id', orderId)
+    .not('buyer_deleted_at', 'is', null)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { error: new Error(fetchError.message) };
+  }
+
+  if (!order) {
+    return { error: new Error('Order not found in deleted list.') };
+  }
+
+  const { error } = await supabase
+    .from('vendor_orders')
+    .delete()
+    .eq('id', orderId)
+    .not('buyer_deleted_at', 'is', null);
+
+  return { error: error ? new Error(error.message) : null };
+}
+
 export function subscribeBuyerOrderUpdates(
   buyerId: string,
   onUpdate: (order: VendorOrderRow) => void,
