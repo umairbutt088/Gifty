@@ -41,11 +41,7 @@ export default function VendorGiftsScreen() {
 
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
-      <DashboardHeader
-        title="Gifts"
-        subtitle="List gifts with photos, price, category, and stock for buyers to send."
-        role={profile?.role}
-      />
+      <DashboardHeader title="Gifts" variant="tab" role={profile?.role} />
 
       <PrimaryButton label="Add gift" onPress={() => router.push('/vendor/gift/new')} />
       <MenuRow

@@ -15,11 +15,7 @@ export default function VendorChatTabScreen() {
 
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
-      <DashboardHeader
-        title="Chat"
-        subtitle="Message buyers about their gift orders."
-        role={profile?.role}
-      />
+      <DashboardHeader title="Chat" variant="tab" role={profile?.role} />
 
       {loading ? (
         <View style={{ paddingVertical: 24 }}>

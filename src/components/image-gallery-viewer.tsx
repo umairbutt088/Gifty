@@ -24,6 +24,15 @@ type ImageGalleryViewerProps = {
   emptyLabel?: string;
 };
 
+function toSelectedIndex(pagerIndex: number, imageCount: number, loopEnabled: boolean) {
+  'worklet';
+
+  if (!loopEnabled) return pagerIndex;
+  if (pagerIndex === 0) return imageCount - 1;
+  if (pagerIndex === imageCount + 1) return 0;
+  return pagerIndex - 1;
+}
+
 export function ImageGalleryViewer({
   images,
   mainHeight = 280,
@@ -34,57 +43,37 @@ export function ImageGalleryViewer({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
+  const loopEnabled = images.length > 1;
+  const loopImages = loopEnabled
+    ? [images[images.length - 1], ...images, images[0]]
+    : images;
+
   const frameWidth = useSharedValue(0);
-  const imageCount = useSharedValue(images.length);
-  const pagerIndex = useSharedValue(0);
+  const pagerLength = useSharedValue(loopImages.length);
+  const pagerIndex = useSharedValue(loopEnabled ? 1 : 0);
   const dragX = useSharedValue(0);
 
   useEffect(() => {
-    imageCount.value = images.length;
-  }, [imageCount, images.length]);
+    pagerLength.value = loopImages.length;
+    pagerIndex.value = loopEnabled ? 1 : 0;
+    dragX.value = 0;
+    setSelectedIndex(0);
+  }, [dragX, images, loopEnabled, loopImages.length, pagerIndex, pagerLength]);
 
   useEffect(() => {
     if (selectedIndex >= images.length) {
-      const nextIndex = Math.max(0, images.length - 1);
-      setSelectedIndex(nextIndex);
-      pagerIndex.value = nextIndex;
-      dragX.value = 0;
+      setSelectedIndex(Math.max(0, images.length - 1));
     }
-  }, [dragX, images.length, pagerIndex, selectedIndex]);
-
-  useEffect(() => {
-    if (pagerIndex.value === selectedIndex) return;
-
-    const from = pagerIndex.value;
-    pagerIndex.value = selectedIndex;
-
-    if (frameWidth.value === 0) {
-      dragX.value = 0;
-      return;
-    }
-
-    dragX.value = (from - selectedIndex) * frameWidth.value;
-    dragX.value = withTiming(0, { duration: SLIDE_DURATION });
-  }, [dragX, frameWidth, pagerIndex, selectedIndex]);
+  }, [images.length, selectedIndex]);
 
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(images.length > 1)
+        .enabled(loopEnabled)
         .activeOffsetX([-12, 12])
         .failOffsetY([-20, 20])
         .onUpdate((event) => {
-          const width = frameWidth.value;
-          if (width === 0) return;
-
-          let offset = event.translationX;
-          const index = pagerIndex.value;
-          const lastIndex = imageCount.value - 1;
-
-          if (index <= 0 && offset > 0) offset *= 0.35;
-          if (index >= lastIndex && offset < 0) offset *= 0.35;
-
-          dragX.value = offset;
+          dragX.value = event.translationX;
         })
         .onEnd((event) => {
           const width = frameWidth.value;
@@ -97,25 +86,41 @@ export function ImageGalleryViewer({
           let nextIndex = pagerIndex.value;
 
           if (event.translationX < -threshold || event.velocityX < -SWIPE_VELOCITY) {
-            nextIndex = Math.min(nextIndex + 1, imageCount.value - 1);
+            nextIndex += 1;
           } else if (event.translationX > threshold || event.velocityX > SWIPE_VELOCITY) {
-            nextIndex = Math.max(nextIndex - 1, 0);
+            nextIndex -= 1;
           }
 
           const previousIndex = pagerIndex.value;
           if (nextIndex !== previousIndex) {
             pagerIndex.value = nextIndex;
             dragX.value = dragX.value + (nextIndex - previousIndex) * width;
-            runOnJS(setSelectedIndex)(nextIndex);
+            runOnJS(setSelectedIndex)(toSelectedIndex(nextIndex, images.length, loopEnabled));
+
+            dragX.value = withTiming(0, { duration: SLIDE_DURATION }, (finished) => {
+              if (!finished || !loopEnabled) return;
+
+              if (nextIndex === 0) {
+                pagerIndex.value = images.length;
+                dragX.value = 0;
+                return;
+              }
+
+              if (nextIndex === images.length + 1) {
+                pagerIndex.value = 1;
+                dragX.value = 0;
+              }
+            });
+            return;
           }
 
           dragX.value = withTiming(0, { duration: SLIDE_DURATION });
         }),
-    [dragX, frameWidth, imageCount, pagerIndex, images.length],
+    [dragX, frameWidth, images.length, loopEnabled, pagerIndex],
   );
 
   const pagerStyle = useAnimatedStyle(() => ({
-    width: frameWidth.value * imageCount.value,
+    width: frameWidth.value * pagerLength.value,
     transform: [{ translateX: -pagerIndex.value * frameWidth.value + dragX.value }],
   }));
 
@@ -131,7 +136,20 @@ export function ImageGalleryViewer({
 
   function selectImage(index: number) {
     if (index === safeIndex) return;
+
+    const targetPagerIndex = loopEnabled ? index + 1 : index;
+    const from = pagerIndex.value;
+
     setSelectedIndex(index);
+    pagerIndex.value = targetPagerIndex;
+
+    if (frameWidth.value === 0) {
+      dragX.value = 0;
+      return;
+    }
+
+    dragX.value = (from - targetPagerIndex) * frameWidth.value;
+    dragX.value = withTiming(0, { duration: SLIDE_DURATION });
   }
 
   return (
@@ -145,18 +163,23 @@ export function ImageGalleryViewer({
         }}>
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.pager, { height: mainHeight }, pagerStyle]}>
-            {images.map((uri, index) => (
+            {loopImages.map((uri, index) => (
               <View
                 key={`${uri}-${index}`}
                 style={[styles.page, layoutWidth > 0 ? { width: layoutWidth } : styles.pageFlex]}>
-                <Image source={{ uri }} style={styles.mainImage} contentFit="cover" />
+                <Image
+                  source={{ uri }}
+                  style={styles.mainImage}
+                  contentFit="cover"
+                  backgroundColor="transparent"
+                />
               </View>
             ))}
           </Animated.View>
         </GestureDetector>
       </View>
 
-      {images.length > 1 ? (
+      {loopEnabled ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -198,13 +221,15 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: Spacing.four,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
+    backgroundColor: 'transparent',
   },
   pager: {
     flexDirection: 'row',
+    backgroundColor: 'transparent',
   },
   page: {
     height: '100%',
+    backgroundColor: 'transparent',
   },
   pageFlex: {
     flex: 1,
@@ -212,6 +237,7 @@ const styles = StyleSheet.create({
   mainImage: {
     width: '100%',
     height: '100%',
+    backgroundColor: 'transparent',
   },
   thumbnailRow: {
     gap: Spacing.two,

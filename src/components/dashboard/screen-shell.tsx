@@ -21,6 +21,7 @@ export function ScreenShell({
   const content = scroll ? (
     <ScrollView
       contentContainerStyle={styles.scrollContent}
+      contentInsetAdjustmentBehavior="never"
       showsVerticalScrollIndicator={false}
       {...scrollProps}>
       {children}
@@ -48,7 +49,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
     paddingBottom: Spacing.five,
     gap: Spacing.four,
   },

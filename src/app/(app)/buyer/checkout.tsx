@@ -8,6 +8,7 @@ import {
   ScreenShell,
   SectionTitle,
 } from '@/components/dashboard';
+import { CartHeaderButton } from '@/components/buyer';
 import { GlassCard } from '@/components/glass-card';
 // import { DatePickerField } from '@/components/date-picker-field';
 import { NativeDatePickerField } from '@/components/native-date-picker-field';
@@ -108,6 +109,7 @@ export default function BuyerCheckoutScreen() {
           showBanner={false}
           showBack
           backHref="/buyer/cart"
+          trailing={<CartHeaderButton />}
         />
         <PrimaryButton label="Go to cart" onPress={() => router.replace('/buyer/cart')} />
       </ScreenShell>
@@ -122,6 +124,7 @@ export default function BuyerCheckoutScreen() {
         showBanner={false}
         showBack
         backHref="/buyer/cart"
+        trailing={<CartHeaderButton />}
       />
 
       <SectionTitle>Order summary</SectionTitle>

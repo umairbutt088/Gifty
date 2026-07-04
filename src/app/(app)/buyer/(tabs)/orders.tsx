@@ -27,11 +27,7 @@ export default function BuyerOrdersTabScreen() {
 
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
-      <DashboardHeader
-        title="My orders"
-        subtitle="Track purchases and delivery status."
-        role={profile?.role}
-      />
+      <DashboardHeader title="My orders" variant="tab" role={profile?.role} />
 
       <MenuRow
         title="Deleted orders"

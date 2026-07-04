@@ -76,15 +76,7 @@ export default function BuyerCartTabScreen() {
 
   return (
     <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled', refreshControl }}>
-      <DashboardHeader
-        title="Your cart"
-        subtitle={
-          items.length > 0
-            ? `${items.length} item${items.length === 1 ? '' : 's'} ready to send`
-            : 'Add gifts from the catalog to get started.'
-        }
-        role={profile?.role}
-      />
+      <DashboardHeader title="Your cart" variant="tab" role={profile?.role} />
 
       {items.length === 0 ? (
         <>
