@@ -10,7 +10,11 @@ import {
 import { SwipeableDeletedOrderListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
-import { fetchDeletedBuyerOrders, restoreBuyerOrder } from '@/lib/buyer-orders';
+import {
+  fetchDeletedBuyerOrders,
+  permanentlyDeleteBuyerOrder,
+  restoreBuyerOrder,
+} from '@/lib/buyer-orders';
 import { useAuth } from '@/providers/auth-provider';
 
 export default function BuyerDeletedOrdersScreen() {
@@ -46,11 +50,22 @@ export default function BuyerDeletedOrdersScreen() {
     setOrders((current) => current.filter((order) => order.id !== orderId));
   }
 
+  async function handlePermanentDeleteOrder(orderId: string) {
+    const { error } = await permanentlyDeleteBuyerOrder(orderId);
+
+    if (error) {
+      Alert.alert('Could not delete', error.message);
+      return;
+    }
+
+    setOrders((current) => current.filter((order) => order.id !== orderId));
+  }
+
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
       <DashboardHeader
         title="Deleted orders"
-        subtitle="Swipe left to restore orders you removed from your history."
+        subtitle="Swipe left to restore or permanently delete. Chat history is removed on permanent delete."
         role={profile?.role}
         showBack
         backHref="/buyer/orders"
@@ -72,6 +87,7 @@ export default function BuyerDeletedOrdersScreen() {
             order={order}
             deletedAt={order.buyer_deleted_at}
             onRestore={handleRestoreOrder}
+            onDeletePermanently={handlePermanentDeleteOrder}
           />
         ))
       )}

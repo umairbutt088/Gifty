@@ -43,7 +43,7 @@ export function StatusBadge({ status, kind = 'gift' }: StatusBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    alignSelf: 'flex-start',
+    flexShrink: 0,
     borderWidth: 1,
     borderRadius: Spacing.one,
     paddingHorizontal: Spacing.two,

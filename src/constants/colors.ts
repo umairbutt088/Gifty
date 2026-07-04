@@ -14,8 +14,8 @@ export const Colors = {
   background: Palette.black,
 
   text: '#F0F2F4',
-  textSecondary: 'rgba(240, 242, 244, 0.62)',
-  textMuted: 'rgba(240, 242, 244, 0.38)',
+  textSecondary: 'rgba(240, 242, 244, 0.80)',
+  textMuted: 'rgba(240, 242, 244, 0.58)',
 
   /** Default accent when no ScreenThemeProvider is present */
   accent: DefaultScreenTheme.accent,

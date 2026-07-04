@@ -35,7 +35,7 @@ function OrderCard({ order, deleted = false, deletedAt }: OrderListItemProps) {
         {!deleted ? <StatusBadge status={order.status} kind="order" /> : null}
       </View>
 
-      <Text style={styles.recipient}>For {order.recipient_name}</Text>
+      <Text style={styles.recipient}>Gift for {order.recipient_name}</Text>
       <Text style={styles.meta}>
         {deleted
           ? `Deleted ${formatDeletedDate(deletedAt)} · ${formatMoney(order.total_cents)}`

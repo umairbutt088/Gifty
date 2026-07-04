@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import { DashboardHeader, EmptyState, MenuRow, ScreenShell } from '@/components/dashboard';
-import { SegmentBar, SwipeableOrderListItem } from '@/components/vendor';
+import { DashboardHeader, EmptyState, MenuRow, ScreenShell, SCREEN_HORIZONTAL_PADDING } from '@/components/dashboard';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { useListRefresh } from '@/hooks/use-list-refresh';
-import { matchesOrderFilter, ORDER_FILTER_TABS, type OrderFilter } from '@/constants/vendor';
+import { SegmentBar, SwipeableOrderListItem } from '@/components/vendor';
 import { Spacing } from '@/constants/theme';
+import { matchesOrderFilter, ORDER_FILTER_TABS, type OrderFilter } from '@/constants/vendor';
+import { useListRefresh } from '@/hooks/use-list-refresh';
 import { fetchVendorOrders, softDeleteVendorOrder } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
@@ -99,8 +99,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingHorizontal: SCREEN_HORIZONTAL_PADDING,
     paddingBottom: Spacing.two,
     gap: Spacing.three,
   },

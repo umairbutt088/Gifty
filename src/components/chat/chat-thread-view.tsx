@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { ChatComposer, MessageBubble } from '@/components/chat';
-import { DashboardHeader, ScreenShell } from '@/components/dashboard';
+import { DashboardHeader, ScreenShell, SCREEN_HORIZONTAL_PADDING } from '@/components/dashboard';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Spacing } from '@/constants/theme';
 import { formatChatProfileName } from '@/lib/chat';
@@ -87,8 +87,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingHorizontal: SCREEN_HORIZONTAL_PADDING,
     paddingBottom: Spacing.two,
   },
   header: {

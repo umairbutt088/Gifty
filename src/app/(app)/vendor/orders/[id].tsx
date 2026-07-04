@@ -1,22 +1,20 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert } from 'react-native';
 
 import {
   DashboardHeader,
+  OrderDetailsCard,
   PrimaryButton,
   ScreenShell,
   SectionTitle,
 } from '@/components/dashboard';
 import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
-import { formatMoney } from '@/lib/format';
 import { getOrCreateConversationForOrder } from '@/lib/chat';
 import {
   fetchVendorOrderById,
   getNextOrderAction,
-  softDeleteVendorOrder,
   updateVendorOrderStatus,
 } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
@@ -87,35 +85,6 @@ export default function VendorOrderDetailScreen() {
     ]);
   }
 
-  function handleDeleteOrder() {
-    if (!order) return;
-
-    Alert.alert(
-      'Delete order',
-      'Move this order to Deleted orders? You can restore it later.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              const { error } = await softDeleteVendorOrder(order.id);
-
-              if (error) {
-                Alert.alert('Could not delete', error.message);
-                return;
-              }
-
-              await refreshNewOrderCount();
-              router.replace('/vendor/orders');
-            })();
-          },
-        },
-      ],
-    );
-  }
-
   if (loading) {
     return (
       <ScreenShell scroll={false}>
@@ -138,43 +107,15 @@ export default function VendorOrderDetailScreen() {
     <ScreenShell>
       <DashboardHeader
         title={order.gift?.title ?? 'Gift order'}
-        subtitle={`For ${order.recipient_name}`}
+        subtitle={`Gift for ${order.recipient_name}`}
         showBanner={false}
         showBack
         backHref="/vendor/orders"
+        trailing={<StatusBadge status={order.status} kind="order" />}
       />
 
-      <StatusBadge status={order.status} kind="order" />
-
-      <SectionTitle>Order details</SectionTitle>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: Colors.textSecondary }}>Total: {formatMoney(order.total_cents)}</Text>
-        <Text style={{ color: Colors.textSecondary }}>Quantity: {order.quantity}</Text>
-        {order.delivery_date ? (
-          <Text style={{ color: Colors.textSecondary }}>Delivery date: {order.delivery_date}</Text>
-        ) : null}
-        {order.recipient_address ? (
-          <Text style={{ color: Colors.textSecondary }}>Address: {order.recipient_address}</Text>
-        ) : null}
-        {order.recipient_phone ? (
-          <Text style={{ color: Colors.textSecondary }}>Recipient phone: {order.recipient_phone}</Text>
-        ) : null}
-        {order.recipient_email ? (
-          <Text style={{ color: Colors.textSecondary }}>Recipient email: {order.recipient_email}</Text>
-        ) : null}
-        {/* Hidden until RECIPIENT_NOTIFICATIONS_ENABLED — see recipient-delivery.ts */}
-        {order.recipient_confirmed_at ? (
-          <Text style={{ color: Colors.text, fontWeight: '600' }}>
-            Recipient confirmed delivery on{' '}
-            {new Date(order.recipient_confirmed_at).toLocaleString()}
-          </Text>
-        ) : null}
-        {order.gift_message ? (
-          <Text style={{ color: Colors.text, fontStyle: 'italic' }}>
-            Message: “{order.gift_message}”
-          </Text>
-        ) : null}
-      </View>
+      <SectionTitle>Delivery details</SectionTitle>
+      <OrderDetailsCard order={order} />
 
       {nextAction ? (
         <PrimaryButton
@@ -199,8 +140,6 @@ export default function VendorOrderDetailScreen() {
           onPress={handleReject}
         />
       ) : null}
-
-      <PrimaryButton label="Delete order" variant="secondary" onPress={handleDeleteOrder} />
     </ScreenShell>
   );
 }
