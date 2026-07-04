@@ -20,11 +20,7 @@ export default function BuyerGiftsTabScreen() {
 
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
-      <DashboardHeader
-        title="Discover gifts"
-        subtitle="Browse live gifts from vendors and tap to view details."
-        role={profile?.role}
-      />
+      <DashboardHeader title="Discover gifts" variant="tab" role={profile?.role} />
 
       {loading ? (
         <View style={{ paddingVertical: 24 }}>

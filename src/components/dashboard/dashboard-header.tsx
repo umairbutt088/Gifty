@@ -14,6 +14,7 @@ type DashboardHeaderProps = {
   title: string;
   subtitle?: string;
   role?: string;
+  variant?: 'default' | 'tab';
   showBanner?: boolean;
   showBack?: boolean;
   backHref?: Href;
@@ -25,6 +26,7 @@ export function DashboardHeader({
   title,
   subtitle,
   role,
+  variant = 'default',
   showBanner = false,
   showBack = false,
   backHref,
@@ -49,25 +51,46 @@ export function DashboardHeader({
     }
   }
 
+  if (variant === 'tab') {
+    return (
+      <View style={styles.tabToolbar}>
+        <Text style={styles.tabTitle} numberOfLines={1}>
+          {title}
+        </Text>
+        {role ? <RoleBadge role={role} /> : null}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.header}>
       {showBanner ? <BrandBanner showTagline={false} /> : null}
-      {showBack ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          onPress={handleBack}
-          style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}>
-          <SymbolView name="chevron.left" tintColor={theme.accentLight} size={22} weight="semibold" />
-        </Pressable>
-      ) : null}
-      {role ? <RoleBadge role={role} /> : null}
-      <View style={styles.titleRow}>
-        <Text style={[styles.title, trailing ? styles.titleWithTrailing : null]} numberOfLines={2}>
+
+      <View style={styles.toolbar}>
+        <View style={styles.sideSlot}>
+          {showBack ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={handleBack}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
+              <SymbolView
+                name="chevron.left"
+                tintColor={theme.accentLight}
+                size={22}
+                weight="semibold"
+              />
+            </Pressable>
+          ) : null}
+        </View>
+
+        <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+
+        <View style={styles.sideSlot}>{trailing ?? null}</View>
       </View>
+
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
   );
@@ -75,40 +98,56 @@ export function DashboardHeader({
 
 const styles = StyleSheet.create({
   header: {
-    gap: Spacing.three,
+    gap: Spacing.two,
     alignItems: 'stretch',
   },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginLeft: -Spacing.one,
-    padding: Spacing.two,
-    borderRadius: Spacing.two,
-  },
-  backButtonPressed: {
-    opacity: 0.7,
-  },
-  titleRow: {
+  tabToolbar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.three,
+    gap: Spacing.two,
+    minHeight: 36,
+  },
+  tabTitle: {
+    flex: 1,
+    flexShrink: 1,
+    color: Colors.text,
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 26,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: 44,
+  },
+  sideSlot: {
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Spacing.two,
+  },
+  iconButtonPressed: {
+    opacity: 0.7,
   },
   title: {
-    color: Colors.text,
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 34,
-    flexShrink: 1,
-  },
-  titleWithTrailing: {
     flex: 1,
-  },
-  trailing: {
-    flexShrink: 0,
+    color: Colors.text,
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 28,
   },
   subtitle: {
     color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
+    paddingHorizontal: Spacing.one,
   },
 });

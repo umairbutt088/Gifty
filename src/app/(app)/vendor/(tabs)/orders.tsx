@@ -54,11 +54,7 @@ export default function VendorOrdersTabScreen() {
     <ScreenShell scroll={false} style={styles.shell}>
       <View style={styles.container}>
         <View style={styles.headerSection}>
-          <DashboardHeader
-            title="Orders"
-            subtitle="Fulfill and track gift orders."
-            role={profile?.role}
-          />
+          <DashboardHeader title="Orders" variant="tab" role={profile?.role} />
           <SegmentBar options={ORDER_FILTER_TABS} value={filter} onChange={setFilter} />
           <MenuRow
             title="Deleted orders"

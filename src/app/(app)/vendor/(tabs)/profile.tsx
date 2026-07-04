@@ -52,11 +52,7 @@ export default function VendorProfileTabScreen() {
 
   return (
     <ScreenShell>
-      <DashboardHeader
-        title="Profile"
-        subtitle="Your store, earnings, and account settings."
-        role={profile?.role}
-      />
+      <DashboardHeader title="Profile" variant="tab" role={profile?.role} />
 
       <View style={styles.profileCard}>
         {store?.logo_url ? (

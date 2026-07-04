@@ -139,19 +139,19 @@ type SurfaceTokens = Pick<
 >;
 
 const warmSurfaces: SurfaceTokens = {
-  surface: 'rgba(28, 18, 24, 0.42)',
-  surfaceNested: 'rgba(22, 14, 20, 0.86)',
-  surfaceSelected: 'rgba(36, 24, 32, 0.94)',
-  tabTrack: 'rgba(18, 10, 16, 0.75)',
-  input: 'rgba(16, 10, 14, 0.88)',
+  surface: 'rgba(16, 10, 14, 0.74)',
+  surfaceNested: 'rgba(10, 6, 10, 0.9)',
+  surfaceSelected: 'rgba(24, 16, 20, 0.96)',
+  tabTrack: 'rgba(12, 8, 12, 0.84)',
+  input: 'rgba(10, 6, 10, 0.92)',
 };
 
 const coolSurfaces: SurfaceTokens = {
-  surface: 'rgba(22, 28, 42, 0.42)',
-  surfaceNested: 'rgba(18, 24, 38, 0.86)',
-  surfaceSelected: 'rgba(30, 40, 56, 0.94)',
-  tabTrack: 'rgba(12, 16, 26, 0.75)',
-  input: 'rgba(12, 16, 26, 0.88)',
+  surface: 'rgba(10, 14, 22, 0.74)',
+  surfaceNested: 'rgba(6, 10, 18, 0.9)',
+  surfaceSelected: 'rgba(18, 26, 38, 0.96)',
+  tabTrack: 'rgba(8, 12, 20, 0.84)',
+  input: 'rgba(6, 10, 18, 0.92)',
 };
 
 function buildTheme(

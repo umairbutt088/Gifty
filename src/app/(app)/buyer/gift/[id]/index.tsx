@@ -2,7 +2,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { QuantityStepper } from '@/components/buyer';
+import { QuantityStepper, CartHeaderButton } from '@/components/buyer';
 import {
   DashboardHeader,
   PrimaryButton,
@@ -69,10 +69,10 @@ export default function BuyerGiftDetailScreen() {
     <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
       <DashboardHeader
         title={gift.title}
-        subtitle={formatMoney(gift.price_cents)}
         showBanner={false}
         showBack
         backHref="/buyer"
+        trailing={<CartHeaderButton />}
       />
 
       <ImageGalleryViewer images={gift.image_urls} />

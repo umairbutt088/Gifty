@@ -26,7 +26,7 @@ export function RoleBadge({ role }: RoleBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    alignSelf: 'flex-start',
+    flexShrink: 0,
     borderWidth: 1,
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.two,

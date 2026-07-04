@@ -8,6 +8,7 @@ import {
   ScreenShell,
   SectionTitle,
 } from '@/components/dashboard';
+import { CartHeaderButton } from '@/components/buyer';
 import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
@@ -117,6 +118,7 @@ export default function BuyerOrderDetailScreen() {
         showBanner={false}
         showBack
         backHref="/buyer/orders"
+        trailing={<CartHeaderButton />}
       />
 
       <StatusBadge status={order.status} kind="order" />

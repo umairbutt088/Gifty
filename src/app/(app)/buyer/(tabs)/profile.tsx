@@ -26,11 +26,7 @@ export default function BuyerProfileTabScreen() {
 
   return (
     <ScreenShell>
-      <DashboardHeader
-        title="Profile"
-        subtitle="Your account and app preferences."
-        role={profile?.role}
-      />
+      <DashboardHeader title="Profile" variant="tab" role={profile?.role} />
 
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
