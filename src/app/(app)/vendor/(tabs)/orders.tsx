@@ -1,7 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import { DashboardHeader, EmptyState, MenuRow, ScreenShell, SCREEN_HORIZONTAL_PADDING } from '@/components/dashboard';
+import {
+  CardList,
+  DashboardHeader,
+  EmptyState,
+  MenuRow,
+  SCREEN_HORIZONTAL_PADDING,
+  ScreenShell,
+} from '@/components/dashboard';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { SegmentBar, SwipeableOrderListItem } from '@/components/vendor';
 import { Spacing } from '@/constants/theme';
@@ -78,14 +85,16 @@ export default function VendorOrdersTabScreen() {
               message="When a buyer sends one of your gifts, it will appear here."
             />
           ) : (
-            filteredOrders.map((order) => (
-              <SwipeableOrderListItem
-                key={order.id}
-                order={order}
-                href={`/vendor/orders/${order.id}`}
-                onDelete={handleDeleteOrder}
-              />
-            ))
+            <CardList>
+              {filteredOrders.map((order) => (
+                <SwipeableOrderListItem
+                  key={order.id}
+                  order={order}
+                  href={`/vendor/orders/${order.id}`}
+                  onDelete={handleDeleteOrder}
+                />
+              ))}
+            </CardList>
           )}
         </ScrollView>
       </View>
@@ -111,7 +120,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    gap: Spacing.three,
     paddingBottom: Spacing.four,
   },
   listContentEmpty: {

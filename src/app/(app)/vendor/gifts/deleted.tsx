@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 
 import {
+  CardList,
   DashboardHeader,
   EmptyState,
   ScreenShell,
@@ -67,14 +68,16 @@ export default function VendorDeletedGiftsScreen() {
           message="Gifts you delete will appear here so you can restore them later."
         />
       ) : (
-        gifts.map((gift) => (
-          <SwipeableDeletedGiftListItem
-            key={gift.id}
-            gift={gift}
-            onRestore={handleRestoreGift}
-            onDeletePermanently={handlePermanentDeleteGift}
-          />
-        ))
+        <CardList>
+          {gifts.map((gift) => (
+            <SwipeableDeletedGiftListItem
+              key={gift.id}
+              gift={gift}
+              onRestore={handleRestoreGift}
+              onDeletePermanently={handlePermanentDeleteGift}
+            />
+          ))}
+        </CardList>
       )}
     </ScreenShell>
   );

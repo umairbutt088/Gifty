@@ -60,23 +60,24 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    padding: Spacing.four,
-    gap: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.two,
   },
   messageBlock: {
     gap: Spacing.one,
-    paddingTop: Spacing.one,
+    paddingTop: Spacing.two,
     borderTopWidth: 1,
     borderTopColor: Colors.surfaceBorder,
   },
   messageLabel: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontSize: 13,
+    lineHeight: 20,
   },
   messageValue: {
     color: Colors.text,
-    fontSize: 15,
+    fontSize: 13,
     fontStyle: 'italic',
-    lineHeight: 22,
+    lineHeight: 20,
   },
 });

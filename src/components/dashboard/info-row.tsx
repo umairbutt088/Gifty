@@ -25,21 +25,22 @@ export function InfoRow({ label, value, capitalize = false }: InfoRowProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: Spacing.three,
+    gap: Spacing.one,
   },
   label: {
     flexShrink: 0,
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontSize: 13,
+    lineHeight: 20,
+    minWidth: 72,
   },
   value: {
     flex: 1,
     color: Colors.text,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
-    textAlign: 'right',
+    lineHeight: 20,
   },
   valueCapitalized: {
     textTransform: 'capitalize',

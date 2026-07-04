@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { Link, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -5,7 +6,7 @@ import { GlassCard } from '@/components/glass-card';
 import { StatusBadge } from '@/components/vendor/status-badge';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { formatMoney } from '@/lib/format';
+import { formatDeliveryDateLabel, formatMoney } from '@/lib/format';
 import type { VendorOrderWithGift } from '@/types/vendor';
 
 type OrderListItemProps = {
@@ -18,36 +19,86 @@ type OrderListItemProps = {
 function formatDeletedDate(value: string | null | undefined): string {
   if (!value) return 'Recently deleted';
 
-  return new Date(value).toLocaleDateString(undefined, {
+  return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  });
+  }).format(new Date(value));
+}
+
+function OrderMetaBullet({
+  label,
+  value,
+  italic = false,
+}: {
+  label: string;
+  value: string;
+  italic?: boolean;
+}) {
+  return (
+    <View style={styles.bulletRow}>
+      <Text style={styles.bulletLabel}>{label}</Text>
+      <Text
+        style={[styles.bulletValue, italic && styles.bulletValueItalic]}
+        numberOfLines={1}
+        ellipsizeMode="tail">
+        {value}
+      </Text>
+    </View>
+  );
 }
 
 function OrderCard({ order, deleted = false, deletedAt }: OrderListItemProps) {
+  const imageUrl = order.gift?.image_urls[0];
+
   return (
     <GlassCard style={[styles.card, deleted && styles.cardDeleted]}>
-      <View style={styles.header}>
-        <Text style={styles.giftTitle} numberOfLines={1}>
-          {order.gift?.title ?? 'Gift order'}
-        </Text>
-        {!deleted ? <StatusBadge status={order.status} kind="order" /> : null}
+      <View style={styles.imageColumn}>
+        <View style={styles.imageWrap}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+          ) : (
+            <View style={styles.placeholder}>
+              <Text style={styles.placeholderText}>Gift</Text>
+            </View>
+          )}
+        </View>
       </View>
 
-      <Text style={styles.recipient}>Gift for {order.recipient_name}</Text>
-      <Text style={styles.meta}>
-        {deleted
-          ? `Deleted ${formatDeletedDate(deletedAt)} · ${formatMoney(order.total_cents)}`
-          : `${formatMoney(order.total_cents)} · Qty ${order.quantity}${
-              order.delivery_date ? ` · ${order.delivery_date}` : ''
-            }`}
-      </Text>
-      {!deleted && order.gift_message ? (
-        <Text style={styles.message} numberOfLines={2}>
-          “{order.gift_message}”
-        </Text>
-      ) : null}
+      <View style={styles.body}>
+        <View style={styles.topRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            {order.gift?.title ?? 'Gift order'}
+          </Text>
+          {!deleted ? <StatusBadge status={order.status} kind="order" /> : null}
+        </View>
+
+        <View style={styles.details}>
+          {deleted ? (
+            <>
+              <OrderMetaBullet label="Deleted" value={formatDeletedDate(deletedAt)} />
+              <OrderMetaBullet label="Recipient" value={order.recipient_name} />
+              <OrderMetaBullet label="Price" value={formatMoney(order.total_cents)} />
+            </>
+          ) : (
+            <>
+              <OrderMetaBullet label="Recipient" value={order.recipient_name} />
+              <OrderMetaBullet label="Price" value={formatMoney(order.total_cents)} />
+              <OrderMetaBullet label="Qty" value={String(order.quantity)} />
+              {order.delivery_date ? (
+                <OrderMetaBullet
+                  label="Delivery"
+                  value={formatDeliveryDateLabel(order.delivery_date)}
+                />
+              ) : null}
+            </>
+          )}
+        </View>
+
+        {!deleted && order.gift_message ? (
+          <OrderMetaBullet label="Message" value={`"${order.gift_message}"`} italic />
+        ) : null}
+      </View>
     </GlassCard>
   );
 }
@@ -68,40 +119,87 @@ export function OrderListItem({ order, href, deleted = false, deletedAt }: Order
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
     padding: Spacing.three,
-    gap: Spacing.two,
+    gap: Spacing.three,
   },
   cardDeleted: {
-    opacity: 0.88,
+    opacity: 0.92,
   },
   pressed: {
     opacity: 0.92,
   },
-  header: {
-    flexDirection: 'row',
+  imageColumn: {
+    width: 88,
+    alignSelf: 'stretch',
+  },
+  imageWrap: {
+    flex: 1,
+    width: 88,
+    minHeight: 88,
+    borderRadius: Spacing.three,
+    overflow: 'hidden',
+    backgroundColor: Colors.surfaceNested,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholder: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surfaceNested,
+  },
+  placeholderText: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  body: {
+    flex: 1,
+    gap: Spacing.two,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  giftTitle: {
+  title: {
     flex: 1,
     color: Colors.text,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
   },
-  recipient: {
+  details: {
+    gap: Spacing.one,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  bulletLabel: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+    minWidth: 72,
+  },
+  bulletValue: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     color: Colors.text,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  meta: {
-    color: Colors.textSecondary,
     fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 20,
   },
-  message: {
-    color: Colors.textSecondary,
-    fontSize: 13,
+  bulletValueItalic: {
     fontStyle: 'italic',
-    lineHeight: 18,
+    fontWeight: '500',
+    color: Colors.textSecondary,
   },
 });

@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { Alert, View } from 'react-native';
 
 import {
+  CardList,
   DashboardHeader,
   EmptyState,
   ScreenShell,
@@ -81,15 +82,17 @@ export default function BuyerDeletedOrdersScreen() {
           message="Orders you remove from your list will appear here so you can restore them."
         />
       ) : (
-        orders.map((order) => (
-          <SwipeableDeletedOrderListItem
-            key={order.id}
-            order={order}
-            deletedAt={order.buyer_deleted_at}
-            onRestore={handleRestoreOrder}
-            onDeletePermanently={handlePermanentDeleteOrder}
-          />
-        ))
+        <CardList>
+          {orders.map((order) => (
+            <SwipeableDeletedOrderListItem
+              key={order.id}
+              order={order}
+              deletedAt={order.buyer_deleted_at}
+              onRestore={handleRestoreOrder}
+              onDeletePermanently={handlePermanentDeleteOrder}
+            />
+          ))}
+        </CardList>
       )}
     </ScreenShell>
   );
