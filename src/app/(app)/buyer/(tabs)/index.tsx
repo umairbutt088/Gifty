@@ -1,22 +1,33 @@
-import { router } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
-import { CardList, DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
-import { GiftListItem } from '@/components/vendor';
+import { BuyerGiftGridView, BuyerGiftListView } from '@/components/buyer';
+import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useListRefresh } from '@/hooks/use-list-refresh';
 import { fetchLiveGifts } from '@/lib/gifts';
+import { fetchPublicVendorStores } from '@/lib/vendor-store';
 import { useAuth } from '@/providers/auth-provider';
+import type { VendorStorePublic } from '@/types/vendor';
 
 export default function BuyerGiftsTabScreen() {
   const { profile } = useAuth();
+  const [vendorStores, setVendorStores] = useState<Map<string, VendorStorePublic>>(new Map());
 
-  const loadGifts = useCallback(async () => fetchLiveGifts(), []);
+  const loadGifts = useCallback(async () => {
+    const gifts = await fetchLiveGifts();
+    const vendorIds = [...new Set(gifts.map((gift) => gift.vendor_id))];
+    const stores = await fetchPublicVendorStores(vendorIds);
+    setVendorStores(stores);
+    return gifts;
+  }, []);
 
   const { items: gifts, loading, refreshControl } = useListRefresh({
     load: loadGifts,
   });
+
+  const GiftView = BuyerGiftGridView;
+  // const GiftView = BuyerGiftListView;
 
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
@@ -32,16 +43,7 @@ export default function BuyerGiftsTabScreen() {
           message="When vendors publish live gifts, they will appear here for you to browse and send."
         />
       ) : (
-        <CardList>
-          {gifts.map((gift) => (
-            <GiftListItem
-              key={gift.id}
-              gift={gift}
-              href={`/buyer/gift/${gift.id}`}
-              showStatus={false}
-            />
-          ))}
-        </CardList>
+        <GiftView gifts={gifts} vendorStores={vendorStores} />
       )}
     </ScreenShell>
   );
