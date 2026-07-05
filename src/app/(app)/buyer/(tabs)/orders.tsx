@@ -1,6 +1,6 @@
 import { View, Alert } from 'react-native';
 
-import { DashboardHeader, EmptyState, MenuRow, ScreenShell } from '@/components/dashboard';
+import { CardList, DashboardHeader, EmptyState, MenuRow, ScreenShell } from '@/components/dashboard';
 import { SwipeableOrderListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useBuyerOrdersList } from '@/hooks/use-buyer-orders-list';
@@ -45,14 +45,16 @@ export default function BuyerOrdersTabScreen() {
           message="When you buy a gift, order history and tracking will show up on this screen."
         />
       ) : (
-        orders.map((order) => (
-          <SwipeableOrderListItem
-            key={order.id}
-            order={order}
-            href={`/buyer/orders/${order.id}`}
-            onDelete={handleDeleteOrder}
-          />
-        ))
+        <CardList>
+          {orders.map((order) => (
+            <SwipeableOrderListItem
+              key={order.id}
+              order={order}
+              href={`/buyer/orders/${order.id}`}
+              onDelete={handleDeleteOrder}
+            />
+          ))}
+        </CardList>
       )}
     </ScreenShell>
   );

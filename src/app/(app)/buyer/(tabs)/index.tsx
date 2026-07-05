@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 
-import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
+import { CardList, DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 import { GiftListItem } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useListRefresh } from '@/hooks/use-list-refresh';
@@ -32,14 +32,16 @@ export default function BuyerGiftsTabScreen() {
           message="When vendors publish live gifts, they will appear here for you to browse and send."
         />
       ) : (
-        gifts.map((gift) => (
-          <GiftListItem
-            key={gift.id}
-            gift={gift}
-            href={`/buyer/gift/${gift.id}`}
-            showStatus={false}
-          />
-        ))
+        <CardList>
+          {gifts.map((gift) => (
+            <GiftListItem
+              key={gift.id}
+              gift={gift}
+              href={`/buyer/gift/${gift.id}`}
+              showStatus={false}
+            />
+          ))}
+        </CardList>
       )}
     </ScreenShell>
   );

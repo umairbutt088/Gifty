@@ -30,14 +30,16 @@ export function ConversationListItem({
     <Link href={href} asChild>
       <Pressable style={({ pressed }) => [pressed && styles.pressed]}>
         <GlassCard style={styles.card}>
-          <View style={styles.imageWrap}>
-            {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
-            ) : (
-              <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>Gift</Text>
-              </View>
-            )}
+          <View style={styles.imageColumn}>
+            <View style={styles.imageWrap}>
+              {imageUrl ? (
+                <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
+              ) : (
+                <View style={styles.placeholder}>
+                  <Text style={styles.placeholderText}>Gift</Text>
+                </View>
+              )}
+            </View>
           </View>
 
           <View style={styles.body}>
@@ -78,19 +80,27 @@ export function getConversationCounterpartLabel(
   return formatChatProfileName(counterpart);
 }
 
+const IMAGE_WIDTH = 72;
+
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     padding: Spacing.three,
     gap: Spacing.three,
   },
   pressed: {
     opacity: 0.92,
   },
+  imageColumn: {
+    width: IMAGE_WIDTH,
+    alignSelf: 'stretch',
+  },
   imageWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: Spacing.two,
+    flex: 1,
+    width: IMAGE_WIDTH,
+    minHeight: IMAGE_WIDTH,
+    borderRadius: Spacing.three,
     overflow: 'hidden',
     backgroundColor: Colors.surfaceNested,
   },

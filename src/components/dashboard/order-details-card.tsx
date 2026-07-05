@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
 import { Colors } from '@/constants/colors';
@@ -30,7 +30,7 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
       ) : null}
 
       {order.recipient_address ? (
-        <InfoRow label="Delivery address" value={order.recipient_address} />
+        <InfoRow label="Delivery address" value={order.recipient_address} multiline />
       ) : null}
 
       {order.recipient_phone ? (
@@ -50,8 +50,7 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
 
       {order.gift_message ? (
         <View style={styles.messageBlock}>
-          <Text style={styles.messageLabel}>Gift message</Text>
-          <Text style={styles.messageValue}>{order.gift_message}</Text>
+          <InfoRow label="Gift message" value={order.gift_message} italic multiline />
         </View>
       ) : null}
     </GlassCard>
@@ -60,23 +59,12 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    padding: Spacing.four,
-    gap: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.two,
   },
   messageBlock: {
-    gap: Spacing.one,
-    paddingTop: Spacing.one,
+    paddingTop: Spacing.two,
     borderTopWidth: 1,
     borderTopColor: Colors.surfaceBorder,
-  },
-  messageLabel: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-  },
-  messageValue: {
-    color: Colors.text,
-    fontSize: 15,
-    fontStyle: 'italic',
-    lineHeight: 22,
   },
 });

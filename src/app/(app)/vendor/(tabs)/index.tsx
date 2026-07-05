@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 
 import {
+  CardList,
   DashboardHeader,
   EmptyState,
   MenuRow,
@@ -60,14 +61,16 @@ export default function VendorGiftsScreen() {
           message="Create your first gift listing with photos, price, category, and stock."
         />
       ) : (
-        gifts.map((gift) => (
-          <SwipeableGiftListItem
-            key={gift.id}
-            gift={gift}
-            href={`/vendor/gift/${gift.id}`}
-            onDelete={handleDeleteGift}
-          />
-        ))
+        <CardList>
+          {gifts.map((gift) => (
+            <SwipeableGiftListItem
+              key={gift.id}
+              gift={gift}
+              href={`/vendor/gift/${gift.id}`}
+              onDelete={handleDeleteGift}
+            />
+          ))}
+        </CardList>
       )}
     </ScreenShell>
   );
