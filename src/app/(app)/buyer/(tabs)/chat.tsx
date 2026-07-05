@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { ConversationListItem, getConversationCounterpartLabel } from '@/components/chat';
-import { DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
+import { CardList, DashboardHeader, EmptyState, ScreenShell } from '@/components/dashboard';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useConversationsList } from '@/hooks/use-conversations-list';
 import { useAuth } from '@/providers/auth-provider';
@@ -24,17 +24,19 @@ export default function BuyerChatTabScreen() {
       ) : conversations.length === 0 ? (
         <EmptyState
           title="No conversations yet"
-          message="Open an order and tap Message vendor to start a chat about that gift order."
+          message="Open an order and tap Chat to start a conversation about that gift order."
         />
       ) : (
-        conversations.map((conversation) => (
-          <ConversationListItem
-            key={conversation.id}
-            conversation={conversation}
-            counterpartLabel={getConversationCounterpartLabel(conversation, profile?.id ?? '')}
-            href={`/buyer/chat/${conversation.id}`}
-          />
-        ))
+        <CardList>
+          {conversations.map((conversation) => (
+            <ConversationListItem
+              key={conversation.id}
+              conversation={conversation}
+              counterpartLabel={getConversationCounterpartLabel(conversation, profile?.id ?? '')}
+              href={`/buyer/chat/${conversation.id}`}
+            />
+          ))}
+        </CardList>
       )}
     </ScreenShell>
   );

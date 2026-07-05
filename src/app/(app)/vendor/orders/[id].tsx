@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import {
+  ButtonStack,
   DashboardHeader,
   OrderDetailsCard,
   PrimaryButton,
@@ -117,29 +118,49 @@ export default function VendorOrderDetailScreen() {
       <SectionTitle>Delivery details</SectionTitle>
       <OrderDetailsCard order={order} />
 
-      {nextAction ? (
-        <PrimaryButton
-          label={nextAction.label}
-          loading={updating}
-          onPress={() => void handleStatusUpdate(nextAction.nextStatus)}
-        />
-      ) : null}
+      <ButtonStack>
+        <ButtonStack horizontal>
+          <PrimaryButton
+            label="Chat with buyer"
+            size="compact"
+            loading={openingChat}
+            onPress={() => void handleOpenChat()}
+          />
 
-      <PrimaryButton
-        label="Message buyer"
-        variant="secondary"
-        loading={openingChat}
-        onPress={() => void handleOpenChat()}
-      />
+          {nextAction ? (
+            <PrimaryButton
+              label={nextAction.label}
+              size="compact"
+              variant="share"
+              loading={updating}
+              onPress={() => void handleStatusUpdate(nextAction.nextStatus)}
+            />
+          ) : null}
+        </ButtonStack>
 
-      {order.status === 'new' ? (
-        <PrimaryButton
-          label="Reject order"
-          variant="secondary"
-          loading={updating}
-          onPress={handleReject}
-        />
-      ) : null}
+        {order.status === 'new' ? (
+          <View style={styles.rejectRow}>
+            <PrimaryButton
+              label="Reject order"
+              size="compact"
+              variant="danger"
+              style={styles.rejectButton}
+              loading={updating}
+              onPress={handleReject}
+            />
+          </View>
+        ) : null}
+      </ButtonStack>
     </ScreenShell>
   );
 }
+
+const styles = StyleSheet.create({
+  rejectRow: {
+    alignItems: 'center',
+  },
+  rejectButton: {
+    flex: 0,
+    width: '48%',
+  },
+});
