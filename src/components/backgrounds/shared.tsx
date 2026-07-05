@@ -1,6 +1,6 @@
 import { StyleSheet, useWindowDimensions, View, type ViewProps } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 export type BackgroundLayout = {
@@ -35,8 +35,10 @@ export function useBackgroundPalette() {
 }
 
 export function BackgroundRoot({ style, children, ...props }: ViewProps) {
+  const colors = useColors();
+
   return (
-    <View style={[styles.root, style]} {...props}>
+    <View style={[styles.root, { backgroundColor: colors.background }, style]} {...props}>
       {children}
       <GrainOverlay />
       <VignetteOverlay />
@@ -45,14 +47,18 @@ export function BackgroundRoot({ style, children, ...props }: ViewProps) {
 }
 
 function GrainOverlay() {
-  return <View pointerEvents="none" style={styles.grainOverlay} />;
+  const colors = useColors();
+
+  return <View pointerEvents="none" style={[styles.grainOverlay, { backgroundColor: colors.grain }]} />;
 }
 
 function VignetteOverlay() {
+  const colors = useColors();
+
   return (
     <View pointerEvents="none" style={styles.vignette}>
       <View style={styles.vignetteFade} />
-      <View style={styles.vignetteBase} />
+      <View style={[styles.vignetteBase, { backgroundColor: colors.vignette }]} />
     </View>
   );
 }
@@ -60,12 +66,10 @@ function VignetteOverlay() {
 const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: Colors.background,
     overflow: 'hidden',
   },
   grainOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: Colors.grain,
   },
   vignette: {
     ...StyleSheet.absoluteFill,
@@ -76,6 +80,5 @@ const styles = StyleSheet.create({
   },
   vignetteBase: {
     height: '42%',
-    backgroundColor: Colors.vignette,
   },
 });

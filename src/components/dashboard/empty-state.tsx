@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 
 type EmptyStateProps = {
@@ -10,10 +10,12 @@ type EmptyStateProps = {
 };
 
 export function EmptyState({ title, message }: EmptyStateProps) {
+  const colors = useColors();
+
   return (
     <GlassCard style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.message}>{message}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
     </GlassCard>
   );
 }
@@ -24,12 +26,10 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   title: {
-    color: Colors.text,
     fontSize: 18,
     fontWeight: '600',
   },
   message: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 21,
   },

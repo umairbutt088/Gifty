@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -76,6 +76,7 @@ function TabLabel({
 
 export default function VendorTabsLayout() {
   const theme = useScreenTheme();
+  const colors = useColors();
   const { newOrderCount } = useVendorStore();
 
   return (
@@ -83,8 +84,14 @@ export default function VendorTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.accentLight,
-        tabBarInactiveTintColor: Colors.textSecondary,
-        tabBarStyle: styles.tabBar,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: theme.surfaceBorder,
+          borderTopWidth: 1,
+          height: Platform.select({ ios: 84, default: 64 }),
+          paddingTop: 6,
+        },
         tabBarLabel: ({ focused, color, children }) => (
           <TabLabel focused={focused} color={String(color)}>
             {children}
@@ -133,13 +140,6 @@ export default function VendorTabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: Colors.background,
-    borderTopColor: Colors.surfaceBorder,
-    borderTopWidth: 1,
-    height: Platform.select({ ios: 84, default: 64 }),
-    paddingTop: 6,
-  },
   tabLabel: {
     fontSize: 11,
     fontWeight: '600',

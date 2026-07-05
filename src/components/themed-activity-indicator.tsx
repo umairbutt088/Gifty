@@ -1,6 +1,6 @@
 import { ActivityIndicator, type ActivityIndicatorProps } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 type ThemedActivityIndicatorProps = ActivityIndicatorProps & {
@@ -13,11 +13,12 @@ export function ThemedActivityIndicator({
   ...props
 }: ThemedActivityIndicatorProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <ActivityIndicator
       {...props}
-      color={color ?? (muted ? Colors.textMuted : theme.accentLight)}
+      color={color ?? (muted ? colors.textMuted : theme.accentLight)}
     />
   );
 }

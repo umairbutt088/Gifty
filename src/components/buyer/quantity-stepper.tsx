@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -20,6 +20,7 @@ export function QuantityStepper({
   disabled = false,
 }: QuantityStepperProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const canDecrease = !disabled && value > min;
   const canIncrease = !disabled && value < max;
 
@@ -37,10 +38,10 @@ export function QuantityStepper({
           !canDecrease && styles.buttonDisabled,
           pressed && canDecrease && styles.buttonPressed,
         ]}>
-        <Text style={styles.buttonLabel}>−</Text>
+        <Text style={[styles.buttonLabel, { color: colors.text }]}>−</Text>
       </Pressable>
 
-      <Text style={styles.value}>{value}</Text>
+      <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
 
       <Pressable
         disabled={!canIncrease}
@@ -54,7 +55,7 @@ export function QuantityStepper({
           !canIncrease && styles.buttonDisabled,
           pressed && canIncrease && styles.buttonPressed,
         ]}>
-        <Text style={styles.buttonLabel}>+</Text>
+        <Text style={[styles.buttonLabel, { color: colors.text }]}>+</Text>
       </Pressable>
     </View>
   );
@@ -81,7 +82,6 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   buttonLabel: {
-    color: Colors.text,
     fontSize: 20,
     fontWeight: '600',
     lineHeight: 22,
@@ -89,7 +89,6 @@ const styles = StyleSheet.create({
   value: {
     minWidth: 24,
     textAlign: 'center',
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '700',
   },

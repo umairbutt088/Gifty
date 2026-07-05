@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -18,6 +18,7 @@ export function ChatComposer({
   placeholder = 'Write a message…',
 }: ChatComposerProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -38,13 +39,20 @@ export function ChatComposer({
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.inputRow, { borderColor: theme.surfaceBorder, backgroundColor: theme.surface }]}>
+      <View
+        style={[
+          styles.inputRow,
+          {
+            borderColor: theme.inputBorder,
+            backgroundColor: theme.input,
+          },
+        ]}>
         <TextInput
           value={text}
           onChangeText={setText}
           placeholder={placeholder}
-          placeholderTextColor={Colors.textMuted}
-          style={styles.input}
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, { color: colors.text }]}
           multiline
           maxLength={2000}
           editable={!sending}
@@ -59,7 +67,7 @@ export function ChatComposer({
             pressed && !sending && text.trim() && styles.sendButtonPressed,
           ]}>
           {sending ? (
-            <ThemedActivityIndicator size="small" />
+            <ThemedActivityIndicator size="small" color="#FFFFFF" />
           ) : (
             <Text style={styles.sendLabel}>Send</Text>
           )}
@@ -77,7 +85,7 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     gap: Spacing.two,
     borderWidth: 1,
     borderRadius: Spacing.three,
@@ -87,10 +95,12 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 40,
     maxHeight: 120,
-    color: Colors.text,
     fontSize: 15,
-    paddingVertical: Spacing.one,
-    textAlignVertical: 'top',
+    lineHeight: 20,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    paddingHorizontal: 0,
+    textAlignVertical: 'center',
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
   },
   sendButton: {
     minWidth: 64,
@@ -108,7 +118,7 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   sendLabel: {
-    color: Colors.text,
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
   },

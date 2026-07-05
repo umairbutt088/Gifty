@@ -12,8 +12,9 @@ import {
 } from '@/components/dashboard';
 import { GlassCard } from '@/components/glass-card';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 import { formatDeliveryCities, formatMoney } from '@/lib/format';
 import { fetchLiveGiftsByVendor } from '@/lib/gifts';
 import { fetchPublicVendorStore } from '@/lib/vendor-store';
@@ -23,6 +24,8 @@ import type { GiftRow, VendorStorePublic } from '@/types/vendor';
 export default function BuyerVendorStoreScreen() {
   const router = useRouter();
   const { vendorId } = useLocalSearchParams<{ vendorId: string }>();
+  const colors = useColors();
+  const theme = useScreenTheme();
   const [store, setStore] = useState<VendorStorePublic | null>(null);
   const [gifts, setGifts] = useState<GiftRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,12 +83,16 @@ export default function BuyerVendorStoreScreen() {
         onBack={() => router.back()}
       />
 
-      <View style={styles.heroCard}>
+      <View
+        style={[
+          styles.heroCard,
+          { borderColor: theme.surfaceBorder, backgroundColor: theme.surface },
+        ]}>
         {store.logo_url ? (
           <Image source={{ uri: store.logo_url }} style={styles.heroLogo} contentFit="cover" />
         ) : (
-          <View style={styles.heroLogoPlaceholder}>
-            <Text style={styles.heroLogoPlaceholderText}>
+          <View style={[styles.heroLogoPlaceholder, { backgroundColor: colors.surfaceNested }]}>
+            <Text style={[styles.heroLogoPlaceholderText, { color: colors.text }]}>
               {store.name.slice(0, 1).toUpperCase()}
             </Text>
           </View>
@@ -94,7 +101,7 @@ export default function BuyerVendorStoreScreen() {
 
       <SectionTitle>About</SectionTitle>
       <GlassCard style={styles.detailCard}>
-        <Text style={styles.bio}>
+        <Text style={[styles.bio, { color: colors.textSecondary }]}>
           {store.bio?.trim() || 'This vendor has not added a store bio yet.'}
         </Text>
       </GlassCard>
@@ -129,7 +136,7 @@ export default function BuyerVendorStoreScreen() {
           />
         ) : null}
         {!store.offers_delivery ? (
-          <Text style={styles.pickupNote}>
+          <Text style={[styles.pickupNote, { color: colors.textMuted }]}>
             Collect your order directly from this vendor. No delivery address is required at
             checkout.
           </Text>
@@ -139,7 +146,7 @@ export default function BuyerVendorStoreScreen() {
       <SectionTitle>Gifts from this store</SectionTitle>
 
       {gifts.length === 0 ? (
-        <Text style={styles.empty}>No live gifts right now.</Text>
+        <Text style={[styles.empty, { color: colors.textSecondary }]}>No live gifts right now.</Text>
       ) : (
         <GiftView gifts={gifts} vendorStores={vendorStores} />
       )}
@@ -150,9 +157,7 @@ export default function BuyerVendorStoreScreen() {
 const styles = StyleSheet.create({
   heroCard: {
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
     borderRadius: Spacing.four,
-    backgroundColor: Colors.surface,
     overflow: 'hidden',
   },
   heroLogo: {
@@ -164,10 +169,8 @@ const styles = StyleSheet.create({
     aspectRatio: 16 / 9,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
   },
   heroLogoPlaceholderText: {
-    color: Colors.text,
     fontSize: 48,
     fontWeight: '700',
   },
@@ -176,17 +179,14 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   bio: {
-    color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
   },
   pickupNote: {
-    color: Colors.textMuted,
     fontSize: 13,
     lineHeight: 18,
   },
   empty: {
-    color: Colors.textSecondary,
     fontSize: 14,
   },
 });

@@ -1,6 +1,6 @@
 import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -12,6 +12,7 @@ type SegmentBarProps<T extends string> = {
 
 export function SegmentBar<T extends string>({ options, value, onChange }: SegmentBarProps<T>) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <View style={styles.wrapper}>
@@ -36,7 +37,14 @@ export function SegmentBar<T extends string>({ options, value, onChange }: Segme
                 selected && styles.chipSelected,
                 pressed && styles.chipPressed,
               ]}>
-              <Text style={[styles.label, selected && styles.labelSelected]}>{option.label}</Text>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.textSecondary },
+                  selected && { color: colors.text },
+                ]}>
+                {option.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -75,11 +83,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   label: {
-    color: Colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
-  },
-  labelSelected: {
-    color: Colors.text,
   },
 });

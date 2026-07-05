@@ -12,8 +12,9 @@ import {
   SectionTitle,
 } from '@/components/dashboard';
 import { BackgroundOptions, type ScreenBackgroundVariant } from '@/constants/background-styles';
+import { ColorModeOptions, type ColorModePreference } from '@/constants/color-mode';
 import { ThemeOptions, type ScreenThemeVariant } from '@/constants/color-themes';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { getRoleHomeHref } from '@/lib/role-routes';
 import { useAuth } from '@/providers/auth-provider';
@@ -27,8 +28,40 @@ type ThemeSwatchProps = {
   onPress: () => void;
 };
 
+function ColorModeOption({
+  label,
+  description,
+  selected,
+  onPress,
+}: {
+  label: string;
+  description: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const theme = useScreenTheme();
+  const colors = useColors();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.modeOption,
+        {
+          borderColor: selected ? theme.accent : theme.surfaceBorder,
+          backgroundColor: selected ? theme.surfaceSelected : theme.surface,
+        },
+        pressed && styles.swatchPressed,
+      ]}>
+      <Text style={[styles.modeLabel, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>{description}</Text>
+    </Pressable>
+  );
+}
+
 function ThemeSwatch({ label, description, preview, selected, onPress }: ThemeSwatchProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <Pressable
@@ -47,12 +80,12 @@ function ThemeSwatch({ label, description, preview, selected, onPress }: ThemeSw
         ))}
       </View>
       <View style={styles.swatchText}>
-        <Text style={styles.swatchLabel}>{label}</Text>
-        <Text style={styles.swatchDescription}>{description}</Text>
+        <Text style={[styles.swatchLabel, { color: colors.text }]}>{label}</Text>
+        <Text style={[styles.swatchDescription, { color: colors.textSecondary }]}>{description}</Text>
       </View>
       {selected ? (
         <View style={[styles.selectedBadge, { backgroundColor: theme.accent }]}>
-          <Text style={styles.selectedBadgeText}>Active</Text>
+          <Text style={[styles.selectedBadgeText, { color: colors.text }]}>Active</Text>
         </View>
       ) : null}
     </Pressable>
@@ -73,6 +106,7 @@ function BackgroundSwatch({
   onPress: () => void;
 }) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <Pressable
@@ -87,12 +121,12 @@ function BackgroundSwatch({
       ]}>
       <BackgroundPreview variant={variant} selected={selected} />
       <View style={styles.swatchText}>
-        <Text style={styles.swatchLabel}>{label}</Text>
-        <Text style={styles.swatchDescription}>{description}</Text>
+        <Text style={[styles.swatchLabel, { color: colors.text }]}>{label}</Text>
+        <Text style={[styles.swatchDescription, { color: colors.textSecondary }]}>{description}</Text>
       </View>
       {selected ? (
         <View style={[styles.selectedBadge, { backgroundColor: theme.accent }]}>
-          <Text style={styles.selectedBadgeText}>Active</Text>
+          <Text style={[styles.selectedBadgeText, { color: colors.text }]}>Active</Text>
         </View>
       ) : null}
     </Pressable>
@@ -101,7 +135,9 @@ function BackgroundSwatch({
 
 export default function SettingsScreen() {
   const { profile, user, signOut } = useAuth();
-  const { variant, backgroundVariant, setThemeVariant, setBackgroundVariant } = useAppTheme();
+  const { variant, backgroundVariant, colorMode, setThemeVariant, setBackgroundVariant, setColorMode } =
+    useAppTheme();
+  const colors = useColors();
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
@@ -119,6 +155,10 @@ export default function SettingsScreen() {
     void setBackgroundVariant(next);
   }
 
+  function handleSelectColorMode(next: ColorModePreference) {
+    void setColorMode(next);
+  }
+
   return (
     <ScreenShell>
       <DashboardHeader
@@ -130,11 +170,22 @@ export default function SettingsScreen() {
 
       <SectionTitle>Appearance</SectionTitle>
       <GlassCard style={styles.themeCard}>
-        <Text style={styles.themeHint}>
-          Pick a color theme for accents and UI. Pick a background for the layout pattern — it
-          uses the same theme colors.
+        <Text style={[styles.themeHint, { color: colors.textSecondary }]}>
+          Choose light or dark mode, then pick accent colors and a background pattern.
         </Text>
-        <Text style={styles.groupLabel}>Color theme</Text>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>Color mode</Text>
+        <View style={styles.modeList}>
+          {ColorModeOptions.map((option) => (
+            <ColorModeOption
+              key={option.value}
+              label={option.label}
+              description={option.description}
+              selected={colorMode === option.value}
+              onPress={() => handleSelectColorMode(option.value)}
+            />
+          ))}
+        </View>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>Color theme</Text>
         <View style={styles.swatchList}>
           {ThemeOptions.map((option) => (
             <ThemeSwatch
@@ -147,7 +198,7 @@ export default function SettingsScreen() {
             />
           ))}
         </View>
-        <Text style={styles.groupLabel}>Background style</Text>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>Background style</Text>
         <View style={styles.swatchList}>
           {BackgroundOptions.map((option) => (
             <BackgroundSwatch
@@ -182,12 +233,28 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   themeHint: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
+  modeList: {
+    gap: Spacing.two,
+  },
+  modeOption: {
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    gap: 2,
+  },
+  modeLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  modeDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   groupLabel: {
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.3,
@@ -218,12 +285,10 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   swatchLabel: {
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   swatchDescription: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
   selectedBadge: {
@@ -235,7 +300,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   selectedBadgeText: {
-    color: Colors.text,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',

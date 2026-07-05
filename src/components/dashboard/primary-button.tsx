@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -49,11 +49,16 @@ export function PrimaryButton({
   ...props
 }: PrimaryButtonProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const isDisabled = disabled || loading;
   const isCompact = size === 'compact';
   const gradientVariant = getGradientVariant(variant);
   const isGradient = variant === 'primary' || gradientVariant !== null;
-  const labelColor = isDisabled ? Colors.textMuted : Colors.text;
+  const labelColor = isDisabled
+    ? colors.textMuted
+    : variant === 'secondary'
+      ? colors.text
+      : '#FFFFFF';
 
   const gradientStops =
     variant === 'primary'

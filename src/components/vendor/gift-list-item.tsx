@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
 import { StatusBadge } from '@/components/vendor/status-badge';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { formatMoney } from '@/lib/format';
@@ -28,15 +28,18 @@ function formatDeletedDate(value: string | null): string {
 }
 
 function GiftMetaBullet({ label, value }: { label: string; value: string }) {
+  const colors = useColors();
+
   return (
     <View style={styles.bulletRow}>
-      <Text style={styles.bulletLabel}>{label}</Text>
-      <Text style={styles.bulletValue}>{value}</Text>
+      <Text style={[styles.bulletLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.bulletValue, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
 
 export function GiftListItem({ gift, href, deleted = false, showStatus = true }: GiftListItemProps) {
+  const colors = useColors();
   const categoryLabel =
     GIFT_CATEGORIES.find((item) => item.value === gift.category)?.label ?? gift.category;
   const imageUrl = gift.image_urls[0];
@@ -44,12 +47,14 @@ export function GiftListItem({ gift, href, deleted = false, showStatus = true }:
   const content = (
     <GlassCard style={[styles.card, deleted && styles.cardDeleted]}>
       <View style={styles.imageColumn}>
-        <View style={styles.imageWrap}>
+        <View style={[styles.imageWrap, { backgroundColor: colors.surfaceNested }]}>
           {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
           ) : (
-            <View style={styles.placeholder}>
-              <Text style={styles.placeholderText}>{deleted ? 'No photos' : 'Gift'}</Text>
+            <View style={[styles.placeholder, { backgroundColor: colors.surfaceNested }]}>
+              <Text style={[styles.placeholderText, { color: colors.textMuted }]}>
+                {deleted ? 'No photos' : 'Gift'}
+              </Text>
             </View>
           )}
         </View>
@@ -57,7 +62,7 @@ export function GiftListItem({ gift, href, deleted = false, showStatus = true }:
 
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {gift.title}
           </Text>
           {!deleted && showStatus ? <StatusBadge status={gift.status} kind="gift" /> : null}
@@ -116,7 +121,6 @@ const styles = StyleSheet.create({
     height: 88,
     borderRadius: Spacing.three,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -126,10 +130,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
   },
   placeholderText: {
-    color: Colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -145,7 +147,6 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 24,
@@ -158,20 +159,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
   },
-  bullet: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
   bulletLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     minWidth: 64,
   },
   bulletValue: {
     flex: 1,
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 20,

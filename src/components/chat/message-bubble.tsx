@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatChatTime } from '@/lib/chat-format';
 import { formatChatProfileName } from '@/lib/chat';
@@ -14,6 +14,7 @@ type MessageBubbleProps = {
 
 export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <View style={[styles.row, isOwn ? styles.rowOwn : styles.rowOther]}>
@@ -22,13 +23,19 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           styles.bubble,
           isOwn
             ? { backgroundColor: theme.accent, borderColor: theme.buttonBorder }
-            : { backgroundColor: Colors.surfaceNested, borderColor: Colors.surfaceBorder },
+            : { backgroundColor: theme.surfaceNested, borderColor: theme.surfaceBorder },
         ]}>
         {!isOwn ? (
-          <Text style={styles.sender}>{formatChatProfileName(message.sender)}</Text>
+          <Text style={[styles.sender, { color: colors.textSecondary }]}>
+            {formatChatProfileName(message.sender)}
+          </Text>
         ) : null}
-        <Text style={[styles.body, isOwn && styles.bodyOwn]}>{message.body}</Text>
-        <Text style={[styles.time, isOwn && styles.timeOwn]}>{formatChatTime(message.created_at)}</Text>
+        <Text style={[styles.body, { color: colors.text }]}>
+          {message.body}
+        </Text>
+        <Text style={[styles.time, { color: colors.textMuted }]}>
+          {formatChatTime(message.created_at)}
+        </Text>
       </View>
     </View>
   );
@@ -54,24 +61,15 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   sender: {
-    color: Colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   body: {
-    color: Colors.text,
     fontSize: 15,
     lineHeight: 21,
   },
-  bodyOwn: {
-    color: Colors.text,
-  },
   time: {
-    color: Colors.textMuted,
     fontSize: 11,
     alignSelf: 'flex-end',
-  },
-  timeOwn: {
-    color: Colors.textSecondary,
   },
 });

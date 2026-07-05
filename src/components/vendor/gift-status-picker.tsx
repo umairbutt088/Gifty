@@ -1,7 +1,7 @@
 import { ScrollView, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GIFT_STATUS_LABELS } from '@/constants/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 import type { GiftStatus } from '@/types/vendor';
@@ -19,10 +19,11 @@ type GiftStatusPickerProps = {
 
 export function GiftStatusPicker({ value, onChange, disabled = false }: GiftStatusPickerProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>Status</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Status</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         {STATUS_OPTIONS.map((item) => {
           const selected = item.value === value;
@@ -40,7 +41,14 @@ export function GiftStatusPicker({ value, onChange, disabled = false }: GiftStat
                 },
                 disabled && styles.chipDisabled,
               ]}>
-              <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{item.label}</Text>
+              <Text
+                style={[
+                  styles.chipLabel,
+                  { color: colors.textSecondary },
+                  selected && { color: colors.text },
+                ]}>
+                {item.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -54,7 +62,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -71,11 +78,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   chipLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
-  },
-  chipLabelSelected: {
-    color: Colors.text,
   },
 });

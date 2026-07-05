@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
 import { StatusBadge } from '@/components/vendor/status-badge';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import type { GiftRow } from '@/types/vendor';
@@ -16,6 +16,7 @@ type VendorGiftGridItemProps = {
 };
 
 export function VendorGiftGridItem({ gift, href, showStatus = true }: VendorGiftGridItemProps) {
+  const colors = useColors();
   const imageUrl = gift.image_urls[0];
 
   const content = (
@@ -24,25 +25,25 @@ export function VendorGiftGridItem({ gift, href, showStatus = true }: VendorGift
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
         ) : (
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imagePlaceholderText}>Gift</Text>
+          <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceNested }]}>
+            <Text style={[styles.imagePlaceholderText, { color: colors.textMuted }]}>Gift</Text>
           </View>
         )}
       </View>
 
       <View style={styles.meta}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {gift.title}
         </Text>
 
         <View style={styles.footer}>
           {showStatus ? <StatusBadge status={gift.status} kind="gift" /> : null}
-          <Text style={styles.price} numberOfLines={1}>
+          <Text style={[styles.price, { color: colors.text }]} numberOfLines={1}>
             {formatMoney(gift.price_cents)}
           </Text>
         </View>
 
-        <Text style={styles.stock} numberOfLines={1}>
+        <Text style={[styles.stock, { color: colors.textSecondary }]} numberOfLines={1}>
           {gift.stock} in stock
         </Text>
       </View>
@@ -81,7 +82,6 @@ const styles = StyleSheet.create({
     height: 108,
     borderRadius: Spacing.two,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -93,12 +93,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imagePlaceholderText: {
-    color: Colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
   title: {
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 17,
@@ -110,13 +108,11 @@ const styles = StyleSheet.create({
   },
   price: {
     flex: 1,
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'right',
   },
   stock: {
-    color: Colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },

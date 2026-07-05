@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/screen-background';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 
 import { DashboardHeader } from './dashboard-header';
@@ -49,6 +49,7 @@ export function ScreenShell({
   ...props
 }: ScreenShellProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const safeAreaPadding = {
     paddingTop: Math.max(insets.top - TOP_INSET_TRIM, Spacing.one),
     paddingBottom: insets.bottom,
@@ -93,7 +94,7 @@ export function ScreenShell({
   }
 
   return (
-    <View style={[styles.root, style]} {...props}>
+    <View style={[styles.root, { backgroundColor: colors.background }, style]} {...props}>
       <ScreenBackground />
       <View style={[styles.safeArea, safeAreaPadding]}>{content}</View>
     </View>
@@ -103,7 +104,6 @@ export function ScreenShell({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   safeArea: {
     flex: 1,

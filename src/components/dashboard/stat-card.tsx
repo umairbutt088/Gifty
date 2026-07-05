@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 
 type StatCardProps = {
@@ -10,10 +10,12 @@ type StatCardProps = {
 };
 
 export function StatCard({ label, value }: StatCardProps) {
+  const colors = useColors();
+
   return (
     <GlassCard style={styles.card}>
-      <Text style={styles.value}>{value}</Text>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+      <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
     </GlassCard>
   );
 }
@@ -50,12 +52,10 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   value: {
-    color: Colors.text,
     fontSize: 24,
     fontWeight: '700',
   },
   label: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
 });

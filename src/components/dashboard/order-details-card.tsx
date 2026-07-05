@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatDeliveryDateLabel, formatMoney } from '@/lib/format';
 import type { VendorOrderWithGift } from '@/types/vendor';
@@ -13,6 +13,8 @@ type OrderDetailsCardProps = {
 };
 
 export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
+  const colors = useColors();
+
   return (
     <GlassCard style={styles.card}>
       <InfoRow label="Recipient" value={order.recipient_name} />
@@ -59,7 +61,7 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
       ) : null}
 
       {order.gift_message ? (
-        <View style={styles.messageBlock}>
+        <View style={[styles.messageBlock, { borderTopColor: colors.surfaceBorder }]}>
           <InfoRow label="Gift message" value={order.gift_message} italic multiline />
         </View>
       ) : null}
@@ -75,6 +77,5 @@ const styles = StyleSheet.create({
   messageBlock: {
     paddingTop: Spacing.two,
     borderTopWidth: 1,
-    borderTopColor: Colors.surfaceBorder,
   },
 });
