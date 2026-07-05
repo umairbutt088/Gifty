@@ -11,6 +11,7 @@ import {
   ScreenShell,
   SectionTitle,
 } from '@/components/dashboard';
+import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { StatusBadge } from '@/components/vendor';
 import { Spacing } from '@/constants/theme';
@@ -125,6 +126,10 @@ export default function BuyerOrderDetailScreen() {
           </View>
         }
       />
+
+      {order.gift?.image_urls?.length ? (
+        <ImageGalleryViewer images={order.gift.image_urls} />
+      ) : null}
 
       <SectionTitle>Delivery details</SectionTitle>
       <OrderDetailsCard order={order} />

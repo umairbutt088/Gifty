@@ -16,6 +16,8 @@ export type VendorOrderStatus =
   | 'delivered'
   | 'rejected';
 
+export type OrderFulfillmentType = 'delivery' | 'pickup';
+
 export type VendorStoreRow = {
   id: string;
   vendor_id: string;
@@ -23,6 +25,9 @@ export type VendorStoreRow = {
   logo_url: string | null;
   bio: string | null;
   delivery_cities: string[];
+  offers_delivery: boolean;
+  delivery_radius_km: number | null;
+  delivery_charge_cents: number | null;
   bank_account_name: string | null;
   bank_account_number: string | null;
   bank_name: string | null;
@@ -54,6 +59,8 @@ export type VendorOrderRow = {
   status: VendorOrderStatus;
   quantity: number;
   total_cents: number;
+  fulfillment_type: OrderFulfillmentType;
+  delivery_charge_cents: number;
   recipient_name: string;
   recipient_address: string | null;
   recipient_phone: string | null;
@@ -76,11 +83,26 @@ export type VendorOrderWithGift = VendorOrderRow & {
   gift: Pick<GiftRow, 'id' | 'title' | 'image_urls'>;
 };
 
+export type VendorStorePublic = {
+  id: string;
+  vendor_id: string;
+  name: string;
+  logo_url: string | null;
+  bio: string | null;
+  delivery_cities: string[];
+  offers_delivery: boolean;
+  delivery_radius_km: number | null;
+  delivery_charge_cents: number | null;
+};
+
 export type VendorStoreInput = {
   name: string;
   logoUrl?: string | null;
   bio?: string | null;
   deliveryCities: string[];
+  offersDelivery?: boolean;
+  deliveryRadiusKm?: number | null;
+  deliveryChargeCents?: number | null;
   bankAccountName?: string | null;
   bankAccountNumber?: string | null;
   bankName?: string | null;

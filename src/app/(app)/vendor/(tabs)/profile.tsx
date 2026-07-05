@@ -11,10 +11,13 @@ import {
   SectionTitle,
   StatGrid,
 } from '@/components/dashboard';
+import { StoreSetupChecklist } from '@/components/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { formatDeliveryCities, formatMoney } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
+import { fetchLiveGiftsByVendor } from '@/lib/gifts';
 import { fetchVendorOrders, getVendorEarningsSummary } from '@/lib/vendor-orders';
+import { getStoreFulfillmentSummary } from '@/lib/vendor-store-helpers';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 
@@ -28,13 +31,16 @@ export default function VendorProfileTabScreen() {
     pendingCount: 0,
     totalCents: 0,
   });
+  const [liveGiftCount, setLiveGiftCount] = useState(0);
 
   const loadSummary = useCallback(async () => {
     if (!profile) return;
 
     await refreshStore();
     const orders = await fetchVendorOrders(profile.id);
+    const gifts = await fetchLiveGiftsByVendor(profile.id);
     setEarnings(getVendorEarningsSummary(orders));
+    setLiveGiftCount(gifts.length);
   }, [profile, refreshStore]);
 
   useFocusEffect(
@@ -71,10 +77,7 @@ export default function VendorProfileTabScreen() {
             {store?.bio || 'Add a short bio so buyers know what makes your gifts special.'}
           </Text>
           <Text style={styles.cities}>
-            Delivers to:{' '}
-            {store?.delivery_cities?.length
-              ? formatDeliveryCities(store.delivery_cities)
-              : 'No cities set'}
+            {store ? getStoreFulfillmentSummary(store) : 'Set pickup or delivery in Delivery settings'}
           </Text>
         </View>
       </View>
@@ -90,6 +93,7 @@ export default function VendorProfileTabScreen() {
       />
 
       <SectionTitle>My store</SectionTitle>
+      <StoreSetupChecklist store={store} liveGiftCount={liveGiftCount} />
       <MenuRow
         title="Edit store info"
         description="Name, logo, and bio"
@@ -97,7 +101,7 @@ export default function VendorProfileTabScreen() {
       />
       <MenuRow
         title="Delivery settings"
-        description="Cities you deliver to"
+        description="Pickup or delivery, radius, and fees"
         href="/vendor/profile/delivery"
       />
       <MenuRow

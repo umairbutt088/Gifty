@@ -10,6 +10,7 @@ import {
   ScreenShell,
   SectionTitle,
 } from '@/components/dashboard';
+import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
 import { StatusBadge } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { getOrCreateConversationForOrder } from '@/lib/chat';
@@ -114,6 +115,10 @@ export default function VendorOrderDetailScreen() {
         backHref="/vendor/orders"
         trailing={<StatusBadge status={order.status} kind="order" />}
       />
+
+      {order.gift?.image_urls?.length ? (
+        <ImageGalleryViewer images={order.gift.image_urls} />
+      ) : null}
 
       <SectionTitle>Delivery details</SectionTitle>
       <OrderDetailsCard order={order} />

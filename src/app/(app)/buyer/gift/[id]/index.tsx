@@ -2,7 +2,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { QuantityStepper, CartHeaderButton } from '@/components/buyer';
+import { QuantityStepper, CartHeaderButton, VendorStorePreview } from '@/components/buyer';
 import {
   DashboardHeader,
   PrimaryButton,
@@ -17,13 +17,15 @@ import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import { fetchLiveGiftById } from '@/lib/gifts';
+import { fetchPublicVendorStore } from '@/lib/vendor-store';
 import { useCart } from '@/providers/cart-provider';
-import type { GiftRow } from '@/types/vendor';
+import type { GiftRow, VendorStorePublic } from '@/types/vendor';
 
 export default function BuyerGiftDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { addGift } = useCart();
   const [gift, setGift] = useState<GiftRow | null>(null);
+  const [store, setStore] = useState<VendorStorePublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [addedMessage, setAddedMessage] = useState<string | null>(null);
@@ -36,6 +38,10 @@ export default function BuyerGiftDetailScreen() {
     setGift(row);
     if (row) {
       setQuantity((current) => Math.min(current, row.stock));
+      const storeRow = await fetchPublicVendorStore(row.vendor_id);
+      setStore(storeRow);
+    } else {
+      setStore(null);
     }
     setLoading(false);
   }, [id]);
@@ -90,6 +96,13 @@ export default function BuyerGiftDetailScreen() {
           <GlassCard style={styles.infoCard}>
             <Text style={styles.description}>{gift.description}</Text>
           </GlassCard>
+        </>
+      ) : null}
+
+      {store ? (
+        <>
+          <SectionTitle>Store</SectionTitle>
+          <VendorStorePreview store={store} compact />
         </>
       ) : null}
 
