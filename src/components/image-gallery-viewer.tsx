@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -20,7 +20,6 @@ const SWIPE_VELOCITY = 400;
 type ImageGalleryViewerProps = {
   images: string[];
   mainHeight?: number;
-  thumbnailSize?: number;
   emptyLabel?: string;
 };
 
@@ -36,7 +35,6 @@ function toSelectedIndex(pagerIndex: number, imageCount: number, loopEnabled: bo
 export function ImageGalleryViewer({
   images,
   mainHeight = 280,
-  thumbnailSize = 72,
   emptyLabel = 'No photos',
 }: ImageGalleryViewerProps) {
   const theme = useScreenTheme();
@@ -134,24 +132,6 @@ export function ImageGalleryViewer({
 
   const safeIndex = Math.min(selectedIndex, images.length - 1);
 
-  function selectImage(index: number) {
-    if (index === safeIndex) return;
-
-    const targetPagerIndex = loopEnabled ? index + 1 : index;
-    const from = pagerIndex.value;
-
-    setSelectedIndex(index);
-    pagerIndex.value = targetPagerIndex;
-
-    if (frameWidth.value === 0) {
-      dragX.value = 0;
-      return;
-    }
-
-    dragX.value = (from - targetPagerIndex) * frameWidth.value;
-    dragX.value = withTiming(0, { duration: SLIDE_DURATION });
-  }
-
   return (
     <View style={styles.root}>
       <View
@@ -180,34 +160,23 @@ export function ImageGalleryViewer({
       </View>
 
       {loopEnabled ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.thumbnailRow}>
-          {images.map((uri, index) => {
-            const selected = index === safeIndex;
+        <View style={styles.indicatorRow}>
+          {images.map((_, index) => {
+            const active = index === safeIndex;
 
             return (
-              <Pressable
-                key={`${uri}-${index}`}
-                onPress={() => selectImage(index)}
-                style={({ pressed }) => [pressed && styles.thumbnailPressed]}>
-                <View
-                  style={[
-                    styles.thumbnailWrap,
-                    {
-                      width: thumbnailSize,
-                      height: thumbnailSize,
-                      borderColor: selected ? theme.accent : theme.surfaceBorder,
-                      backgroundColor: selected ? theme.surfaceSelected : theme.surface,
-                    },
-                  ]}>
-                  <Image source={{ uri }} style={styles.thumbnailImage} contentFit="cover" />
-                </View>
-              </Pressable>
+              <View
+                key={index}
+                style={[
+                  styles.indicatorBar,
+                  active
+                    ? [styles.indicatorBarActive, { backgroundColor: theme.accent }]
+                    : styles.indicatorBarInactive,
+                ]}
+              />
             );
           })}
-        </ScrollView>
+        </View>
       ) : null}
     </View>
   );
@@ -215,7 +184,7 @@ export function ImageGalleryViewer({
 
 const styles = StyleSheet.create({
   root: {
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   mainFrame: {
     width: '100%',
@@ -239,21 +208,25 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: 'transparent',
   },
-  thumbnailRow: {
-    gap: Spacing.two,
+  indicatorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
     paddingVertical: Spacing.one,
   },
-  thumbnailWrap: {
-    borderWidth: 2,
-    borderRadius: Spacing.two,
-    overflow: 'hidden',
+  indicatorBar: {
+    height: 3,
+    borderRadius: 2,
   },
-  thumbnailPressed: {
-    opacity: 0.85,
+  indicatorBarActive: {
+    width: 20,
+    opacity: 1,
   },
-  thumbnailImage: {
-    width: '100%',
-    height: '100%',
+  indicatorBarInactive: {
+    width: 8,
+    backgroundColor: Colors.textMuted,
+    opacity: 0.45,
   },
   empty: {
     width: '100%',
