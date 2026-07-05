@@ -14,43 +14,47 @@ type VendorStorePreviewProps = {
 };
 
 export function VendorStorePreview({ store, compact = false }: VendorStorePreviewProps) {
+  function openStore() {
+    router.push(`/buyer/store/${store.vendor_id}`);
+  }
+
   return (
-    <Pressable
-      onPress={() => router.push(`/buyer/store/${store.vendor_id}`)}
-      style={({ pressed }) => [pressed && styles.pressed]}>
-      <GlassCard style={styles.card}>
-        <View style={styles.row}>
-          {store.logo_url ? (
-            <Image source={{ uri: store.logo_url }} style={styles.logo} contentFit="cover" />
-          ) : (
-            <View style={styles.logoPlaceholder}>
-              <Text style={styles.logoPlaceholderText}>{store.name.slice(0, 1).toUpperCase()}</Text>
-            </View>
-          )}
-
-          <View style={styles.text}>
-            <Text style={styles.name}>{store.name}</Text>
-            {store.bio && !compact ? (
-              <Text style={styles.bio} numberOfLines={2}>
-                {store.bio}
-              </Text>
-            ) : null}
-            <Text style={styles.cities} numberOfLines={compact ? 1 : 2}>
-              {getStoreFulfillmentSummary(store)}
-            </Text>
+    <GlassCard style={styles.card}>
+      <View style={styles.row}>
+        {store.logo_url ? (
+          <Image source={{ uri: store.logo_url }} style={styles.logo} contentFit="cover" />
+        ) : (
+          <View style={styles.logoPlaceholder}>
+            <Text style={styles.logoPlaceholderText}>{store.name.slice(0, 1).toUpperCase()}</Text>
           </View>
-        </View>
+        )}
 
-        <Text style={styles.link}>View store →</Text>
-      </GlassCard>
-    </Pressable>
+        <View style={styles.text}>
+          <Text style={styles.name}>{store.name}</Text>
+          {store.bio && !compact ? (
+            <Text style={styles.bio} numberOfLines={2}>
+              {store.bio}
+            </Text>
+          ) : null}
+          <Text style={styles.cities} numberOfLines={compact ? 1 : 2}>
+            {getStoreFulfillmentSummary(store)}
+          </Text>
+        </View>
+      </View>
+
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={`View ${store.name} store details`}
+        onPress={openStore}
+        style={({ pressed }) => [styles.linkRow, pressed && styles.linkPressed]}>
+        <Text style={styles.link}>View store</Text>
+        <Text style={styles.linkArrow}>→</Text>
+      </Pressable>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
-  pressed: {
-    opacity: 0.92,
-  },
   card: {
     padding: Spacing.four,
     gap: Spacing.three,
@@ -97,9 +101,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
+  },
+  linkPressed: {
+    opacity: 0.75,
+  },
   link: {
     color: Colors.accent,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  linkArrow: {
+    color: Colors.accent,
+    fontSize: 15,
     fontWeight: '600',
   },
 });
