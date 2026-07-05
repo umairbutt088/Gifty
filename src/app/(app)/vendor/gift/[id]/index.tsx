@@ -13,7 +13,7 @@ import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { StatusBadge, GiftStatusPicker } from '@/components/vendor';
 import { GIFT_CATEGORIES } from '@/constants/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import { softDeleteGift, fetchGiftById, updateGift } from '@/lib/gifts';
@@ -23,6 +23,7 @@ import type { GiftRow, GiftStatus } from '@/types/vendor';
 export default function VendorGiftDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
+  const colors = useColors();
   const [gift, setGift] = useState<GiftRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -135,7 +136,7 @@ export default function VendorGiftDetailScreen() {
         <>
           <SectionTitle>Description</SectionTitle>
           <GlassCard style={styles.infoCard}>
-            <Text style={styles.description}>{gift.description}</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{gift.description}</Text>
           </GlassCard>
         </>
       ) : null}
@@ -155,10 +156,12 @@ export default function VendorGiftDetailScreen() {
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const colors = useColors();
+
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
@@ -175,17 +178,14 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   infoLabel: {
-    color: Colors.textSecondary,
     fontSize: 14,
   },
   infoValue: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
   description: {
-    color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
   },

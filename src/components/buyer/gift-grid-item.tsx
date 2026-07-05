@@ -3,7 +3,7 @@ import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import type { GiftRow } from '@/types/vendor';
@@ -21,6 +21,7 @@ export function GiftGridItem({
   vendorLogoUrl,
   vendorName,
 }: GiftGridItemProps) {
+  const colors = useColors();
   const imageUrl = gift.image_urls[0];
   const vendorInitial = (vendorName ?? 'S').slice(0, 1).toUpperCase();
 
@@ -30,14 +31,14 @@ export function GiftGridItem({
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
         ) : (
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imagePlaceholderText}>Gift</Text>
+          <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceNested }]}>
+            <Text style={[styles.imagePlaceholderText, { color: colors.textMuted }]}>Gift</Text>
           </View>
         )}
       </View>
 
       <View style={styles.meta}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {gift.title}
         </Text>
 
@@ -45,16 +46,16 @@ export function GiftGridItem({
           {vendorLogoUrl ? (
             <Image source={{ uri: vendorLogoUrl }} style={styles.vendorLogo} contentFit="cover" />
           ) : (
-            <View style={styles.vendorLogoPlaceholder}>
-              <Text style={styles.vendorLogoInitial}>{vendorInitial}</Text>
+            <View style={[styles.vendorLogoPlaceholder, { backgroundColor: colors.surfaceNested, borderColor: colors.surfaceBorder }]}>
+              <Text style={[styles.vendorLogoInitial, { color: colors.text }]}>{vendorInitial}</Text>
             </View>
           )}
-          <Text style={styles.price} numberOfLines={1}>
+          <Text style={[styles.price, { color: colors.text }]} numberOfLines={1}>
             {formatMoney(gift.price_cents)}
           </Text>
         </View>
 
-        <Text style={styles.stock} numberOfLines={1}>
+        <Text style={[styles.stock, { color: colors.textSecondary }]} numberOfLines={1}>
           {gift.stock} in stock
         </Text>
       </View>
@@ -93,7 +94,6 @@ const styles = StyleSheet.create({
     height: 108,
     borderRadius: Spacing.two,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -105,12 +105,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imagePlaceholderText: {
-    color: Colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
   title: {
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 17,
@@ -131,23 +129,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
   },
   vendorLogoInitial: {
-    color: Colors.text,
     fontSize: 10,
     fontWeight: '700',
   },
   price: {
     flex: 1,
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '700',
   },
   stock: {
-    color: Colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },

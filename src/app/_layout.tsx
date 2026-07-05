@@ -1,4 +1,4 @@
-import { DarkTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, type ReactNode } from 'react';
@@ -7,29 +7,49 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components';
 import { AuthGate } from '@/components/auth-gate';
-import { Colors } from '@/constants/colors';
 import { AuthProvider } from '@/providers/auth-provider';
-import { AppThemeProvider, useScreenTheme } from '@/providers/screen-theme-provider';
+import { AppThemeProvider, useAppTheme } from '@/providers/screen-theme-provider';
 
 function NavigationThemeProvider({ children }: { children: ReactNode }) {
-  const theme = useScreenTheme();
+  const { theme, colors, resolvedColorMode } = useAppTheme();
+  const isDark = resolvedColorMode === 'dark';
 
   const navigationTheme = useMemo(
     () => ({
-      ...DarkTheme,
+      ...(isDark ? DarkTheme : DefaultTheme),
       colors: {
-        ...DarkTheme.colors,
-        background: Colors.background,
-        card: Colors.background,
-        text: Colors.text,
+        ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+        background: colors.background,
+        card: colors.background,
+        text: colors.text,
         border: theme.surfaceBorder,
         primary: theme.accent,
       },
     }),
-    [theme],
+    [colors.background, colors.text, isDark, theme.accent, theme.surfaceBorder],
   );
 
   return <ThemeProvider value={navigationTheme}>{children}</ThemeProvider>;
+}
+
+function RootStack() {
+  const { colors, resolvedColorMode } = useAppTheme();
+
+  return (
+    <>
+      <StatusBar style={resolvedColorMode === 'dark' ? 'light' : 'dark'} />
+      <AnimatedSplashOverlay />
+      <AuthGate>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+            animation: 'fade',
+          }}
+        />
+      </AuthGate>
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -38,17 +58,7 @@ export default function RootLayout() {
       <AppThemeProvider>
         <AuthProvider>
           <NavigationThemeProvider>
-            <StatusBar style="light" />
-            <AnimatedSplashOverlay />
-            <AuthGate>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: Colors.background },
-                  animation: 'fade',
-                }}
-              />
-            </AuthGate>
+            <RootStack />
           </NavigationThemeProvider>
         </AuthProvider>
       </AppThemeProvider>

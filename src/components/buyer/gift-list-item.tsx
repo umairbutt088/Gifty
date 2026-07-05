@@ -3,7 +3,7 @@ import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import type { GiftRow } from '@/types/vendor';
@@ -21,25 +21,26 @@ export function BuyerGiftListItem({
   vendorLogoUrl,
   vendorName,
 }: BuyerGiftListItemProps) {
+  const colors = useColors();
   const imageUrl = gift.image_urls[0];
   const vendorInitial = (vendorName ?? 'S').slice(0, 1).toUpperCase();
 
   const content = (
     <GlassCard style={styles.card}>
       <View style={styles.imageColumn}>
-        <View style={styles.imageWrap}>
+        <View style={[styles.imageWrap, { backgroundColor: colors.surfaceNested }]}>
           {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
           ) : (
-            <View style={styles.placeholder}>
-              <Text style={styles.placeholderText}>Gift</Text>
+            <View style={[styles.placeholder, { backgroundColor: colors.surfaceNested }]}>
+              <Text style={[styles.placeholderText, { color: colors.textMuted }]}>Gift</Text>
             </View>
           )}
         </View>
       </View>
 
       <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {gift.title}
         </Text>
 
@@ -47,16 +48,20 @@ export function BuyerGiftListItem({
           {vendorLogoUrl ? (
             <Image source={{ uri: vendorLogoUrl }} style={styles.vendorLogo} contentFit="cover" />
           ) : (
-            <View style={styles.vendorLogoPlaceholder}>
-              <Text style={styles.vendorLogoInitial}>{vendorInitial}</Text>
+            <View
+              style={[
+                styles.vendorLogoPlaceholder,
+                { backgroundColor: colors.surfaceNested, borderColor: colors.surfaceBorder },
+              ]}>
+              <Text style={[styles.vendorLogoInitial, { color: colors.text }]}>{vendorInitial}</Text>
             </View>
           )}
-          <Text style={styles.vendorName} numberOfLines={1}>
+          <Text style={[styles.vendorName, { color: colors.textSecondary }]} numberOfLines={1}>
             {vendorName ?? 'Store'}
           </Text>
         </View>
 
-        <Text style={styles.price}>{formatMoney(gift.price_cents)}</Text>
+        <Text style={[styles.price, { color: colors.text }]}>{formatMoney(gift.price_cents)}</Text>
       </View>
     </GlassCard>
   );
@@ -91,7 +96,6 @@ const styles = StyleSheet.create({
     height: 88,
     borderRadius: Spacing.three,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -101,10 +105,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
   },
   placeholderText: {
-    color: Colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -114,7 +116,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: Colors.text,
     fontSize: 17,
     fontWeight: '700',
     lineHeight: 22,
@@ -135,23 +136,18 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
   },
   vendorLogoInitial: {
-    color: Colors.text,
     fontSize: 10,
     fontWeight: '700',
   },
   vendorName: {
     flex: 1,
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
   price: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: '700',
   },

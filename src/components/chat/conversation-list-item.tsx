@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
 import { ORDER_STATUS_LABELS } from '@/constants/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatChatPreviewTime } from '@/lib/chat-format';
 import { formatChatProfileName } from '@/lib/chat';
@@ -21,6 +21,7 @@ export function ConversationListItem({
   counterpartLabel,
   href,
 }: ConversationListItemProps) {
+  const colors = useColors();
   const giftTitle = conversation.order?.gift?.title ?? 'Gift order';
   const imageUrl = conversation.order?.gift?.image_urls?.[0] ?? null;
   const preview = conversation.last_message_body ?? 'No messages yet';
@@ -31,12 +32,12 @@ export function ConversationListItem({
       <Pressable style={({ pressed }) => [pressed && styles.pressed]}>
         <GlassCard style={styles.card}>
           <View style={styles.imageColumn}>
-            <View style={styles.imageWrap}>
+            <View style={[styles.imageWrap, { backgroundColor: colors.surfaceNested }]}>
               {imageUrl ? (
                 <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
               ) : (
                 <View style={styles.placeholder}>
-                  <Text style={styles.placeholderText}>Gift</Text>
+                  <Text style={[styles.placeholderText, { color: colors.textMuted }]}>Gift</Text>
                 </View>
               )}
             </View>
@@ -44,22 +45,24 @@ export function ConversationListItem({
 
           <View style={styles.body}>
             <View style={styles.topRow}>
-              <Text style={styles.title} numberOfLines={1}>
+              <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
                 {giftTitle}
               </Text>
-              {timeLabel ? <Text style={styles.time}>{timeLabel}</Text> : null}
+              {timeLabel ? (
+                <Text style={[styles.time, { color: colors.textSecondary }]}>{timeLabel}</Text>
+              ) : null}
             </View>
 
-            <Text style={styles.counterpart} numberOfLines={1}>
+            <Text style={[styles.counterpart, { color: colors.textSecondary }]} numberOfLines={1}>
               {counterpartLabel}
             </Text>
 
-            <Text style={styles.preview} numberOfLines={2}>
+            <Text style={[styles.preview, { color: colors.textSecondary }]} numberOfLines={2}>
               {preview}
             </Text>
 
             {conversation.order?.status ? (
-              <Text style={styles.status}>
+              <Text style={[styles.status, { color: colors.textMuted }]}>
                 Order · {ORDER_STATUS_LABELS[conversation.order.status]}
               </Text>
             ) : null}
@@ -102,7 +105,6 @@ const styles = StyleSheet.create({
     minHeight: IMAGE_WIDTH,
     borderRadius: Spacing.three,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -114,7 +116,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   placeholderText: {
-    color: Colors.textMuted,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -130,26 +131,21 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   time: {
-    color: Colors.textSecondary,
     fontSize: 12,
   },
   counterpart: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
   preview: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
   status: {
-    color: Colors.textMuted,
     fontSize: 12,
   },
 });

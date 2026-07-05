@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassCard } from '@/components/glass-card';
 import { StatusBadge } from '@/components/vendor/status-badge';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatDeliveryDateLabel, formatMoney } from '@/lib/format';
 import type { VendorOrderWithGift } from '@/types/vendor';
@@ -35,11 +35,17 @@ function OrderMetaBullet({
   value: string;
   italic?: boolean;
 }) {
+  const colors = useColors();
+
   return (
     <View style={styles.bulletRow}>
-      <Text style={styles.bulletLabel}>{label}</Text>
+      <Text style={[styles.bulletLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text
-        style={[styles.bulletValue, italic && styles.bulletValueItalic]}
+        style={[
+          styles.bulletValue,
+          { color: colors.text },
+          italic && { color: colors.textSecondary, fontStyle: 'italic', fontWeight: '500' },
+        ]}
         numberOfLines={1}
         ellipsizeMode="tail">
         {value}
@@ -49,17 +55,18 @@ function OrderMetaBullet({
 }
 
 function OrderCard({ order, deleted = false, deletedAt }: OrderListItemProps) {
+  const colors = useColors();
   const imageUrl = order.gift?.image_urls[0];
 
   return (
     <GlassCard style={[styles.card, deleted && styles.cardDeleted]}>
       <View style={styles.imageColumn}>
-        <View style={styles.imageWrap}>
+        <View style={[styles.imageWrap, { backgroundColor: colors.surfaceNested }]}>
           {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.image} contentFit="cover" />
           ) : (
-            <View style={styles.placeholder}>
-              <Text style={styles.placeholderText}>Gift</Text>
+            <View style={[styles.placeholder, { backgroundColor: colors.surfaceNested }]}>
+              <Text style={[styles.placeholderText, { color: colors.textMuted }]}>Gift</Text>
             </View>
           )}
         </View>
@@ -67,7 +74,7 @@ function OrderCard({ order, deleted = false, deletedAt }: OrderListItemProps) {
 
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {order.gift?.title ?? 'Gift order'}
           </Text>
           {!deleted ? <StatusBadge status={order.status} kind="order" /> : null}
@@ -140,7 +147,6 @@ const styles = StyleSheet.create({
     minHeight: 88,
     borderRadius: Spacing.three,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -150,10 +156,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
   },
   placeholderText: {
-    color: Colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -169,7 +173,6 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 24,
@@ -183,7 +186,6 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   bulletLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     minWidth: 72,
@@ -192,14 +194,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     minWidth: 0,
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 20,
-  },
-  bulletValueItalic: {
-    fontStyle: 'italic',
-    fontWeight: '500',
-    color: Colors.textSecondary,
   },
 });

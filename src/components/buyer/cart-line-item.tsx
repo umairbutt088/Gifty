@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { QuantityStepper } from '@/components/buyer/quantity-stepper';
 import { GlassCard } from '@/components/glass-card';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import type { CartItem } from '@/types/cart';
@@ -15,21 +15,23 @@ type CartLineItemProps = {
 };
 
 export function CartLineItem({ item, onChangeQuantity, onRemove }: CartLineItemProps) {
+  const colors = useColors();
+
   return (
     <GlassCard style={styles.card}>
-      <View style={styles.imageWrap}>
+      <View style={[styles.imageWrap, { backgroundColor: colors.surfaceNested }]}>
         {item.imageUrl ? (
           <Image source={{ uri: item.imageUrl }} style={styles.image} contentFit="cover" />
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.placeholderText}>Gift</Text>
+            <Text style={[styles.placeholderText, { color: colors.textMuted }]}>Gift</Text>
           </View>
         )}
       </View>
 
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
             {item.title}
           </Text>
           <Pressable onPress={onRemove} hitSlop={8} style={({ pressed }) => [pressed && styles.removePressed]}>
@@ -37,7 +39,9 @@ export function CartLineItem({ item, onChangeQuantity, onRemove }: CartLineItemP
           </Pressable>
         </View>
 
-        <Text style={styles.price}>{formatMoney(item.priceCents)} each</Text>
+        <Text style={[styles.price, { color: colors.textSecondary }]}>
+          {formatMoney(item.priceCents)} each
+        </Text>
 
         <View style={styles.footer}>
           <QuantityStepper
@@ -45,7 +49,9 @@ export function CartLineItem({ item, onChangeQuantity, onRemove }: CartLineItemP
             max={item.stock}
             onChange={onChangeQuantity}
           />
-          <Text style={styles.lineTotal}>{formatMoney(item.priceCents * item.quantity)}</Text>
+          <Text style={[styles.lineTotal, { color: colors.text }]}>
+            {formatMoney(item.priceCents * item.quantity)}
+          </Text>
         </View>
       </View>
     </GlassCard>
@@ -63,7 +69,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: Spacing.two,
     overflow: 'hidden',
-    backgroundColor: Colors.surfaceNested,
   },
   image: {
     width: '100%',
@@ -75,7 +80,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   placeholderText: {
-    color: Colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -91,7 +95,6 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -104,7 +107,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   price: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
   footer: {
@@ -114,7 +116,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   lineTotal: {
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '700',
   },

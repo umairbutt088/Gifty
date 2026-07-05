@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrandBanner } from '@/components/brand-banner';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -41,6 +41,7 @@ export function DashboardHeader({
   trailing,
 }: DashboardHeaderProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   function handleBack() {
     if (onBack) {
@@ -83,7 +84,7 @@ export function DashboardHeader({
           </View>
         ) : null}
 
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
 
@@ -94,7 +95,11 @@ export function DashboardHeader({
 
       {variant === 'default' && subtitle ? (
         <Text
-          style={[styles.subtitle, showBack && styles.subtitleWithBack]}
+          style={[
+            styles.subtitle,
+            { color: colors.textSecondary },
+            showBack && styles.subtitleWithBack,
+          ]}
           numberOfLines={2}>
           {subtitle}
         </Text>
@@ -141,13 +146,11 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: Colors.text,
     fontSize: TITLE_FONT_SIZE,
     fontWeight: '700',
     lineHeight: TITLE_LINE_HEIGHT,
   },
   subtitle: {
-    color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     paddingLeft: Spacing.one,
