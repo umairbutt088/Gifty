@@ -3,14 +3,13 @@ import { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 
 import {
-  CardList,
   DashboardHeader,
   EmptyState,
   MenuRow,
   PrimaryButton,
   ScreenShell,
 } from '@/components/dashboard';
-import { SwipeableGiftListItem } from '@/components/vendor';
+import { VendorGiftGridView, VendorGiftListView } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { useListRefresh } from '@/hooks/use-list-refresh';
 import { softDeleteGift, fetchVendorGifts } from '@/lib/gifts';
@@ -40,6 +39,9 @@ export default function VendorGiftsScreen() {
     setGifts((current) => current.filter((gift) => gift.id !== giftId));
   }
 
+  const GiftView = VendorGiftGridView;
+  // const GiftView = VendorGiftListView;
+
   return (
     <ScreenShell scrollProps={{ refreshControl }}>
       <DashboardHeader title="Gifts" variant="tab" role={profile?.role} />
@@ -61,16 +63,7 @@ export default function VendorGiftsScreen() {
           message="Create your first gift listing with photos, price, category, and stock."
         />
       ) : (
-        <CardList>
-          {gifts.map((gift) => (
-            <SwipeableGiftListItem
-              key={gift.id}
-              gift={gift}
-              href={`/vendor/gift/${gift.id}`}
-              onDelete={handleDeleteGift}
-            />
-          ))}
-        </CardList>
+        <GiftView gifts={gifts} onDelete={handleDeleteGift} />
       )}
     </ScreenShell>
   );

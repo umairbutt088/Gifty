@@ -2,19 +2,19 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { QuantityStepper, CartHeaderButton, VendorStorePreview } from '@/components/buyer';
+import { CartHeaderButton, QuantityStepper, VendorStorePreview } from '@/components/buyer';
 import {
-  DashboardHeader,
-  PrimaryButton,
-  ScreenShell,
-  SectionTitle,
+    DashboardHeader,
+    PrimaryButton,
+    ScreenShell,
+    SectionTitle,
 } from '@/components/dashboard';
 import { GlassCard } from '@/components/glass-card';
 import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { formatMoney } from '@/lib/format';
 import { fetchLiveGiftById } from '@/lib/gifts';
 import { fetchPublicVendorStore } from '@/lib/vendor-store';

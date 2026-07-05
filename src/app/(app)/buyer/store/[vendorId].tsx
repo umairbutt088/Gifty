@@ -3,9 +3,8 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { GiftListItem } from '@/components/vendor';
+import { BuyerGiftGridView, BuyerGiftListView } from '@/components/buyer';
 import {
-  CardList,
   DashboardHeader,
   InfoRow,
   ScreenShell,
@@ -67,6 +66,10 @@ export default function BuyerVendorStoreScreen() {
       </ScreenShell>
     );
   }
+
+  const GiftView = BuyerGiftGridView;
+  // const GiftView = BuyerGiftListView;
+  const vendorStores = new Map([[store.vendor_id, store]]);
 
   return (
     <ScreenShell>
@@ -138,16 +141,7 @@ export default function BuyerVendorStoreScreen() {
       {gifts.length === 0 ? (
         <Text style={styles.empty}>No live gifts right now.</Text>
       ) : (
-        <CardList>
-          {gifts.map((gift) => (
-            <GiftListItem
-              key={gift.id}
-              gift={gift}
-              href={`/buyer/gift/${gift.id}`}
-              showStatus={false}
-            />
-          ))}
-        </CardList>
+        <GiftView gifts={gifts} vendorStores={vendorStores} />
       )}
     </ScreenShell>
   );
