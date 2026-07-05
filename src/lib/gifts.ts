@@ -48,6 +48,23 @@ export async function fetchLiveGifts(): Promise<GiftRow[]> {
   return data as GiftRow[];
 }
 
+export async function fetchLiveGiftsByVendor(vendorId: string): Promise<GiftRow[]> {
+  const { data, error } = await supabase
+    .from('gifts')
+    .select('*')
+    .eq('vendor_id', vendorId)
+    .eq('status', 'live')
+    .is('deleted_at', null)
+    .gt('stock', 0)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as GiftRow[];
+}
+
 export async function fetchLiveGiftById(giftId: string): Promise<GiftRow | null> {
   const { data, error } = await supabase
     .from('gifts')

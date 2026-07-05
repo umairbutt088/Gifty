@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import type { VendorStoreInput, VendorStoreRow } from '@/types/vendor';
+import { normalizeDeliveryCities, isDeliveryStepComplete } from '@/lib/vendor-store-helpers';
+import type { VendorStoreInput, VendorStorePublic, VendorStoreRow } from '@/types/vendor';
 
 export async function fetchVendorStore(vendorId: string): Promise<VendorStoreRow | null> {
   const { data, error } = await supabase
@@ -26,12 +27,17 @@ export async function upsertVendorStore(
   vendorId: string,
   input: VendorStoreInput,
 ): Promise<{ data: VendorStoreRow | null; error: Error | null }> {
+  const offersDelivery = input.offersDelivery ?? false;
+
   const payload = {
     vendor_id: vendorId,
     name: input.name.trim(),
     logo_url: input.logoUrl?.trim() || null,
     bio: input.bio?.trim() || null,
-    delivery_cities: input.deliveryCities,
+    offers_delivery: offersDelivery,
+    delivery_radius_km: offersDelivery ? (input.deliveryRadiusKm ?? null) : null,
+    delivery_charge_cents: offersDelivery ? (input.deliveryChargeCents ?? 0) : null,
+    delivery_cities: offersDelivery ? normalizeDeliveryCities(input.deliveryCities) : [],
     bank_account_name: input.bankAccountName?.trim() || null,
     bank_account_number: input.bankAccountNumber?.trim() || null,
     bank_name: input.bankName?.trim() || null,
@@ -56,9 +62,49 @@ export async function upsertVendorStore(
   };
 }
 
+export async function fetchPublicVendorStore(
+  vendorId: string,
+): Promise<VendorStorePublic | null> {
+  const { data, error } = await supabase.rpc('get_vendor_store_public', {
+    p_vendor_id: vendorId,
+  });
+
+  if (error || !data) {
+    if (__DEV__ && error) {
+      console.warn('[vendor-store] public fetch failed:', error.message);
+    }
+    return null;
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+
+  return row as VendorStorePublic;
+}
+
+export async function fetchPublicVendorStores(
+  vendorIds: string[],
+): Promise<Map<string, VendorStorePublic>> {
+  const uniqueIds = [...new Set(vendorIds)];
+  const entries = await Promise.all(
+    uniqueIds.map(async (vendorId) => {
+      const store = await fetchPublicVendorStore(vendorId);
+      return [vendorId, store] as const;
+    }),
+  );
+
+  const map = new Map<string, VendorStorePublic>();
+  for (const [vendorId, store] of entries) {
+    if (store) {
+      map.set(vendorId, store);
+    }
+  }
+
+  return map;
+}
+
 export function isVendorStoreOnboarded(store: VendorStoreRow | null): boolean {
   if (!store?.onboarding_complete) return false;
   if (!store.name.trim()) return false;
-  if (store.delivery_cities.length === 0) return false;
-  return true;
+  return isDeliveryStepComplete(store);
 }

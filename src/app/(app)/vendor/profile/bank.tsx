@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 
 import { DashboardHeader, PrimaryButton, ScreenShell } from '@/components/dashboard';
@@ -11,11 +11,21 @@ import { useVendorStore } from '@/providers/vendor-store-provider';
 export default function VendorProfileBankScreen() {
   const { profile } = useAuth();
   const { store, refreshStore } = useVendorStore();
-  const [bankAccountName, setBankAccountName] = useState(store?.bank_account_name ?? '');
-  const [bankName, setBankName] = useState(store?.bank_name ?? '');
-  const [bankAccountNumber, setBankAccountNumber] = useState(store?.bank_account_number ?? '');
+  const [bankAccountName, setBankAccountName] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!store || hydrated) return;
+
+    setBankAccountName(store.bank_account_name ?? '');
+    setBankName(store.bank_name ?? '');
+    setBankAccountNumber(store.bank_account_number ?? '');
+    setHydrated(true);
+  }, [store, hydrated]);
 
   async function handleSave() {
     if (!profile || !store) return;
@@ -28,6 +38,9 @@ export default function VendorProfileBankScreen() {
       logoUrl: store.logo_url,
       bio: store.bio,
       deliveryCities: store.delivery_cities,
+      offersDelivery: store.offers_delivery,
+      deliveryRadiusKm: store.delivery_radius_km,
+      deliveryChargeCents: store.delivery_charge_cents,
       bankAccountName,
       bankAccountNumber,
       bankName,

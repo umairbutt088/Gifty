@@ -1,21 +1,35 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 
 import { DashboardHeader, PrimaryButton, ScreenShell } from '@/components/dashboard';
-import { FormField } from '@/components/vendor';
+import { FormField, StoreLogoPicker, type GiftImageSelection } from '@/components/vendor';
+import { resolveStoreLogoUrl } from '@/lib/store-logo-upload';
 import { upsertVendorStore } from '@/lib/vendor-store';
+import { STORE_BIO_MAX_LENGTH } from '@/lib/vendor-store-helpers';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 
 export default function VendorProfileEditScreen() {
   const { profile } = useAuth();
   const { store, refreshStore } = useVendorStore();
-  const [name, setName] = useState(store?.name ?? '');
-  const [logoUrl, setLogoUrl] = useState(store?.logo_url ?? '');
-  const [bio, setBio] = useState(store?.bio ?? '');
+  const [name, setName] = useState('');
+  const [logo, setLogo] = useState<GiftImageSelection | null>(null);
+  const [bio, setBio] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!store || hydrated) return;
+
+    setName(store.name ?? '');
+    if (store.logo_url) {
+      setLogo({ uri: store.logo_url });
+    }
+    setBio(store.bio ?? '');
+    setHydrated(true);
+  }, [store, hydrated]);
 
   async function handleSave() {
     if (!profile || !store) return;
@@ -28,11 +42,26 @@ export default function VendorProfileEditScreen() {
     setLoading(true);
     setError(null);
 
+    const { url: logoUrl, error: logoError } = await resolveStoreLogoUrl(
+      profile.id,
+      logo,
+      store.logo_url,
+    );
+
+    if (logoError) {
+      setLoading(false);
+      setError(logoError.message);
+      return;
+    }
+
     const { error: saveError } = await upsertVendorStore(profile.id, {
       name,
       logoUrl,
       bio,
       deliveryCities: store.delivery_cities,
+      offersDelivery: store.offers_delivery,
+      deliveryRadiusKm: store.delivery_radius_km,
+      deliveryChargeCents: store.delivery_charge_cents,
       bankAccountName: store.bank_account_name,
       bankAccountNumber: store.bank_account_number,
       bankName: store.bank_name,
@@ -67,21 +96,16 @@ export default function VendorProfileEditScreen() {
         placeholder="Bloom & Box"
         autoCapitalize="words"
       />
-      <FormField
-        label="Logo URL"
-        value={logoUrl}
-        onChangeText={setLogoUrl}
-        placeholder="https://..."
-        autoCapitalize="none"
-        hint="Optional image URL for your shop logo."
-      />
+      <StoreLogoPicker value={logo} onChange={setLogo} />
       <FormField
         label="Bio"
         value={bio}
         onChangeText={setBio}
         placeholder="Tell buyers what makes your gifts special."
         multiline
+        maxLength={STORE_BIO_MAX_LENGTH}
         style={styles.multiline}
+        hint={`${bio.length}/${STORE_BIO_MAX_LENGTH} characters`}
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}

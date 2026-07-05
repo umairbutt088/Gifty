@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -10,28 +9,50 @@ import {
 } from 'react-native';
 
 import { DashboardHeader, PrimaryButton, ScreenShell } from '@/components/dashboard';
-import { FormField } from '@/components/vendor';
+import {
+  DeliveryOptionsField,
+  FormField,
+  StoreLogoPicker,
+  type DeliveryOptionsValue,
+  type GiftImageSelection,
+} from '@/components/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { formatDeliveryCities, parseDeliveryCities } from '@/lib/format';
+import { resolveStoreLogoUrl } from '@/lib/store-logo-upload';
 import { upsertVendorStore } from '@/lib/vendor-store';
+import {
+  deliveryOptionsFromStore,
+  deliveryOptionsToStoreInput,
+  getDeliveryOptionsValidationError,
+  getOnboardingResumeStep,
+  getStoreFulfillmentSummary,
+  STORE_BIO_MAX_LENGTH,
+} from '@/lib/vendor-store-helpers';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 
-const STEPS = ['Store profile', 'Delivery cities', 'Bank details'] as const;
+const STEPS = ['Store profile', 'Fulfillment', 'Payout details'] as const;
+
+type OnboardingPhase = 'welcome' | 'form' | 'success';
 
 export default function VendorOnboardingScreen() {
   const { profile } = useAuth();
   const { store, refreshStore } = useVendorStore();
+  const [phase, setPhase] = useState<OnboardingPhase>('welcome');
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   const [name, setName] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
+  const [logo, setLogo] = useState<GiftImageSelection | null>(null);
   const [bio, setBio] = useState('');
-  const [deliveryCitiesInput, setDeliveryCitiesInput] = useState('');
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOptionsValue>({
+    offersDelivery: false,
+    deliveryRadiusKm: '',
+    deliveryCharge: '',
+    deliveryCities: [],
+  });
   const [bankAccountName, setBankAccountName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [bankName, setBankName] = useState('');
@@ -40,65 +61,170 @@ export default function VendorOnboardingScreen() {
     if (!store || hydrated) return;
 
     setName(store.name ?? '');
-    setLogoUrl(store.logo_url ?? '');
+    if (store.logo_url) {
+      setLogo({ uri: store.logo_url });
+    }
     setBio(store.bio ?? '');
-    setDeliveryCitiesInput(
-      store.delivery_cities?.length ? formatDeliveryCities(store.delivery_cities) : '',
-    );
+    setDeliveryOptions(deliveryOptionsFromStore(store));
     setBankAccountName(store.bank_account_name ?? '');
     setBankAccountNumber(store.bank_account_number ?? '');
     setBankName(store.bank_name ?? '');
+
+    const resumeStep = getOnboardingResumeStep(store);
+    if (resumeStep > 0 || store.name?.trim()) {
+      setPhase('form');
+      setStep(resumeStep);
+    }
+
     setHydrated(true);
   }, [store, hydrated]);
 
-  async function saveStep() {
-    if (!profile) return;
+  async function persistStore(options: { complete: boolean }): Promise<boolean> {
+    if (!profile) return false;
 
-    const deliveryCities = parseDeliveryCities(deliveryCitiesInput);
-    const isFinalStep = step === STEPS.length - 1;
+    setLoading(true);
+    setError(null);
+
+    const { url: logoUrl, error: logoError } = await resolveStoreLogoUrl(
+      profile.id,
+      logo,
+      store?.logo_url,
+    );
+
+    if (logoError) {
+      setLoading(false);
+      setError(logoError.message);
+      return false;
+    }
+
+    const deliveryInput = deliveryOptionsToStoreInput(deliveryOptions);
+
+    const { error: saveError } = await upsertVendorStore(profile.id, {
+      name,
+      logoUrl,
+      bio,
+      ...deliveryInput,
+      bankAccountName,
+      bankAccountNumber,
+      bankName,
+      onboardingComplete: options.complete,
+    });
+
+    if (saveError) {
+      setLoading(false);
+      setError(saveError.message);
+      return false;
+    }
+
+    await refreshStore();
+    setLoading(false);
+    return true;
+  }
+
+  async function handleContinue() {
+    if (!profile) return;
 
     if (step === 0 && !name.trim()) {
       setError('Store name is required.');
       return;
     }
 
-    if (step === 1 && deliveryCities.length === 0) {
-      setError('Add at least one delivery city.');
-      return;
+    if (step === 1) {
+      const validationError = getDeliveryOptionsValidationError(
+        deliveryOptions.offersDelivery,
+        deliveryOptions.deliveryRadiusKm,
+        deliveryOptions.deliveryCharge,
+        deliveryOptions.deliveryCities,
+      );
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
     }
 
-    setLoading(true);
-    setError(null);
-
-    const { error: saveError } = await upsertVendorStore(profile.id, {
-      name,
-      logoUrl,
-      bio,
-      deliveryCities,
-      bankAccountName,
-      bankAccountNumber,
-      bankName,
-      onboardingComplete: isFinalStep,
-    });
-
-    if (saveError) {
-      setLoading(false);
-      setError(saveError.message);
-      return;
-    }
-
-    if (isFinalStep) {
-      await refreshStore();
-      setLoading(false);
-      Alert.alert('Store ready', 'Your vendor store is set up. Start listing gifts!', [
-        { text: 'Continue', onPress: () => router.replace('/vendor') },
-      ]);
-      return;
-    }
+    const saved = await persistStore({ complete: false });
+    if (!saved) return;
 
     setStep(step + 1);
-    setLoading(false);
-    void refreshStore();
+    setError(null);
+  }
+
+  async function handleFinish() {
+    const saved = await persistStore({ complete: true });
+    if (!saved) return;
+
+    setPhase('success');
+    setError(null);
+  }
+
+  if (phase === 'welcome') {
+    return (
+      <ScreenShell>
+        <DashboardHeader
+          title="Welcome to Gifty"
+          subtitle="Set up your store once, then list gifts and receive orders."
+          showBanner={false}
+        />
+
+        <View style={styles.welcomeBody}>
+          <Text style={styles.welcomeText}>
+            You will add your store profile, pickup or delivery settings, and optional payout details.
+          </Text>
+        </View>
+
+        <PrimaryButton label="Get started" onPress={() => setPhase('form')} />
+      </ScreenShell>
+    );
+  }
+
+  if (phase === 'success') {
+    return (
+      <ScreenShell>
+        <DashboardHeader
+          title="Store ready"
+          subtitle="Your shop is live. Add your first gift to start selling."
+          showBanner={false}
+        />
+
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>{name}</Text>
+          <Text style={styles.summaryLine}>
+            {deliveryOptions.offersDelivery
+              ? getStoreFulfillmentSummary({
+                  id: '',
+                  vendor_id: profile?.id ?? '',
+                  name,
+                  logo_url: null,
+                  bio: null,
+                  delivery_cities: deliveryOptions.deliveryCities,
+                  offers_delivery: true,
+                  delivery_radius_km: Number.parseFloat(deliveryOptions.deliveryRadiusKm) || null,
+                  delivery_charge_cents:
+                    deliveryOptionsToStoreInput(deliveryOptions).deliveryChargeCents,
+                })
+              : 'Pickup only'}
+          </Text>
+          <Text style={styles.summaryLine}>
+            Payout:{' '}
+            {bankAccountName.trim() && bankName.trim() && bankAccountNumber.trim()
+              ? 'Added'
+              : 'Skipped — add anytime in Profile'}
+          </Text>
+        </View>
+
+        <View style={styles.actions}>
+          <PrimaryButton
+            label="Add first gift"
+            onPress={() => router.replace('/vendor/gift/new')}
+          />
+          <PrimaryButton
+            label="Go to dashboard"
+            variant="secondary"
+            onPress={() => router.replace('/vendor')}
+          />
+        </View>
+      </ScreenShell>
+    );
   }
 
   return (
@@ -108,20 +234,15 @@ export default function VendorOnboardingScreen() {
       <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
         <DashboardHeader
           title="Set up your store"
-          subtitle="Complete onboarding once, then manage everything from your dashboard tabs."
+          subtitle={`Step ${step + 1} of ${STEPS.length}`}
           showBanner={false}
         />
 
-        <View style={styles.progressRow}>
-          {STEPS.map((label, index) => (
-            <View key={label} style={styles.progressItem}>
-              <View style={[styles.dot, index <= step && styles.dotActive]} />
-              <Text style={[styles.progressLabel, index === step && styles.progressLabelActive]}>
-                {label}
-              </Text>
-            </View>
-          ))}
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${((step + 1) / STEPS.length) * 100}%` }]} />
         </View>
+
+        <Text style={styles.stepLabel}>{STEPS[step]}</Text>
 
         {step === 0 ? (
           <>
@@ -132,37 +253,29 @@ export default function VendorOnboardingScreen() {
               placeholder="Bloom & Box"
               autoCapitalize="words"
             />
-            <FormField
-              label="Logo URL"
-              value={logoUrl}
-              onChangeText={setLogoUrl}
-              placeholder="https://..."
-              autoCapitalize="none"
-              hint="Optional. Paste an image URL for your shop logo."
-            />
+            <StoreLogoPicker value={logo} onChange={setLogo} />
             <FormField
               label="Bio"
               value={bio}
               onChangeText={setBio}
               placeholder="Tell buyers what makes your gifts special."
               multiline
+              maxLength={STORE_BIO_MAX_LENGTH}
               style={styles.multiline}
+              hint={`${bio.length}/${STORE_BIO_MAX_LENGTH} characters`}
             />
           </>
         ) : null}
 
         {step === 1 ? (
-          <FormField
-            label="Delivery cities"
-            value={deliveryCitiesInput}
-            onChangeText={setDeliveryCitiesInput}
-            placeholder="Karachi, Lahore, Islamabad"
-            hint="Comma-separated list of cities you deliver to."
-          />
+          <DeliveryOptionsField value={deliveryOptions} onChange={setDeliveryOptions} />
         ) : null}
 
         {step === 2 ? (
           <>
+            <Text style={styles.optionalCopy}>
+              Payout details are optional. You can skip now and add them later from Profile.
+            </Text>
             <FormField
               label="Account holder name"
               value={bankAccountName}
@@ -183,7 +296,6 @@ export default function VendorOnboardingScreen() {
               onChangeText={setBankAccountNumber}
               placeholder="IBAN or account number"
               autoCapitalize="none"
-              hint="Stored securely for future payouts. You can update this later in Store."
             />
           </>
         ) : null}
@@ -202,11 +314,24 @@ export default function VendorOnboardingScreen() {
               }}
             />
           ) : null}
-          <PrimaryButton
-            label={step === STEPS.length - 1 ? 'Finish setup' : 'Continue'}
-            loading={loading}
-            onPress={() => void saveStep()}
-          />
+
+          {step < STEPS.length - 1 ? (
+            <PrimaryButton label="Continue" loading={loading} onPress={() => void handleContinue()} />
+          ) : (
+            <>
+              <PrimaryButton
+                label="Finish setup"
+                loading={loading}
+                onPress={() => void handleFinish()}
+              />
+              <PrimaryButton
+                label="Skip payout for now"
+                variant="secondary"
+                disabled={loading}
+                onPress={() => void handleFinish()}
+              />
+            </>
+          )}
         </View>
       </ScreenShell>
     </KeyboardAvoidingView>
@@ -217,34 +342,56 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  progressRow: {
-    gap: Spacing.three,
+  welcomeBody: {
+    marginBottom: Spacing.four,
   },
-  progressItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
+  welcomeText: {
+    color: Colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 22,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
     backgroundColor: Colors.surfaceBorder,
+    overflow: 'hidden',
   },
-  dotActive: {
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
     backgroundColor: Colors.accent,
   },
-  progressLabel: {
+  stepLabel: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  optionalCopy: {
     color: Colors.textSecondary,
     fontSize: 14,
-  },
-  progressLabelActive: {
-    color: Colors.text,
-    fontWeight: '600',
+    lineHeight: 20,
   },
   multiline: {
     minHeight: 96,
     textAlignVertical: 'top',
+  },
+  summaryCard: {
+    gap: Spacing.two,
+    padding: Spacing.four,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderRadius: Spacing.four,
+    backgroundColor: Colors.surface,
+  },
+  summaryTitle: {
+    color: Colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  summaryLine: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   actions: {
     gap: Spacing.two,

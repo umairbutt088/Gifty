@@ -16,7 +16,17 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
   return (
     <GlassCard style={styles.card}>
       <InfoRow label="Recipient" value={order.recipient_name} />
+      <InfoRow
+        label="Fulfillment"
+        value={order.fulfillment_type === 'pickup' ? 'Pickup / takeaway' : 'Delivery'}
+      />
       <InfoRow label="Order total" value={formatMoney(order.total_cents)} />
+      {order.delivery_charge_cents > 0 ? (
+        <InfoRow
+          label="Delivery charge"
+          value={formatMoney(order.delivery_charge_cents)}
+        />
+      ) : null}
       <InfoRow
         label="Gift quantity"
         value={`${order.quantity} ${order.quantity === 1 ? 'item' : 'items'}`}

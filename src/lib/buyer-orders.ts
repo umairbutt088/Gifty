@@ -4,7 +4,9 @@ import {
   normalizeRecipientPhone,
 } from '@/lib/recipient-delivery';
 import { supabase } from '@/lib/supabase';
-import type { VendorOrderRow, VendorOrderWithGift } from '@/types/vendor';
+import { fetchPublicVendorStore } from '@/lib/vendor-store';
+import { getDeliveryCityValidationError } from '@/lib/vendor-store-helpers';
+import type { OrderFulfillmentType, VendorOrderRow, VendorOrderWithGift, VendorStorePublic } from '@/types/vendor';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type BuyerOrderInput = {
@@ -179,6 +181,7 @@ export type RecipientDeliveryFieldErrors = {
   recipientName?: string;
   recipientPhone?: string;
   recipientEmail?: string;
+  recipientAddress?: string;
 };
 
 export function getRecipientDeliveryFieldErrors(
@@ -212,6 +215,74 @@ function validateRecipientDelivery(delivery: BuyerOrderDelivery): Error | null {
   return firstError ? new Error(firstError) : null;
 }
 
+async function validateCheckoutFulfillment(
+  vendorIds: string[],
+  address: string | undefined,
+): Promise<Error | null> {
+  const addressValue = address?.trim() ?? '';
+
+  for (const vendorId of vendorIds) {
+    const store = await fetchPublicVendorStore(vendorId);
+    if (!store?.offers_delivery) continue;
+
+    if (!addressValue) {
+      return new Error('Delivery address is required for vendors that offer delivery.');
+    }
+
+    const cityError = getDeliveryCityValidationError(addressValue, store, store.name);
+    if (cityError) {
+      return new Error(cityError);
+    }
+  }
+
+  return null;
+}
+
+type ResolvedFulfillment = {
+  fulfillmentType: OrderFulfillmentType;
+  deliveryChargeCents: number;
+};
+
+async function resolveOrderFulfillment(
+  vendorId: string,
+  store: VendorStorePublic | null,
+  vendorsCharged: Set<string>,
+): Promise<ResolvedFulfillment> {
+  if (!store?.offers_delivery) {
+    return { fulfillmentType: 'pickup', deliveryChargeCents: 0 };
+  }
+
+  let deliveryChargeCents = 0;
+  if (!vendorsCharged.has(vendorId)) {
+    deliveryChargeCents = store.delivery_charge_cents ?? 0;
+    vendorsCharged.add(vendorId);
+  }
+
+  return { fulfillmentType: 'delivery', deliveryChargeCents };
+}
+
+export function calculateVendorDeliveryFees(
+  vendorIds: string[],
+  stores: Map<string, VendorStorePublic>,
+): number {
+  let total = 0;
+
+  for (const vendorId of vendorIds) {
+    const store = stores.get(vendorId);
+    if (!store?.offers_delivery) continue;
+    total += store.delivery_charge_cents ?? 0;
+  }
+
+  return total;
+}
+
+export function cartRequiresDeliveryAddress(
+  vendorIds: string[],
+  stores: Map<string, VendorStorePublic>,
+): boolean {
+  return vendorIds.some((vendorId) => stores.get(vendorId)?.offers_delivery);
+}
+
 export async function createBuyerOrder(
   buyerId: string,
   input: BuyerOrderInput,
@@ -233,7 +304,20 @@ export async function createBuyerOrder(
     return { data: null, error: new Error('Not enough stock for this gift.') };
   }
 
+  const cityError = await validateCheckoutFulfillment([gift.vendor_id], input.recipientAddress);
+  if (cityError) {
+    return { data: null, error: cityError };
+  }
+
+  const store = await fetchPublicVendorStore(gift.vendor_id);
+  const { fulfillmentType, deliveryChargeCents } = await resolveOrderFulfillment(
+    gift.vendor_id,
+    store,
+    new Set<string>(),
+  );
+
   const { recipientPhone, recipientEmail, notifyRecipient } = buildRecipientFields(input);
+  const lineTotal = gift.price_cents * quantity + deliveryChargeCents;
 
   const { data, error } = await supabase
     .from('vendor_orders')
@@ -242,9 +326,12 @@ export async function createBuyerOrder(
       gift_id: gift.id,
       buyer_id: buyerId,
       quantity,
-      total_cents: gift.price_cents * quantity,
+      total_cents: lineTotal,
+      fulfillment_type: fulfillmentType,
+      delivery_charge_cents: deliveryChargeCents,
       recipient_name: input.recipientName.trim(),
-      recipient_address: input.recipientAddress?.trim() || null,
+      recipient_address:
+        fulfillmentType === 'delivery' ? input.recipientAddress?.trim() || null : null,
       recipient_phone: recipientPhone,
       recipient_email: recipientEmail,
       notify_recipient: notifyRecipient,
@@ -308,9 +395,29 @@ export async function createBuyerOrders(
     validatedLines.push({ gift, quantity: item.quantity });
   }
 
+  const vendorIds = [...new Set(validatedLines.map((line) => line.gift.vendor_id))];
+  const fulfillmentError = await validateCheckoutFulfillment(vendorIds, delivery.recipientAddress);
+  if (fulfillmentError) {
+    return { orders: [], error: fulfillmentError };
+  }
+
+  const storeEntries = await Promise.all(
+    vendorIds.map(async (vendorId) => [vendorId, await fetchPublicVendorStore(vendorId)] as const),
+  );
+  const stores = new Map(storeEntries.filter((entry): entry is [string, VendorStorePublic] => Boolean(entry[1])));
+
   const orders: VendorOrderRow[] = [];
+  const vendorsCharged = new Set<string>();
 
   for (const line of validatedLines) {
+    const store = stores.get(line.gift.vendor_id) ?? null;
+    const { fulfillmentType, deliveryChargeCents } = await resolveOrderFulfillment(
+      line.gift.vendor_id,
+      store,
+      vendorsCharged,
+    );
+    const lineTotal = line.gift.price_cents * line.quantity + deliveryChargeCents;
+
     const { data, error } = await supabase
       .from('vendor_orders')
       .insert({
@@ -318,9 +425,12 @@ export async function createBuyerOrders(
         gift_id: line.gift.id,
         buyer_id: buyerId,
         quantity: line.quantity,
-        total_cents: line.gift.price_cents * line.quantity,
+        total_cents: lineTotal,
+        fulfillment_type: fulfillmentType,
+        delivery_charge_cents: deliveryChargeCents,
         recipient_name: delivery.recipientName.trim(),
-        recipient_address: delivery.recipientAddress?.trim() || null,
+        recipient_address:
+          fulfillmentType === 'delivery' ? delivery.recipientAddress?.trim() || null : null,
         recipient_phone: recipientPhone,
         recipient_email: recipientEmail,
         notify_recipient: notifyRecipient,

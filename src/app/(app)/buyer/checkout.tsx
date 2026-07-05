@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -10,20 +10,24 @@ import {
 } from '@/components/dashboard';
 import { CartHeaderButton } from '@/components/buyer';
 import { GlassCard } from '@/components/glass-card';
-// import { DatePickerField } from '@/components/date-picker-field';
 import { NativeDatePickerField } from '@/components/native-date-picker-field';
 import { FormField } from '@/components/vendor';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import {
+  calculateVendorDeliveryFees,
+  cartRequiresDeliveryAddress,
   createBuyerOrders,
   getRecipientDeliveryFieldErrors,
   type RecipientDeliveryFieldErrors,
 } from '@/lib/buyer-orders';
 import { formatMoney } from '@/lib/format';
+import { fetchPublicVendorStores } from '@/lib/vendor-store';
+import { getStoreFulfillmentSummary } from '@/lib/vendor-store-helpers';
 import { useAuth } from '@/providers/auth-provider';
 import { useCart } from '@/providers/cart-provider';
+import type { VendorStorePublic } from '@/types/vendor';
 
 export default function BuyerCheckoutScreen() {
   const { profile } = useAuth();
@@ -31,6 +35,8 @@ export default function BuyerCheckoutScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RecipientDeliveryFieldErrors>({});
+  const [vendorStores, setVendorStores] = useState<Map<string, VendorStorePublic>>(new Map());
+  const [storesLoading, setStoresLoading] = useState(false);
 
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
@@ -39,6 +45,29 @@ export default function BuyerCheckoutScreen() {
   const [recipientAddress, setRecipientAddress] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
+
+  const vendorIds = useMemo(() => [...new Set(items.map((item) => item.vendorId))], [items]);
+
+  useEffect(() => {
+    if (vendorIds.length === 0) {
+      setVendorStores(new Map());
+      return;
+    }
+
+    setStoresLoading(true);
+    void fetchPublicVendorStores(vendorIds).then((stores) => {
+      setVendorStores(stores);
+      setStoresLoading(false);
+    });
+  }, [vendorIds]);
+
+  const deliveryFeeCents = useMemo(
+    () => calculateVendorDeliveryFees(vendorIds, vendorStores),
+    [vendorIds, vendorStores],
+  );
+  const grandTotalCents = subtotalCents + deliveryFeeCents;
+  const requiresDeliveryAddress = cartRequiresDeliveryAddress(vendorIds, vendorStores);
+  const pickupOnly = vendorIds.length > 0 && !requiresDeliveryAddress;
 
   async function handlePlaceOrder() {
     if (!profile || items.length === 0) return;
@@ -54,6 +83,10 @@ export default function BuyerCheckoutScreen() {
     };
 
     const nextFieldErrors = getRecipientDeliveryFieldErrors(delivery);
+    if (requiresDeliveryAddress && !recipientAddress.trim()) {
+      nextFieldErrors.recipientAddress = 'Delivery address is required.';
+    }
+
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
       setError(null);
@@ -92,7 +125,7 @@ export default function BuyerCheckoutScreen() {
     );
   }
 
-  if (!isReady) {
+  if (!isReady || storesLoading) {
     return (
       <ScreenShell scroll={false}>
         <ThemedActivityIndicator style={{ marginTop: 48 }} />
@@ -129,29 +162,52 @@ export default function BuyerCheckoutScreen() {
 
       <SectionTitle>Order summary</SectionTitle>
       <GlassCard style={styles.summaryCard}>
-        {items.map((item) => (
-          <View key={item.giftId} style={styles.summaryLine}>
-            <View style={styles.summaryLineText}>
-              <Text style={styles.summaryTitle} numberOfLines={2}>
-                {item.title}
-              </Text>
-              <Text style={styles.summaryMeta}>
-                {item.quantity} × {formatMoney(item.priceCents)}
+        {items.map((item) => {
+          const store = vendorStores.get(item.vendorId);
+          return (
+            <View key={item.giftId} style={styles.summaryLine}>
+              <View style={styles.summaryLineText}>
+                <Text style={styles.summaryTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <Text style={styles.summaryMeta}>
+                  {item.quantity} × {formatMoney(item.priceCents)}
+                </Text>
+                {store ? (
+                  <Text style={styles.summaryFulfillment}>{getStoreFulfillmentSummary(store)}</Text>
+                ) : null}
+              </View>
+              <Text style={styles.summaryLineTotal}>
+                {formatMoney(item.priceCents * item.quantity)}
               </Text>
             </View>
-            <Text style={styles.summaryLineTotal}>
-              {formatMoney(item.priceCents * item.quantity)}
-            </Text>
+          );
+        })}
+
+        {deliveryFeeCents > 0 ? (
+          <View style={styles.summaryLine}>
+            <Text style={styles.summaryMeta}>Delivery fees</Text>
+            <Text style={styles.summaryLineTotal}>{formatMoney(deliveryFeeCents)}</Text>
           </View>
-        ))}
+        ) : null}
 
         <View style={styles.summaryDivider} />
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryTotalLabel}>Total</Text>
-          <Text style={styles.summaryTotalValue}>{formatMoney(subtotalCents)}</Text>
+          <Text style={styles.summaryTotalValue}>{formatMoney(grandTotalCents)}</Text>
         </View>
       </GlassCard>
+
+      {pickupOnly ? (
+        <GlassCard style={styles.pickupCard}>
+          <Text style={styles.pickupTitle}>Pickup / takeaway</Text>
+          <Text style={styles.pickupText}>
+            These vendors do not deliver. You or the recipient will collect the order from the
+            store.
+          </Text>
+        </GlassCard>
+      ) : null}
 
       <SectionTitle>Recipient</SectionTitle>
       <FormField
@@ -195,25 +251,22 @@ export default function BuyerCheckoutScreen() {
         autoComplete="email"
         error={fieldErrors.recipientEmail}
       />
-      {/* Recipient SMS/email notifications — enable when RECIPIENT_NOTIFICATIONS_ENABLED is true.
-      <View style={styles.notifyRow}>
-        <View style={styles.notifyCopy}>
-          <Text style={styles.notifyLabel}>Notify recipient</Text>
-          <Text style={styles.notifyHint}>
-            Send SMS and email when the gift ships and is delivered.
-          </Text>
-        </View>
-        <Switch value={notifyRecipient} onValueChange={setNotifyRecipient} />
-      </View>
-      */}
-      <FormField
-        label="Delivery address"
-        value={recipientAddress}
-        onChangeText={setRecipientAddress}
-        placeholder="Street, city"
-        multiline
-        style={styles.multiline}
-      />
+      {requiresDeliveryAddress ? (
+        <FormField
+          label="Delivery address"
+          value={recipientAddress}
+          onChangeText={(text) => {
+            setRecipientAddress(text);
+            if (fieldErrors.recipientAddress) {
+              setFieldErrors((current) => ({ ...current, recipientAddress: undefined }));
+            }
+          }}
+          placeholder="Street, city"
+          multiline
+          style={styles.multiline}
+          error={fieldErrors.recipientAddress}
+        />
+      ) : null}
       <FormField
         label="Gift message"
         value={giftMessage}
@@ -222,26 +275,22 @@ export default function BuyerCheckoutScreen() {
         multiline
         style={styles.multiline}
       />
-      {/* Custom modal picker kept for comparison — swap back by uncommenting below.
-      <DatePickerField
-        label="Preferred delivery date (custom modal)"
-        value={deliveryDate}
-        onChange={setDeliveryDate}
-        hint="Optional. Vendors will try to deliver on or near this date."
-      />
-      */}
 
       <NativeDatePickerField
-        label="Preferred delivery date"
+        label={pickupOnly ? 'Preferred pickup date' : 'Preferred delivery date'}
         value={deliveryDate}
         onChange={setDeliveryDate}
-        hint="Optional. Vendors will try to deliver on or near this date."
+        hint={
+          pickupOnly
+            ? 'Optional. Coordinate pickup timing with the vendor.'
+            : 'Optional. Vendors will try to deliver on or near this date.'
+        }
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <PrimaryButton
-        label={`Place order · ${formatMoney(subtotalCents)}`}
+        label={`Place order · ${formatMoney(grandTotalCents)}`}
         loading={submitting}
         onPress={() => void handlePlaceOrder()}
       />
@@ -273,6 +322,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 13,
   },
+  summaryFulfillment: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
   summaryLineTotal: {
     color: Colors.text,
     fontSize: 15,
@@ -297,29 +351,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  pickupCard: {
+    padding: Spacing.four,
+    gap: Spacing.two,
+  },
+  pickupTitle: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  pickupText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
   multiline: {
     minHeight: 88,
     textAlignVertical: 'top',
-  },
-  notifyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-  },
-  notifyCopy: {
-    flex: 1,
-    gap: Spacing.one,
-  },
-  notifyLabel: {
-    color: Colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  notifyHint: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
   },
   error: {
     color: '#E05D5D',
