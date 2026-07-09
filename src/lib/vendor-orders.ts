@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import { notifyBuyerOfOrderStatusChange } from '@/lib/push-notifications';
 import { notifyRecipientOfDelivery } from '@/lib/recipient-delivery';
 import type { VendorOrderStatus, VendorOrderRow, VendorOrderWithGift } from '@/types/vendor';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 const ORDER_SELECT = '*, gift:gifts(id, title, image_urls)';
 
@@ -49,6 +51,56 @@ export async function fetchVendorOrderById(orderId: string): Promise<VendorOrder
   return data as VendorOrderWithGift;
 }
 
+export function subscribeVendorOrderUpdates(
+  vendorId: string,
+  onInsert: (order: VendorOrderRow) => void,
+  onUpdate: (order: VendorOrderRow) => void,
+  subscriberKey = 'default',
+): RealtimeChannel {
+  // Namespaced by subscriberKey: multiple independent subscribers (e.g. the
+  // orders list screen and the app-wide new-order badge) can each hold their
+  // own channel for the same vendor without tearing down one another's.
+  const channelName = `vendor-orders:${vendorId}:${subscriberKey}`;
+
+  const existing = supabase
+    .getChannels()
+    .find((channel) => channel.topic === `realtime:${channelName}`);
+
+  if (existing) {
+    void supabase.removeChannel(existing);
+  }
+
+  const channel = supabase.channel(channelName);
+
+  channel
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'vendor_orders',
+        filter: `vendor_id=eq.${vendorId}`,
+      },
+      (payload) => {
+        onInsert(payload.new as VendorOrderRow);
+      },
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'vendor_orders',
+        filter: `vendor_id=eq.${vendorId}`,
+      },
+      (payload) => {
+        onUpdate(payload.new as VendorOrderRow);
+      },
+    );
+
+  return channel.subscribe();
+}
+
 export async function countNewVendorOrders(vendorId: string): Promise<number> {
   const { count, error } = await supabase
     .from('vendor_orders')
@@ -67,17 +119,67 @@ export async function countNewVendorOrders(vendorId: string): Promise<number> {
 export async function updateVendorOrderStatus(
   orderId: string,
   status: VendorOrderStatus,
+  note?: string,
 ): Promise<{ data: VendorOrderRow | null; error: Error | null }> {
   const { data, error } = await supabase
-    .from('vendor_orders')
-    .update({ status })
-    .eq('id', orderId)
-    .is('vendor_deleted_at', null)
-    .select('*')
+    .rpc('set_vendor_order_status', {
+      p_order_id: orderId,
+      p_status: status,
+      p_note: note?.trim() || null,
+    })
     .single();
 
-  if (!error && data && (status === 'shipped' || status === 'delivered')) {
-    void notifyRecipientOfDelivery(orderId, status);
+  if (!error && data) {
+    if (status === 'shipped' || status === 'delivered') {
+      void notifyRecipientOfDelivery(orderId, status);
+    }
+    void notifyBuyerOfOrderStatusChange(orderId, status);
+  }
+
+  return {
+    data: (data as VendorOrderRow | null) ?? null,
+    error: error ? new Error(error.message) : null,
+  };
+}
+
+export async function markVendorOrderShipped(
+  orderId: string,
+  options: { trackingNumber?: string; carrier?: string; note?: string } = {},
+): Promise<{ data: VendorOrderRow | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .rpc('mark_vendor_order_shipped', {
+      p_order_id: orderId,
+      p_tracking_number: options.trackingNumber?.trim() || null,
+      p_carrier: options.carrier?.trim() || null,
+      p_note: options.note?.trim() || null,
+    })
+    .single();
+
+  if (!error && data) {
+    void notifyRecipientOfDelivery(orderId, 'shipped');
+    void notifyBuyerOfOrderStatusChange(orderId, 'shipped');
+  }
+
+  return {
+    data: (data as VendorOrderRow | null) ?? null,
+    error: error ? new Error(error.message) : null,
+  };
+}
+
+export async function cancelVendorOrder(
+  orderId: string,
+  reason: string,
+): Promise<{ data: VendorOrderRow | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .rpc('set_vendor_order_status', {
+      p_order_id: orderId,
+      p_status: 'cancelled',
+      p_note: reason.trim() || null,
+    })
+    .single();
+
+  if (!error && data) {
+    void notifyBuyerOfOrderStatusChange(orderId, 'cancelled');
   }
 
   return {
@@ -153,8 +255,9 @@ export function getVendorEarningsSummary(orders: VendorOrderWithGift[]) {
   return {
     totalOrders: orders.length,
     deliveredCount: delivered.length,
-    pendingCount: orders.filter((order) => !['delivered', 'rejected'].includes(order.status))
-      .length,
+    pendingCount: orders.filter(
+      (order) => !['delivered', 'rejected', 'cancelled'].includes(order.status),
+    ).length,
     totalCents,
   };
 }

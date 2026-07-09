@@ -14,7 +14,8 @@ export type VendorOrderStatus =
   | 'preparing'
   | 'shipped'
   | 'delivered'
-  | 'rejected';
+  | 'rejected'
+  | 'cancelled';
 
 export type OrderFulfillmentType = 'delivery' | 'pickup';
 
@@ -75,8 +76,32 @@ export type VendorOrderRow = {
   recipient_notified_delivered_at: string | null;
   buyer_deleted_at: string | null;
   vendor_deleted_at: string | null;
+  status_changed_at: string;
+  accepted_at: string | null;
+  preparing_at: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
+  rejected_at: string | null;
+  cancelled_at: string | null;
+  reject_reason: string | null;
+  cancel_reason: string | null;
+  sla_escalated_at: string | null;
+  tracking_number: string | null;
+  carrier: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type OrderStatusEvent = {
+  id: string;
+  order_id: string;
+  buyer_id: string;
+  vendor_id: string;
+  from_status: VendorOrderStatus | null;
+  to_status: VendorOrderStatus;
+  changed_by: string | null;
+  note: string | null;
+  created_at: string;
 };
 
 export type VendorOrderWithGift = VendorOrderRow & {

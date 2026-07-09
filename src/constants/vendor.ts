@@ -24,6 +24,7 @@ export const ORDER_STATUS_LABELS: Record<VendorOrderStatus, string> = {
   shipped: 'Shipped',
   delivered: 'Delivered',
   rejected: 'Rejected',
+  cancelled: 'Cancelled',
 };
 
 export const ORDER_PIPELINE: VendorOrderStatus[] = [

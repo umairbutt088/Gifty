@@ -7,8 +7,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components';
 import { AuthGate } from '@/components/auth-gate';
+import { configurePushNotifications } from '@/lib/push-notifications';
 import { AuthProvider } from '@/providers/auth-provider';
 import { AppThemeProvider, useAppTheme } from '@/providers/screen-theme-provider';
+
+configurePushNotifications();
 
 function NavigationThemeProvider({ children }: { children: ReactNode }) {
   const { theme, colors, resolvedColorMode } = useAppTheme();

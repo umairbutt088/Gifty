@@ -1,4 +1,5 @@
 import { fetchLiveGiftById } from '@/lib/gifts';
+import { notifyVendorOfBuyerCancellation, notifyVendorOfNewOrder } from '@/lib/push-notifications';
 import {
   normalizeRecipientEmail,
   normalizeRecipientPhone,
@@ -34,6 +35,27 @@ export async function fetchBuyerOrders(buyerId: string): Promise<VendorOrderWith
   }
 
   return data as VendorOrderWithGift[];
+}
+
+export async function cancelBuyerOrder(
+  orderId: string,
+  reason: string,
+): Promise<{ data: VendorOrderRow | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .rpc('cancel_buyer_order', {
+      p_order_id: orderId,
+      p_note: reason.trim() || null,
+    })
+    .single();
+
+  if (!error && data) {
+    void notifyVendorOfBuyerCancellation(orderId);
+  }
+
+  return {
+    data: (data as VendorOrderRow | null) ?? null,
+    error: error ? new Error(error.message) : null,
+  };
 }
 
 export async function fetchDeletedBuyerOrders(buyerId: string): Promise<VendorOrderWithGift[]> {
@@ -342,6 +364,10 @@ export async function createBuyerOrder(
     .select('*')
     .single();
 
+  if (!error && data) {
+    void notifyVendorOfNewOrder(data.id);
+  }
+
   return {
     data: (data as VendorOrderRow | null) ?? null,
     error: error ? new Error(error.message) : null,
@@ -449,6 +475,7 @@ export async function createBuyerOrders(
     }
 
     orders.push(data as VendorOrderRow);
+    void notifyVendorOfNewOrder(data.id);
   }
 
   return { orders, error: null };

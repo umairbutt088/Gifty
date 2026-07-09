@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Share, StyleSheet, View } from 'react-native';
+import { Alert, Share, StyleSheet, Text, View } from 'react-native';
 
 import { CartHeaderButton } from '@/components/buyer';
 import {
@@ -13,10 +13,11 @@ import {
 } from '@/components/dashboard';
 import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { StatusBadge } from '@/components/vendor';
+import { FormField, StatusBadge } from '@/components/vendor';
+import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { fetchBuyerOrderById, softDeleteBuyerOrder } from '@/lib/buyer-orders';
-import { getOrCreateConversationForOrder } from '@/lib/chat';
+import { cancelBuyerOrder, fetchBuyerOrderById, softDeleteBuyerOrder } from '@/lib/buyer-orders';
+import { getOrCreateConversationForOrder, sendMessage } from '@/lib/chat';
 import { buildRecipientLink } from '@/lib/recipient-delivery';
 import { useAuth } from '@/providers/auth-provider';
 import type { VendorOrderWithGift } from '@/types/vendor';
@@ -27,6 +28,10 @@ export default function BuyerOrderDetailScreen() {
   const [order, setOrder] = useState<VendorOrderWithGift | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingChat, setOpeningChat] = useState(false);
+  const [showCancelForm, setShowCancelForm] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const loadOrder = useCallback(async () => {
     if (!id || !profile) return;
@@ -40,6 +45,34 @@ export default function BuyerOrderDetailScreen() {
   useEffect(() => {
     void loadOrder();
   }, [loadOrder]);
+
+  async function handleCancelOrder() {
+    if (!order || !profile) return;
+
+    if (!cancelReason.trim()) {
+      setCancelError('A reason is required.');
+      return;
+    }
+
+    setCancelling(true);
+    const { data, error } = await cancelBuyerOrder(order.id, cancelReason);
+    setCancelling(false);
+
+    if (error || !data) {
+      Alert.alert('Could not cancel order', error?.message ?? 'Try again.');
+      return;
+    }
+
+    const { data: conversation } = await getOrCreateConversationForOrder(order.id, profile.id);
+    if (conversation) {
+      await sendMessage(conversation.id, profile.id, `Order cancelled: ${cancelReason.trim()}`);
+    }
+
+    setShowCancelForm(false);
+    setCancelReason('');
+    setCancelError(null);
+    await loadOrder();
+  }
 
   async function handleOpenChat() {
     if (!order || !profile) return;
@@ -151,6 +184,55 @@ export default function BuyerOrderDetailScreen() {
           />
         </ButtonStack>
 
+        {order.status === 'new' ? (
+          showCancelForm ? (
+            <View style={styles.cancelForm}>
+              <Text style={styles.cancelFormTitle}>Why do you want to cancel this order?</Text>
+              <FormField
+                label="Reason"
+                value={cancelReason}
+                onChangeText={(text) => {
+                  setCancelReason(text);
+                  if (cancelError) setCancelError(null);
+                }}
+                placeholder="Let the vendor know what changed"
+                multiline
+                style={styles.cancelInput}
+                error={cancelError}
+              />
+              <ButtonStack horizontal>
+                <PrimaryButton
+                  label="Never mind"
+                  size="compact"
+                  variant="secondary"
+                  onPress={() => {
+                    setShowCancelForm(false);
+                    setCancelReason('');
+                    setCancelError(null);
+                  }}
+                />
+                <PrimaryButton
+                  label="Confirm cancel"
+                  size="compact"
+                  variant="danger"
+                  loading={cancelling}
+                  onPress={() => void handleCancelOrder()}
+                />
+              </ButtonStack>
+            </View>
+          ) : (
+            <View style={styles.deleteRow}>
+              <PrimaryButton
+                label="Cancel order"
+                size="compact"
+                variant="danger"
+                style={styles.deleteButton}
+                onPress={() => setShowCancelForm(true)}
+              />
+            </View>
+          )
+        ) : null}
+
         <View style={styles.deleteRow}>
           <PrimaryButton
             label="Delete order"
@@ -170,6 +252,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
+  },
+  cancelForm: {
+    gap: 8,
+  },
+  cancelFormTitle: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cancelInput: {
+    minHeight: 72,
+    textAlignVertical: 'top',
   },
   deleteRow: {
     alignItems: 'center',

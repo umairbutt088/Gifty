@@ -53,11 +53,26 @@ export function OrderDetailsCard({ order }: OrderDetailsCardProps) {
         <InfoRow label="Email" value={order.recipient_email} />
       ) : null}
 
+      {order.tracking_number ? (
+        <InfoRow
+          label="Tracking"
+          value={order.carrier ? `${order.tracking_number} (${order.carrier})` : order.tracking_number}
+        />
+      ) : null}
+
       {order.recipient_confirmed_at ? (
         <InfoRow
           label="Delivery confirmed"
           value={new Date(order.recipient_confirmed_at).toLocaleString()}
         />
+      ) : null}
+
+      {order.status === 'rejected' && order.reject_reason ? (
+        <InfoRow label="Rejection reason" value={order.reject_reason} multiline />
+      ) : null}
+
+      {order.status === 'cancelled' && order.cancel_reason ? (
+        <InfoRow label="Cancellation reason" value={order.cancel_reason} multiline />
       ) : null}
 
       {order.gift_message ? (
