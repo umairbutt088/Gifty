@@ -106,6 +106,12 @@ export default function RecipientGiftScreen() {
                 {gift.gift_message ? (
                   <Text style={styles.message}>“{gift.gift_message}”</Text>
                 ) : null}
+                {gift.tracking_number ? (
+                  <Text style={styles.body}>
+                    Tracking: {gift.tracking_number}
+                    {gift.carrier ? ` (${gift.carrier})` : ''}
+                  </Text>
+                ) : null}
               </GlassCard>
 
               {confirmed || gift.recipient_confirmed_at ? (

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1002047134953",
+    "project_id": "gifty-23c09",
+    "storage_bucket": "gifty-23c09.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1002047134953:android:f89c3dc506c36f6ce5a478",
+        "android_client_info": {
+          "package_name": "com.umairbutt.gifty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfgfq8ZWX0AgqHHhbQZv_czdFk-75PfYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

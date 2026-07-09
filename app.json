@@ -13,7 +13,9 @@
         "NSPhotoLibraryUsageDescription": "Allow Gifty to access your photos for gift listings.",
         "NSCameraUsageDescription": "Allow Gifty to use your camera for gift photos.",
         "NSMicrophoneUsageDescription": "Allow Gifty to use your microphone for video capture."
-      }
+      },
+      "bundleIdentifier": "com.umairbutt.gifty",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,10 +26,12 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.umairbutt.gifty",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -53,11 +57,19 @@
           "cameraPermission": "Allow Gifty to use your camera for gift photos."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ada4ffe7-60d2-463e-bb59-efa046bcb9b1"
+      }
+    },
+    "owner": "umairbutt"
   }
 }

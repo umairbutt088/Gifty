@@ -8,8 +8,9 @@ import {
   type ReactNode,
 } from 'react';
 
-import { countNewVendorOrders } from '@/lib/vendor-orders';
+import { countNewVendorOrders, subscribeVendorOrderUpdates } from '@/lib/vendor-orders';
 import { fetchVendorStore, isVendorStoreOnboarded } from '@/lib/vendor-store';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 import type { VendorStoreRow } from '@/types/vendor';
 
@@ -56,6 +57,21 @@ export function VendorStoreProvider({ children }: { children: ReactNode }) {
     void refreshStore();
     void refreshNewOrderCount();
   }, [refreshStore, refreshNewOrderCount]);
+
+  useEffect(() => {
+    if (!profile || profile.role !== 'vendor') return;
+
+    const channel = subscribeVendorOrderUpdates(
+      profile.id,
+      () => void refreshNewOrderCount(),
+      () => void refreshNewOrderCount(),
+      'badge',
+    );
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [profile, refreshNewOrderCount]);
 
   const value = useMemo(
     () => ({

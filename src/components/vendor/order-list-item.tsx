@@ -80,6 +80,12 @@ function OrderCard({ order, deleted = false, deletedAt }: OrderListItemProps) {
           {!deleted ? <StatusBadge status={order.status} kind="order" /> : null}
         </View>
 
+        {!deleted && order.status === 'new' && order.sla_escalated_at ? (
+          <View style={styles.overdueBadge}>
+            <Text style={styles.overdueText}>Overdue — respond soon</Text>
+          </View>
+        ) : null}
+
         <View style={styles.details}>
           {deleted ? (
             <>
@@ -197,5 +203,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  overdueBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#E05D5D22',
+  },
+  overdueText: {
+    color: '#E05D5D',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

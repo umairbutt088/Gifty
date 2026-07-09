@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import type { VendorOrderStatus } from '@/types/vendor';
 
 /** Set to true when SMS/email provider (Twilio, Resend, etc.) is configured. */
-export const RECIPIENT_NOTIFICATIONS_ENABLED = false;
+export const RECIPIENT_NOTIFICATIONS_ENABLED = true;
 
 export type RecipientGiftView = {
   recipient_name: string;
@@ -11,9 +11,12 @@ export type RecipientGiftView = {
   gift_image_url: string | null;
   gift_message: string | null;
   status: VendorOrderStatus;
+  status_changed_at: string;
   delivery_date: string | null;
   recipient_confirmed_at: string | null;
   quantity: number;
+  tracking_number: string | null;
+  carrier: string | null;
 };
 
 export function buildRecipientLink(deliveryToken: string): string {

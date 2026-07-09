@@ -17,6 +17,7 @@ const ORDER_TONE: Partial<Record<VendorOrderStatus, string>> = {
   shipped: '#4ECDC4',
   delivered: '#6BCB77',
   rejected: '#E05D5D',
+  cancelled: '#9AA0A6',
 };
 
 const GIFT_TONE: Partial<Record<GiftStatus, string>> = {

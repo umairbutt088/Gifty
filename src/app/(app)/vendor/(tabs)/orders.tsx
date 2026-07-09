@@ -13,8 +13,8 @@ import { ThemedActivityIndicator } from '@/components/themed-activity-indicator'
 import { SegmentBar, SwipeableOrderListItem } from '@/components/vendor';
 import { Spacing } from '@/constants/theme';
 import { matchesOrderFilter, ORDER_FILTER_TABS, type OrderFilter } from '@/constants/vendor';
-import { useListRefresh } from '@/hooks/use-list-refresh';
-import { fetchVendorOrders, softDeleteVendorOrder } from '@/lib/vendor-orders';
+import { useVendorOrdersList } from '@/hooks/use-vendor-orders-list';
+import { softDeleteVendorOrder } from '@/lib/vendor-orders';
 import { useAuth } from '@/providers/auth-provider';
 import { useVendorStore } from '@/providers/vendor-store-provider';
 
@@ -23,20 +23,11 @@ export default function VendorOrdersTabScreen() {
   const { refreshNewOrderCount } = useVendorStore();
   const [filter, setFilter] = useState<OrderFilter>('all');
 
-  const loadOrders = useCallback(async () => {
-    if (!profile) return [];
-    return fetchVendorOrders(profile.id);
-  }, [profile]);
-
   const handleLoaded = useCallback(async () => {
     await refreshNewOrderCount();
   }, [refreshNewOrderCount]);
 
-  const { items: orders, setItems: setOrders, loading, refreshControl } = useListRefresh({
-    enabled: Boolean(profile),
-    load: loadOrders,
-    onLoaded: handleLoaded,
-  });
+  const { orders, setOrders, loading, refreshControl } = useVendorOrdersList(handleLoaded);
 
   const filteredOrders = useMemo(
     () => orders.filter((order) => matchesOrderFilter(order.status, filter)),
