@@ -34,6 +34,10 @@ yarn-error.*
 .env
 .env*.local
 
+# Firebase / Google private keys (never commit)
+*-firebase-adminsdk-*.json
+secrets/
+
 # typescript
 *.tsbuildinfo
 

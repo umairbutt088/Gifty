@@ -36,8 +36,8 @@ export function StatusBadge({ status, kind = 'gift' }: StatusBadgeProps) {
       : GIFT_TONE[status as GiftStatus] ?? Colors.accent;
 
   return (
-    <View style={[styles.badge, { backgroundColor: `${tone}22`, borderColor: `${tone}66` }]}>
-      <Text style={[styles.label, { color: tone }]}>{label}</Text>
+    <View style={[styles.badge, { backgroundColor: tone, borderColor: tone }]}>
+      <Text style={[styles.label, { color: Colors.text }]}>{label}</Text>
     </View>
   );
 }

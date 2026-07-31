@@ -4,9 +4,9 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrandBanner } from '@/components/brand-banner';
+import { Colors } from '@/constants/colors';
 import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
-import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 import { RoleBadge } from './role-badge';
 
@@ -40,7 +40,6 @@ export function DashboardHeader({
   onBack,
   trailing,
 }: DashboardHeaderProps) {
-  const theme = useScreenTheme();
   const colors = useColors();
 
   function handleBack() {
@@ -76,7 +75,7 @@ export function DashboardHeader({
               style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
               <SymbolView
                 name="chevron.left"
-                tintColor={theme.accentLight}
+                tintColor={Colors.text}
                 size={22}
                 weight="semibold"
               />

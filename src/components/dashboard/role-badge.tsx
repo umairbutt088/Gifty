@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -19,7 +20,7 @@ export function RoleBadge({ role }: RoleBadgeProps) {
           borderColor: theme.surfaceSelectedBorder,
         },
       ]}>
-      <Text style={[styles.label, { color: theme.accentLight }]}>{role}</Text>
+      <Text style={[styles.label, { color: Colors.text }]}>{role}</Text>
     </View>
   );
 }
