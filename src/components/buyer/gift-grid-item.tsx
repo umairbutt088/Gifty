@@ -84,20 +84,26 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: Spacing.two,
-    padding: Spacing.two,
   },
   meta: {
     gap: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    paddingBottom: Spacing.two,
   },
   imageWrap: {
-    width: '100%',
-    height: 108,
-    borderRadius: Spacing.two,
+    // Bleed under GlassCard's 1px border so the image meets the outer edge.
+    marginTop: -1,
+    marginHorizontal: -1,
+    height: 109,
+    borderTopLeftRadius: Spacing.four,
+    borderTopRightRadius: Spacing.four,
     overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: '100%',
+    borderTopLeftRadius: Spacing.four,
+    borderTopRightRadius: Spacing.four,
   },
   imagePlaceholder: {
     flex: 1,

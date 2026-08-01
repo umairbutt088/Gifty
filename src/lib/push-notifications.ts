@@ -1,17 +1,42 @@
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { supabase } from '@/lib/supabase';
 import type { VendorOrderStatus } from '@/types/vendor';
 
+type NotificationsModule = typeof import('expo-notifications');
 type OrderPushEvent = 'new_order' | 'status_change' | 'buyer_cancelled';
+
+let notificationsModule: NotificationsModule | null | undefined;
+
+function getNotifications(): NotificationsModule | null {
+  if (notificationsModule !== undefined) {
+    return notificationsModule;
+  }
+
+  try {
+    // Lazy load so a missing native module does not crash app startup.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    notificationsModule = require('expo-notifications') as NotificationsModule;
+  } catch (error) {
+    console.warn(
+      '[push] expo-notifications is unavailable on this install. Rebuild the native app with `npx expo run:ios` or `npx expo run:android`.',
+      error,
+    );
+    notificationsModule = null;
+  }
+
+  return notificationsModule;
+}
 
 function getEasProjectId(): string | undefined {
   return Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
 }
 
 export function configurePushNotifications(): void {
+  const Notifications = getNotifications();
+  if (!Notifications) return;
+
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
@@ -23,7 +48,8 @@ export function configurePushNotifications(): void {
 }
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  if (Platform.OS === 'web') {
+  const Notifications = getNotifications();
+  if (!Notifications || Platform.OS === 'web') {
     return null;
   }
 
@@ -31,7 +57,9 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'default',
-        importance: Notifications.AndroidImportance.DEFAULT,
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
       });
     }
 
@@ -67,18 +95,33 @@ export async function syncPushToken(userId: string): Promise<boolean> {
   const token = await registerForPushNotificationsAsync();
   if (!token) return false;
 
-  const { error } = await supabase
-    .from('push_tokens')
-    .upsert(
-      { user_id: userId, expo_push_token: token, platform: Platform.OS },
-      { onConflict: 'expo_push_token' },
-    );
+  const { error: rpcError } = await supabase.rpc('upsert_push_token', {
+    p_expo_push_token: token,
+    p_platform: Platform.OS,
+  });
+
+  if (!rpcError) {
+    console.log('[push] token synced for user', userId.slice(0, 8), Platform.OS);
+    return true;
+  }
+
+  console.warn('[push] upsert_push_token rpc failed, falling back to upsert:', rpcError.message);
+
+  // Claim existing device token then insert (works around older RLS on conflict).
+  await supabase.from('push_tokens').delete().eq('expo_push_token', token);
+
+  const { error } = await supabase.from('push_tokens').insert({
+    user_id: userId,
+    expo_push_token: token,
+    platform: Platform.OS,
+  });
 
   if (error) {
     console.warn('[push] failed to store push token:', error.message);
     return false;
   }
 
+  console.log('[push] token synced for user', userId.slice(0, 8), Platform.OS);
   return true;
 }
 
@@ -102,6 +145,11 @@ async function invokeOrderPushNotification(
 
     if ('skipped' in data && data.skipped) {
       console.warn('[push] notification skipped:', 'reason' in data ? data.reason : 'unknown');
+      return;
+    }
+
+    if ('ok' in data && data.ok) {
+      console.log('[push] notification sent:', payload.event, payload.orderId);
     }
   }
 }

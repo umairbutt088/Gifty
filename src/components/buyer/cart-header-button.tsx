@@ -2,12 +2,11 @@ import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { useCart } from '@/providers/cart-provider';
-import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 export function CartHeaderButton() {
-  const theme = useScreenTheme();
   const { itemCount } = useCart();
   const badgeLabel = itemCount > 99 ? '99+' : String(itemCount);
 
@@ -17,7 +16,7 @@ export function CartHeaderButton() {
       accessibilityLabel={itemCount > 0 ? `Cart, ${itemCount} items` : 'Cart'}
       onPress={() => router.push('/buyer/cart')}
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
-      <SymbolView name="cart.fill" tintColor={theme.accentLight} size={22} weight="semibold" />
+      <SymbolView name="cart.fill" tintColor={Colors.text} size={22} weight="semibold" />
       {itemCount > 0 ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{badgeLabel}</Text>

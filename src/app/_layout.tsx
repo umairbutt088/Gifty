@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useMemo, type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AnimatedSplashOverlay } from '@/components';
 import { AuthGate } from '@/components/auth-gate';
@@ -58,13 +59,15 @@ function RootStack() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <AppThemeProvider>
-        <AuthProvider>
-          <NavigationThemeProvider>
-            <RootStack />
-          </NavigationThemeProvider>
-        </AuthProvider>
-      </AppThemeProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <AppThemeProvider>
+          <AuthProvider>
+            <NavigationThemeProvider>
+              <RootStack />
+            </NavigationThemeProvider>
+          </AuthProvider>
+        </AppThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
