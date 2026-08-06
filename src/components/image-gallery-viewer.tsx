@@ -156,7 +156,6 @@ export function ImageGalleryViewer({
                   source={{ uri }}
                   style={styles.mainImage}
                   contentFit="cover"
-                  backgroundColor="transparent"
                 />
               </View>
             ))}
