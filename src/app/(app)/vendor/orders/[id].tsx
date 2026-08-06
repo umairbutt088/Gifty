@@ -1,32 +1,32 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 
 import {
-  ButtonStack,
-  DashboardHeader,
-  OrderDetailsCard,
-  PrimaryButton,
-  ScreenShell,
-  SectionTitle,
-} from '@/components/dashboard';
-import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
-import { FormField, StatusBadge } from '@/components/vendor';
-import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
-import { getOrCreateConversationForOrder, sendMessage } from '@/lib/chat';
+    ButtonStack,
+    DashboardHeader,
+    OrderDetailsCard,
+    PrimaryButton,
+    ScreenShell,
+    SectionTitle,
+} from "@/components/dashboard";
+import { ImageGalleryViewer } from "@/components/image-gallery-viewer";
+import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
+import { FormField, StatusBadge } from "@/components/vendor";
+import { Colors } from "@/constants/colors";
+import { getOrCreateConversationForOrder, sendMessage } from "@/lib/chat";
 import {
-  cancelVendorOrder,
-  fetchVendorOrderById,
-  getNextOrderAction,
-  markVendorOrderShipped,
-  updateVendorOrderStatus,
-} from '@/lib/vendor-orders';
-import { useAuth } from '@/providers/auth-provider';
-import { useVendorStore } from '@/providers/vendor-store-provider';
-import type { VendorOrderWithGift } from '@/types/vendor';
+    cancelVendorOrder,
+    fetchVendorOrderById,
+    getNextOrderAction,
+    markVendorOrderShipped,
+    updateVendorOrderStatus,
+} from "@/lib/vendor-orders";
+import { useAuth } from "@/providers/auth-provider";
+import { useVendorStore } from "@/providers/vendor-store-provider";
+import type { VendorOrderWithGift } from "@/types/vendor";
 
-type ReasonAction = 'reject' | 'cancel' | null;
+type ReasonAction = "reject" | "cancel" | null;
 
 export default function VendorOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,11 +37,11 @@ export default function VendorOrderDetailScreen() {
   const [updating, setUpdating] = useState(false);
   const [openingChat, setOpeningChat] = useState(false);
   const [reasonAction, setReasonAction] = useState<ReasonAction>(null);
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string | null>(null);
   const [showShippingForm, setShowShippingForm] = useState(false);
-  const [trackingNumber, setTrackingNumber] = useState('');
-  const [carrier, setCarrier] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrier, setCarrier] = useState("");
 
   const loadOrder = useCallback(async () => {
     if (!id) return;
@@ -59,13 +59,16 @@ export default function VendorOrderDetailScreen() {
   async function postSystemChatMessage(body: string) {
     if (!order || !profile) return;
 
-    const { data: conversation } = await getOrCreateConversationForOrder(order.id, profile.id);
+    const { data: conversation } = await getOrCreateConversationForOrder(
+      order.id,
+      profile.id,
+    );
     if (conversation) {
       await sendMessage(conversation.id, profile.id, body);
     }
   }
 
-  async function handleStatusUpdate(nextStatus: VendorOrderWithGift['status']) {
+  async function handleStatusUpdate(nextStatus: VendorOrderWithGift["status"]) {
     if (!order) return;
 
     setUpdating(true);
@@ -73,7 +76,7 @@ export default function VendorOrderDetailScreen() {
     setUpdating(false);
 
     if (error || !data) {
-      Alert.alert('Could not update order', error?.message ?? 'Try again.');
+      Alert.alert("Could not update order", error?.message ?? "Try again.");
       return;
     }
 
@@ -83,19 +86,22 @@ export default function VendorOrderDetailScreen() {
 
   function closeShippingForm() {
     setShowShippingForm(false);
-    setTrackingNumber('');
-    setCarrier('');
+    setTrackingNumber("");
+    setCarrier("");
   }
 
   async function handleMarkShipped() {
     if (!order) return;
 
     setUpdating(true);
-    const { data, error } = await markVendorOrderShipped(order.id, { trackingNumber, carrier });
+    const { data, error } = await markVendorOrderShipped(order.id, {
+      trackingNumber,
+      carrier,
+    });
     setUpdating(false);
 
     if (error || !data) {
-      Alert.alert('Could not update order', error?.message ?? 'Try again.');
+      Alert.alert("Could not update order", error?.message ?? "Try again.");
       return;
     }
 
@@ -108,11 +114,14 @@ export default function VendorOrderDetailScreen() {
     if (!order || !profile) return;
 
     setOpeningChat(true);
-    const { data, error } = await getOrCreateConversationForOrder(order.id, profile.id);
+    const { data, error } = await getOrCreateConversationForOrder(
+      order.id,
+      profile.id,
+    );
     setOpeningChat(false);
 
     if (error || !data) {
-      Alert.alert('Could not open chat', error?.message ?? 'Try again.');
+      Alert.alert("Could not open chat", error?.message ?? "Try again.");
       return;
     }
 
@@ -121,13 +130,13 @@ export default function VendorOrderDetailScreen() {
 
   function openReasonForm(action: Exclude<ReasonAction, null>) {
     setReasonAction(action);
-    setReason('');
+    setReason("");
     setReasonError(null);
   }
 
   function closeReasonForm() {
     setReasonAction(null);
-    setReason('');
+    setReason("");
     setReasonError(null);
   }
 
@@ -135,24 +144,26 @@ export default function VendorOrderDetailScreen() {
     if (!order || !reasonAction) return;
 
     if (!reason.trim()) {
-      setReasonError('A reason is required.');
+      setReasonError("A reason is required.");
       return;
     }
 
     setUpdating(true);
     const { data, error } =
-      reasonAction === 'reject'
-        ? await updateVendorOrderStatus(order.id, 'rejected', reason)
+      reasonAction === "reject"
+        ? await updateVendorOrderStatus(order.id, "rejected", reason)
         : await cancelVendorOrder(order.id, reason);
     setUpdating(false);
 
     if (error || !data) {
-      Alert.alert('Could not update order', error?.message ?? 'Try again.');
+      Alert.alert("Could not update order", error?.message ?? "Try again.");
       return;
     }
 
     await postSystemChatMessage(
-      reasonAction === 'reject' ? `Order rejected: ${reason.trim()}` : `Order cancelled: ${reason.trim()}`,
+      reasonAction === "reject"
+        ? `Order rejected: ${reason.trim()}`
+        : `Order cancelled: ${reason.trim()}`,
     );
 
     closeReasonForm();
@@ -171,7 +182,12 @@ export default function VendorOrderDetailScreen() {
   if (!order || order.vendor_id !== profile?.id) {
     return (
       <ScreenShell>
-        <DashboardHeader title="Order not found" showBanner={false} showBack backHref="/vendor/orders" />
+        <DashboardHeader
+          title="Order not found"
+          showBanner={false}
+          showBack
+          backHref="/vendor/orders"
+        />
       </ScreenShell>
     );
   }
@@ -181,7 +197,7 @@ export default function VendorOrderDetailScreen() {
   return (
     <ScreenShell>
       <DashboardHeader
-        title={order.gift?.title ?? 'Gift order'}
+        title={order.gift?.title ?? "Gift order"}
         subtitle={`Gift for ${order.recipient_name}`}
         showBanner={false}
         showBack
@@ -189,7 +205,7 @@ export default function VendorOrderDetailScreen() {
         trailing={<StatusBadge status={order.status} kind="order" />}
       />
 
-      {order.status === 'new' && order.sla_escalated_at ? (
+      {order.status === "new" && order.sla_escalated_at ? (
         <View style={styles.overdueBanner}>
           <Text style={styles.overdueBannerText}>
             This order is overdue — accept or reject it as soon as you can.
@@ -220,7 +236,7 @@ export default function VendorOrderDetailScreen() {
               variant="share"
               loading={updating}
               onPress={() => {
-                if (nextAction.nextStatus === 'shipped') {
+                if (nextAction.nextStatus === "shipped") {
                   setShowShippingForm(true);
                 } else {
                   void handleStatusUpdate(nextAction.nextStatus);
@@ -264,7 +280,9 @@ export default function VendorOrderDetailScreen() {
         ) : reasonAction ? (
           <View style={styles.reasonForm}>
             <Text style={styles.reasonTitle}>
-              {reasonAction === 'reject' ? 'Why are you rejecting this order?' : 'Why are you cancelling this order?'}
+              {reasonAction === "reject"
+                ? "Why are you rejecting this order?"
+                : "Why are you cancelling this order?"}
             </Text>
             <FormField
               label="Reason"
@@ -286,7 +304,11 @@ export default function VendorOrderDetailScreen() {
                 onPress={closeReasonForm}
               />
               <PrimaryButton
-                label={reasonAction === 'reject' ? 'Confirm reject' : 'Confirm cancel'}
+                label={
+                  reasonAction === "reject"
+                    ? "Confirm reject"
+                    : "Confirm cancel"
+                }
                 size="compact"
                 variant="danger"
                 loading={updating}
@@ -296,23 +318,23 @@ export default function VendorOrderDetailScreen() {
           </View>
         ) : (
           <View style={styles.secondaryActionsRow}>
-            {order.status === 'new' ? (
+            {order.status === "new" ? (
               <PrimaryButton
                 label="Reject order"
                 size="compact"
                 variant="danger"
                 style={styles.secondaryActionButton}
-                onPress={() => openReasonForm('reject')}
+                onPress={() => openReasonForm("reject")}
               />
             ) : null}
 
-            {order.status === 'accepted' || order.status === 'preparing' ? (
+            {order.status === "accepted" || order.status === "preparing" ? (
               <PrimaryButton
                 label="Cancel order"
                 size="compact"
                 variant="danger"
                 style={styles.secondaryActionButton}
-                onPress={() => openReasonForm('cancel')}
+                onPress={() => openReasonForm("cancel")}
               />
             ) : null}
           </View>
@@ -324,11 +346,11 @@ export default function VendorOrderDetailScreen() {
 
 const styles = StyleSheet.create({
   secondaryActionsRow: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   secondaryActionButton: {
     flex: 0,
-    width: '48%',
+    width: "48%",
   },
   reasonForm: {
     gap: 8,
@@ -336,21 +358,21 @@ const styles = StyleSheet.create({
   reasonTitle: {
     color: Colors.text,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   reasonInput: {
     minHeight: 72,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   overdueBanner: {
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#E05D5D22',
+    backgroundColor: "#E05D5D22",
   },
   overdueBannerText: {
-    color: '#E05D5D',
+    color: "#E05D5D",
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -40,7 +40,9 @@ export function CartLineItem({ item, onChangeQuantity, onRemove }: CartLineItemP
         </View>
 
         <Text style={[styles.price, { color: colors.textSecondary }]}>
-          {formatMoney(item.priceCents)} each
+          {item.variantLabel
+            ? `${item.variantLabel} · ${formatMoney(item.priceCents)} each`
+            : `${formatMoney(item.priceCents)} each`}
         </Text>
 
         <View style={styles.footer}>

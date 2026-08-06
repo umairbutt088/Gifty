@@ -1,24 +1,33 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from "expo-router";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { GlassCard } from '@/components';
-import { BackgroundPreview } from '@/components/screen-background';
+import { GlassCard } from "@/components";
 import {
-  DashboardHeader,
-  MenuRow,
-  PrimaryButton,
-  ScreenShell,
-  SectionTitle,
-} from '@/components/dashboard';
-import { BackgroundOptions, type ScreenBackgroundVariant } from '@/constants/background-styles';
-import { ColorModeOptions, type ColorModePreference } from '@/constants/color-mode';
-import { ThemeOptions, type ScreenThemeVariant } from '@/constants/color-themes';
-import { useColors } from '@/hooks/use-colors';
-import { Spacing } from '@/constants/theme';
-import { getRoleHomeHref } from '@/lib/role-routes';
-import { useAuth } from '@/providers/auth-provider';
-import { useAppTheme, useScreenTheme } from '@/providers/screen-theme-provider';
+    DashboardHeader,
+    MenuRow,
+    PrimaryButton,
+    ScreenShell,
+    SectionTitle,
+} from "@/components/dashboard";
+import { BackgroundPreview } from "@/components/screen-background";
+import {
+    BackgroundOptions,
+    type ScreenBackgroundVariant,
+} from "@/constants/background-styles";
+import {
+    ColorModeOptions,
+    type ColorModePreference,
+} from "@/constants/color-mode";
+import {
+    ThemeOptions,
+    type ScreenThemeVariant,
+} from "@/constants/color-themes";
+import { Spacing } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
+import { getRoleHomeHref } from "@/lib/role-routes";
+import { useAuth } from "@/providers/auth-provider";
+import { useAppTheme, useScreenTheme } from "@/providers/screen-theme-provider";
 
 type ThemeSwatchProps = {
   label: string;
@@ -52,14 +61,23 @@ function ColorModeOption({
           backgroundColor: selected ? theme.surfaceSelected : theme.surface,
         },
         pressed && styles.swatchPressed,
-      ]}>
+      ]}
+    >
       <Text style={[styles.modeLabel, { color: colors.text }]}>{label}</Text>
-      <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>{description}</Text>
+      <Text style={[styles.modeDescription, { color: colors.textSecondary }]}>
+        {description}
+      </Text>
     </Pressable>
   );
 }
 
-function ThemeSwatch({ label, description, preview, selected, onPress }: ThemeSwatchProps) {
+function ThemeSwatch({
+  label,
+  description,
+  preview,
+  selected,
+  onPress,
+}: ThemeSwatchProps) {
   const theme = useScreenTheme();
   const colors = useColors();
 
@@ -73,19 +91,31 @@ function ThemeSwatch({ label, description, preview, selected, onPress }: ThemeSw
           backgroundColor: selected ? theme.surfaceSelected : theme.surface,
         },
         pressed && styles.swatchPressed,
-      ]}>
+      ]}
+    >
       <View style={styles.previewRow}>
         {preview.map((color) => (
-          <View key={color} style={[styles.previewSlice, { backgroundColor: color }]} />
+          <View
+            key={color}
+            style={[styles.previewSlice, { backgroundColor: color }]}
+          />
         ))}
       </View>
       <View style={styles.swatchText}>
-        <Text style={[styles.swatchLabel, { color: colors.text }]}>{label}</Text>
-        <Text style={[styles.swatchDescription, { color: colors.textSecondary }]}>{description}</Text>
+        <Text style={[styles.swatchLabel, { color: colors.text }]}>
+          {label}
+        </Text>
+        <Text
+          style={[styles.swatchDescription, { color: colors.textSecondary }]}
+        >
+          {description}
+        </Text>
       </View>
       {selected ? (
         <View style={[styles.selectedBadge, { backgroundColor: theme.accent }]}>
-          <Text style={[styles.selectedBadgeText, { color: colors.text }]}>Active</Text>
+          <Text style={[styles.selectedBadgeText, { color: colors.text }]}>
+            Active
+          </Text>
         </View>
       ) : null}
     </Pressable>
@@ -118,15 +148,24 @@ function BackgroundSwatch({
           backgroundColor: selected ? theme.surfaceSelected : theme.surface,
         },
         pressed && styles.swatchPressed,
-      ]}>
+      ]}
+    >
       <BackgroundPreview variant={variant} selected={selected} />
       <View style={styles.swatchText}>
-        <Text style={[styles.swatchLabel, { color: colors.text }]}>{label}</Text>
-        <Text style={[styles.swatchDescription, { color: colors.textSecondary }]}>{description}</Text>
+        <Text style={[styles.swatchLabel, { color: colors.text }]}>
+          {label}
+        </Text>
+        <Text
+          style={[styles.swatchDescription, { color: colors.textSecondary }]}
+        >
+          {description}
+        </Text>
       </View>
       {selected ? (
         <View style={[styles.selectedBadge, { backgroundColor: theme.accent }]}>
-          <Text style={[styles.selectedBadgeText, { color: colors.text }]}>Active</Text>
+          <Text style={[styles.selectedBadgeText, { color: colors.text }]}>
+            Active
+          </Text>
         </View>
       ) : null}
     </Pressable>
@@ -135,8 +174,14 @@ function BackgroundSwatch({
 
 export default function SettingsScreen() {
   const { profile, user, signOut } = useAuth();
-  const { variant, backgroundVariant, colorMode, setThemeVariant, setBackgroundVariant, setColorMode } =
-    useAppTheme();
+  const {
+    variant,
+    backgroundVariant,
+    colorMode,
+    setThemeVariant,
+    setBackgroundVariant,
+    setColorMode,
+  } = useAppTheme();
   const colors = useColors();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -144,7 +189,7 @@ export default function SettingsScreen() {
     setSigningOut(true);
     await signOut();
     setSigningOut(false);
-    router.replace('/');
+    router.replace("/");
   }
 
   function handleSelectTheme(next: ScreenThemeVariant) {
@@ -166,14 +211,19 @@ export default function SettingsScreen() {
         subtitle={user?.email ?? undefined}
         role={profile?.role}
         showBanner={false}
+        showBack
+        backHref={getRoleHomeHref(profile?.role ?? 'buyer')}
       />
 
       <SectionTitle>Appearance</SectionTitle>
       <GlassCard style={styles.themeCard}>
         <Text style={[styles.themeHint, { color: colors.textSecondary }]}>
-          Choose light or dark mode, then pick accent colors and a background pattern.
+          Choose light or dark mode, then pick accent colors and a background
+          pattern.
         </Text>
-        <Text style={[styles.groupLabel, { color: colors.text }]}>Color mode</Text>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>
+          Color mode
+        </Text>
         <View style={styles.modeList}>
           {ColorModeOptions.map((option) => (
             <ColorModeOption
@@ -185,7 +235,9 @@ export default function SettingsScreen() {
             />
           ))}
         </View>
-        <Text style={[styles.groupLabel, { color: colors.text }]}>Color theme</Text>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>
+          Color theme
+        </Text>
         <View style={styles.swatchList}>
           {ThemeOptions.map((option) => (
             <ThemeSwatch
@@ -198,7 +250,9 @@ export default function SettingsScreen() {
             />
           ))}
         </View>
-        <Text style={[styles.groupLabel, { color: colors.text }]}>Background style</Text>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>
+          Background style
+        </Text>
         <View style={styles.swatchList}>
           {BackgroundOptions.map((option) => (
             <BackgroundSwatch
@@ -222,7 +276,12 @@ export default function SettingsScreen() {
         />
       ) : null}
 
-      <PrimaryButton label="Sign out" loading={signingOut} onPress={handleSignOut} variant="secondary" />
+      <PrimaryButton
+        label="Sign out"
+        loading={signingOut}
+        onPress={handleSignOut}
+        variant="secondary"
+      />
     </ScreenShell>
   );
 }
@@ -248,7 +307,7 @@ const styles = StyleSheet.create({
   },
   modeLabel: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modeDescription: {
     fontSize: 13,
@@ -256,9 +315,9 @@ const styles = StyleSheet.create({
   },
   groupLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     marginTop: Spacing.one,
   },
   swatchList: {
@@ -267,13 +326,13 @@ const styles = StyleSheet.create({
   swatch: {
     borderWidth: 1,
     borderRadius: Spacing.three,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   swatchPressed: {
     opacity: 0.92,
   },
   previewRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     height: 56,
   },
   previewSlice: {
@@ -286,13 +345,13 @@ const styles = StyleSheet.create({
   },
   swatchLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   swatchDescription: {
     fontSize: 13,
   },
   selectedBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: Spacing.two,
     right: Spacing.two,
     borderRadius: Spacing.one,
@@ -301,7 +360,7 @@ const styles = StyleSheet.create({
   },
   selectedBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
 });

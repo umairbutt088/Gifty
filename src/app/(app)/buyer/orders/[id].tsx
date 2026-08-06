@@ -1,26 +1,30 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Share, StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Share, StyleSheet, Text, View } from "react-native";
 
-import { CartHeaderButton } from '@/components/buyer';
+import { CartHeaderButton } from "@/components/buyer";
 import {
-  ButtonStack,
-  DashboardHeader,
-  OrderDetailsCard,
-  PrimaryButton,
-  ScreenShell,
-  SectionTitle,
-} from '@/components/dashboard';
-import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
-import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { FormField, StatusBadge } from '@/components/vendor';
-import { Colors } from '@/constants/colors';
-import { Spacing } from '@/constants/theme';
-import { cancelBuyerOrder, fetchBuyerOrderById, softDeleteBuyerOrder } from '@/lib/buyer-orders';
-import { getOrCreateConversationForOrder, sendMessage } from '@/lib/chat';
-import { buildRecipientLink } from '@/lib/recipient-delivery';
-import { useAuth } from '@/providers/auth-provider';
-import type { VendorOrderWithGift } from '@/types/vendor';
+    ButtonStack,
+    DashboardHeader,
+    OrderDetailsCard,
+    PrimaryButton,
+    ScreenShell,
+    SectionTitle,
+} from "@/components/dashboard";
+import { ImageGalleryViewer } from "@/components/image-gallery-viewer";
+import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
+import { FormField, StatusBadge } from "@/components/vendor";
+import { Colors } from "@/constants/colors";
+import { Spacing } from "@/constants/theme";
+import {
+    cancelBuyerOrder,
+    fetchBuyerOrderById,
+    softDeleteBuyerOrder,
+} from "@/lib/buyer-orders";
+import { getOrCreateConversationForOrder, sendMessage } from "@/lib/chat";
+import { buildRecipientLink } from "@/lib/recipient-delivery";
+import { useAuth } from "@/providers/auth-provider";
+import type { VendorOrderWithGift } from "@/types/vendor";
 
 export default function BuyerOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,7 +33,7 @@ export default function BuyerOrderDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [openingChat, setOpeningChat] = useState(false);
   const [showCancelForm, setShowCancelForm] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
@@ -50,7 +54,7 @@ export default function BuyerOrderDetailScreen() {
     if (!order || !profile) return;
 
     if (!cancelReason.trim()) {
-      setCancelError('A reason is required.');
+      setCancelError("A reason is required.");
       return;
     }
 
@@ -59,17 +63,24 @@ export default function BuyerOrderDetailScreen() {
     setCancelling(false);
 
     if (error || !data) {
-      Alert.alert('Could not cancel order', error?.message ?? 'Try again.');
+      Alert.alert("Could not cancel order", error?.message ?? "Try again.");
       return;
     }
 
-    const { data: conversation } = await getOrCreateConversationForOrder(order.id, profile.id);
+    const { data: conversation } = await getOrCreateConversationForOrder(
+      order.id,
+      profile.id,
+    );
     if (conversation) {
-      await sendMessage(conversation.id, profile.id, `Order cancelled: ${cancelReason.trim()}`);
+      await sendMessage(
+        conversation.id,
+        profile.id,
+        `Order cancelled: ${cancelReason.trim()}`,
+      );
     }
 
     setShowCancelForm(false);
-    setCancelReason('');
+    setCancelReason("");
     setCancelError(null);
     await loadOrder();
   }
@@ -78,11 +89,14 @@ export default function BuyerOrderDetailScreen() {
     if (!order || !profile) return;
 
     setOpeningChat(true);
-    const { data, error } = await getOrCreateConversationForOrder(order.id, profile.id);
+    const { data, error } = await getOrCreateConversationForOrder(
+      order.id,
+      profile.id,
+    );
     setOpeningChat(false);
 
     if (error || !data) {
-      Alert.alert('Could not open chat', error?.message ?? 'Try again.');
+      Alert.alert("Could not open chat", error?.message ?? "Try again.");
       return;
     }
 
@@ -95,7 +109,7 @@ export default function BuyerOrderDetailScreen() {
     const link = buildRecipientLink(order.delivery_token);
 
     await Share.share({
-      title: 'Gift delivery link',
+      title: "Gift delivery link",
       message: `Track and confirm your gift delivery: ${link}`,
     });
   }
@@ -104,23 +118,23 @@ export default function BuyerOrderDetailScreen() {
     if (!order) return;
 
     Alert.alert(
-      'Remove order',
-      'Remove this order from your list? You can restore it from Deleted orders.',
+      "Remove order",
+      "Remove this order from your list? You can restore it from Deleted orders.",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Remove',
-          style: 'destructive',
+          text: "Remove",
+          style: "destructive",
           onPress: () => {
             void (async () => {
               const { error } = await softDeleteBuyerOrder(order.id);
 
               if (error) {
-                Alert.alert('Could not remove', error.message);
+                Alert.alert("Could not remove", error.message);
                 return;
               }
 
-              router.replace('/buyer/orders');
+              router.replace("/buyer/orders");
             })();
           },
         },
@@ -139,7 +153,12 @@ export default function BuyerOrderDetailScreen() {
   if (!order) {
     return (
       <ScreenShell>
-        <DashboardHeader title="Order not found" showBanner={false} showBack backHref="/buyer/orders" />
+        <DashboardHeader
+          title="Order not found"
+          showBanner={false}
+          showBack
+          backHref="/buyer/orders"
+        />
       </ScreenShell>
     );
   }
@@ -147,7 +166,7 @@ export default function BuyerOrderDetailScreen() {
   return (
     <ScreenShell>
       <DashboardHeader
-        title={order.gift?.title ?? 'Gift order'}
+        title={order.gift?.title ?? "Gift order"}
         subtitle={`Gift for ${order.recipient_name}`}
         showBanner={false}
         showBack
@@ -184,10 +203,12 @@ export default function BuyerOrderDetailScreen() {
           />
         </ButtonStack>
 
-        {order.status === 'new' ? (
+        {order.status === "new" ? (
           showCancelForm ? (
             <View style={styles.cancelForm}>
-              <Text style={styles.cancelFormTitle}>Why do you want to cancel this order?</Text>
+              <Text style={styles.cancelFormTitle}>
+                Why do you want to cancel this order?
+              </Text>
               <FormField
                 label="Reason"
                 value={cancelReason}
@@ -207,7 +228,7 @@ export default function BuyerOrderDetailScreen() {
                   variant="secondary"
                   onPress={() => {
                     setShowCancelForm(false);
-                    setCancelReason('');
+                    setCancelReason("");
                     setCancelError(null);
                   }}
                 />
@@ -249,8 +270,8 @@ export default function BuyerOrderDetailScreen() {
 
 const styles = StyleSheet.create({
   headerTrailing: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.one,
   },
   cancelForm: {
@@ -259,17 +280,17 @@ const styles = StyleSheet.create({
   cancelFormTitle: {
     color: Colors.text,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   cancelInput: {
     minHeight: 72,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   deleteRow: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   deleteButton: {
     flex: 0,
-    width: '48%',
+    width: "48%",
   },
 });

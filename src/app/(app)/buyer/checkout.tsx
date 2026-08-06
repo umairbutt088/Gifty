@@ -1,52 +1,59 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { router } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 
+import { CartHeaderButton } from "@/components/buyer";
 import {
-  DashboardHeader,
-  PrimaryButton,
-  ScreenShell,
-  SectionTitle,
-} from '@/components/dashboard';
-import { CartHeaderButton } from '@/components/buyer';
-import { GlassCard } from '@/components/glass-card';
-import { NativeDatePickerField } from '@/components/native-date-picker-field';
-import { FormField } from '@/components/vendor';
-import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { Colors } from '@/constants/colors';
-import { Spacing } from '@/constants/theme';
+    DashboardHeader,
+    PrimaryButton,
+    ScreenShell,
+    SectionTitle,
+} from "@/components/dashboard";
+import { GlassCard } from "@/components/glass-card";
+import { NativeDatePickerField } from "@/components/native-date-picker-field";
+import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
+import { FormField } from "@/components/vendor";
+import { Colors } from "@/constants/colors";
+import { Spacing } from "@/constants/theme";
 import {
-  calculateVendorDeliveryFees,
-  cartRequiresDeliveryAddress,
-  createBuyerOrders,
-  getRecipientDeliveryFieldErrors,
-  type RecipientDeliveryFieldErrors,
-} from '@/lib/buyer-orders';
-import { formatMoney } from '@/lib/format';
-import { fetchPublicVendorStores } from '@/lib/vendor-store';
-import { getStoreFulfillmentSummary } from '@/lib/vendor-store-helpers';
-import { useAuth } from '@/providers/auth-provider';
-import { useCart } from '@/providers/cart-provider';
-import type { VendorStorePublic } from '@/types/vendor';
+    calculateVendorDeliveryFees,
+    cartRequiresDeliveryAddress,
+    createBuyerOrders,
+    getRecipientDeliveryFieldErrors,
+    type RecipientDeliveryFieldErrors,
+} from "@/lib/buyer-orders";
+import { formatMoney } from "@/lib/format";
+import { fetchPublicVendorStores } from "@/lib/vendor-store";
+import { getStoreFulfillmentSummary } from "@/lib/vendor-store-helpers";
+import { useAuth } from "@/providers/auth-provider";
+import { useCart } from "@/providers/cart-provider";
+import type { VendorStorePublic } from "@/types/vendor";
 
 export default function BuyerCheckoutScreen() {
   const { profile } = useAuth();
   const { items, isReady, subtotalCents, clearCart } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<RecipientDeliveryFieldErrors>({});
-  const [vendorStores, setVendorStores] = useState<Map<string, VendorStorePublic>>(new Map());
+  const [fieldErrors, setFieldErrors] = useState<RecipientDeliveryFieldErrors>(
+    {},
+  );
+  const [vendorStores, setVendorStores] = useState<
+    Map<string, VendorStorePublic>
+  >(new Map());
   const [storesLoading, setStoresLoading] = useState(false);
 
-  const [recipientName, setRecipientName] = useState('');
-  const [recipientPhone, setRecipientPhone] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState('');
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [notifyRecipient] = useState(false);
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [giftMessage, setGiftMessage] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState('');
+  const [recipientAddress, setRecipientAddress] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
 
-  const vendorIds = useMemo(() => [...new Set(items.map((item) => item.vendorId))], [items]);
+  const vendorIds = useMemo(
+    () => [...new Set(items.map((item) => item.vendorId))],
+    [items],
+  );
 
   useEffect(() => {
     if (vendorIds.length === 0) {
@@ -66,7 +73,10 @@ export default function BuyerCheckoutScreen() {
     [vendorIds, vendorStores],
   );
   const grandTotalCents = subtotalCents + deliveryFeeCents;
-  const requiresDeliveryAddress = cartRequiresDeliveryAddress(vendorIds, vendorStores);
+  const requiresDeliveryAddress = cartRequiresDeliveryAddress(
+    vendorIds,
+    vendorStores,
+  );
   const pickupOnly = vendorIds.length > 0 && !requiresDeliveryAddress;
 
   async function handlePlaceOrder() {
@@ -84,7 +94,7 @@ export default function BuyerCheckoutScreen() {
 
     const nextFieldErrors = getRecipientDeliveryFieldErrors(delivery);
     if (requiresDeliveryAddress && !recipientAddress.trim()) {
-      nextFieldErrors.recipientAddress = 'Delivery address is required.';
+      nextFieldErrors.recipientAddress = "Delivery address is required.";
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -103,6 +113,8 @@ export default function BuyerCheckoutScreen() {
         giftId: item.giftId,
         quantity: item.quantity,
         title: item.title,
+        priceCents: item.priceCents,
+        variantId: item.variantId ?? null,
       })),
       delivery,
     );
@@ -110,18 +122,18 @@ export default function BuyerCheckoutScreen() {
     setSubmitting(false);
 
     if (orderError || orders.length === 0) {
-      setError(orderError?.message ?? 'Could not place order.');
+      setError(orderError?.message ?? "Could not place order.");
       return;
     }
 
     await clearCart();
 
     Alert.alert(
-      'Order placed',
+      "Order placed",
       orders.length === 1
-        ? 'The vendor will review your gift order.'
+        ? "The vendor will review your gift order."
         : `${orders.length} gift orders were sent to vendors.`,
-      [{ text: 'View orders', onPress: () => router.replace('/buyer/orders') }],
+      [{ text: "View orders", onPress: () => router.replace("/buyer/orders") }],
     );
   }
 
@@ -144,13 +156,16 @@ export default function BuyerCheckoutScreen() {
           backHref="/buyer/cart"
           trailing={<CartHeaderButton />}
         />
-        <PrimaryButton label="Go to cart" onPress={() => router.replace('/buyer/cart')} />
+        <PrimaryButton
+          label="Go to cart"
+          onPress={() => router.replace("/buyer/cart")}
+        />
       </ScreenShell>
     );
   }
 
   return (
-    <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
+    <ScreenShell scrollProps={{ keyboardShouldPersistTaps: "handled" }}>
       <DashboardHeader
         title="Checkout"
         subtitle="Review your cart and add recipient details."
@@ -174,7 +189,9 @@ export default function BuyerCheckoutScreen() {
                   {item.quantity} × {formatMoney(item.priceCents)}
                 </Text>
                 {store ? (
-                  <Text style={styles.summaryFulfillment}>{getStoreFulfillmentSummary(store)}</Text>
+                  <Text style={styles.summaryFulfillment}>
+                    {getStoreFulfillmentSummary(store)}
+                  </Text>
                 ) : null}
               </View>
               <Text style={styles.summaryLineTotal}>
@@ -187,7 +204,9 @@ export default function BuyerCheckoutScreen() {
         {deliveryFeeCents > 0 ? (
           <View style={styles.summaryLine}>
             <Text style={styles.summaryMeta}>Delivery fees</Text>
-            <Text style={styles.summaryLineTotal}>{formatMoney(deliveryFeeCents)}</Text>
+            <Text style={styles.summaryLineTotal}>
+              {formatMoney(deliveryFeeCents)}
+            </Text>
           </View>
         ) : null}
 
@@ -195,7 +214,9 @@ export default function BuyerCheckoutScreen() {
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryTotalLabel}>Total</Text>
-          <Text style={styles.summaryTotalValue}>{formatMoney(grandTotalCents)}</Text>
+          <Text style={styles.summaryTotalValue}>
+            {formatMoney(grandTotalCents)}
+          </Text>
         </View>
       </GlassCard>
 
@@ -203,8 +224,8 @@ export default function BuyerCheckoutScreen() {
         <GlassCard style={styles.pickupCard}>
           <Text style={styles.pickupTitle}>Pickup / takeaway</Text>
           <Text style={styles.pickupText}>
-            These vendors do not deliver. You or the recipient will collect the order from the
-            store.
+            These vendors do not deliver. You or the recipient will collect the
+            order from the store.
           </Text>
         </GlassCard>
       ) : null}
@@ -216,7 +237,10 @@ export default function BuyerCheckoutScreen() {
         onChangeText={(text) => {
           setRecipientName(text);
           if (fieldErrors.recipientName) {
-            setFieldErrors((current) => ({ ...current, recipientName: undefined }));
+            setFieldErrors((current) => ({
+              ...current,
+              recipientName: undefined,
+            }));
           }
         }}
         placeholder="Who receives the gift?"
@@ -228,7 +252,10 @@ export default function BuyerCheckoutScreen() {
         onChangeText={(text) => {
           setRecipientPhone(text);
           if (fieldErrors.recipientPhone) {
-            setFieldErrors((current) => ({ ...current, recipientPhone: undefined }));
+            setFieldErrors((current) => ({
+              ...current,
+              recipientPhone: undefined,
+            }));
           }
         }}
         placeholder="+1 555 123 4567"
@@ -242,7 +269,10 @@ export default function BuyerCheckoutScreen() {
         onChangeText={(text) => {
           setRecipientEmail(text);
           if (fieldErrors.recipientEmail) {
-            setFieldErrors((current) => ({ ...current, recipientEmail: undefined }));
+            setFieldErrors((current) => ({
+              ...current,
+              recipientEmail: undefined,
+            }));
           }
         }}
         placeholder="recipient@email.com"
@@ -258,7 +288,10 @@ export default function BuyerCheckoutScreen() {
           onChangeText={(text) => {
             setRecipientAddress(text);
             if (fieldErrors.recipientAddress) {
-              setFieldErrors((current) => ({ ...current, recipientAddress: undefined }));
+              setFieldErrors((current) => ({
+                ...current,
+                recipientAddress: undefined,
+              }));
             }
           }}
           placeholder="Street, city"
@@ -277,13 +310,13 @@ export default function BuyerCheckoutScreen() {
       />
 
       <NativeDatePickerField
-        label={pickupOnly ? 'Preferred pickup date' : 'Preferred delivery date'}
+        label={pickupOnly ? "Preferred pickup date" : "Preferred delivery date"}
         value={deliveryDate}
         onChange={setDeliveryDate}
         hint={
           pickupOnly
-            ? 'Optional. Coordinate pickup timing with the vendor.'
-            : 'Optional. Vendors will try to deliver on or near this date.'
+            ? "Optional. Coordinate pickup timing with the vendor."
+            : "Optional. Vendors will try to deliver on or near this date."
         }
       />
 
@@ -304,9 +337,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   summaryLine: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     gap: Spacing.three,
   },
   summaryLineText: {
@@ -316,7 +349,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     color: Colors.text,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   summaryMeta: {
     color: Colors.textSecondary,
@@ -330,26 +363,26 @@ const styles = StyleSheet.create({
   summaryLineTotal: {
     color: Colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   summaryDivider: {
     height: 1,
     backgroundColor: Colors.surfaceBorder,
   },
   summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   summaryTotalLabel: {
     color: Colors.textSecondary,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   summaryTotalValue: {
     color: Colors.text,
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   pickupCard: {
     padding: Spacing.four,
@@ -358,7 +391,7 @@ const styles = StyleSheet.create({
   pickupTitle: {
     color: Colors.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   pickupText: {
     color: Colors.textSecondary,
@@ -367,10 +400,10 @@ const styles = StyleSheet.create({
   },
   multiline: {
     minHeight: 88,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   error: {
-    color: '#E05D5D',
+    color: "#E05D5D",
     fontSize: 14,
   },
 });

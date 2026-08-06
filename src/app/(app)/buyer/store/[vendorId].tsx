@@ -1,25 +1,25 @@
-import { Image } from 'expo-image';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image } from "expo-image";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
-import { BuyerGiftGridView, BuyerGiftListView } from '@/components/buyer';
+import { BuyerGiftGridView } from "@/components/buyer";
 import {
-  DashboardHeader,
-  InfoRow,
-  ScreenShell,
-  SectionTitle,
-} from '@/components/dashboard';
-import { GlassCard } from '@/components/glass-card';
-import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { useColors } from '@/hooks/use-colors';
-import { Spacing } from '@/constants/theme';
-import { useScreenTheme } from '@/providers/screen-theme-provider';
-import { formatDeliveryCities, formatMoney } from '@/lib/format';
-import { fetchLiveGiftsByVendor } from '@/lib/gifts';
-import { fetchPublicVendorStore } from '@/lib/vendor-store';
-import { formatDeliveryRadiusKm } from '@/lib/vendor-store-helpers';
-import type { GiftRow, VendorStorePublic } from '@/types/vendor';
+    DashboardHeader,
+    InfoRow,
+    ScreenShell,
+    SectionTitle,
+} from "@/components/dashboard";
+import { GlassCard } from "@/components/glass-card";
+import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
+import { Spacing } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
+import { formatDeliveryCities, formatMoney } from "@/lib/format";
+import { fetchLiveGiftsByVendor } from "@/lib/gifts";
+import { fetchPublicVendorStore } from "@/lib/vendor-store";
+import { formatDeliveryRadiusKm } from "@/lib/vendor-store-helpers";
+import { useScreenTheme } from "@/providers/screen-theme-provider";
+import type { GiftRow, VendorStorePublic } from "@/types/vendor";
 
 export default function BuyerVendorStoreScreen() {
   const router = useRouter();
@@ -87,12 +87,24 @@ export default function BuyerVendorStoreScreen() {
         style={[
           styles.heroCard,
           { borderColor: theme.surfaceBorder, backgroundColor: theme.surface },
-        ]}>
+        ]}
+      >
         {store.logo_url ? (
-          <Image source={{ uri: store.logo_url }} style={styles.heroLogo} contentFit="cover" />
+          <Image
+            source={{ uri: store.logo_url }}
+            style={styles.heroLogo}
+            contentFit="cover"
+          />
         ) : (
-          <View style={[styles.heroLogoPlaceholder, { backgroundColor: colors.surfaceNested }]}>
-            <Text style={[styles.heroLogoPlaceholderText, { color: colors.text }]}>
+          <View
+            style={[
+              styles.heroLogoPlaceholder,
+              { backgroundColor: colors.surfaceNested },
+            ]}
+          >
+            <Text
+              style={[styles.heroLogoPlaceholderText, { color: colors.text }]}
+            >
               {store.name.slice(0, 1).toUpperCase()}
             </Text>
           </View>
@@ -102,7 +114,7 @@ export default function BuyerVendorStoreScreen() {
       <SectionTitle>About</SectionTitle>
       <GlassCard style={styles.detailCard}>
         <Text style={[styles.bio, { color: colors.textSecondary }]}>
-          {store.bio?.trim() || 'This vendor has not added a store bio yet.'}
+          {store.bio?.trim() || "This vendor has not added a store bio yet."}
         </Text>
       </GlassCard>
 
@@ -110,9 +122,13 @@ export default function BuyerVendorStoreScreen() {
       <GlassCard style={styles.detailCard}>
         <InfoRow
           label="Order type"
-          value={store.offers_delivery ? 'Delivery available' : 'Pickup / takeaway'}
+          value={
+            store.offers_delivery ? "Delivery available" : "Pickup / takeaway"
+          }
         />
-        {store.offers_delivery && store.delivery_radius_km != null && store.delivery_radius_km > 0 ? (
+        {store.offers_delivery &&
+        store.delivery_radius_km != null &&
+        store.delivery_radius_km > 0 ? (
           <InfoRow
             label="Delivery radius"
             value={formatDeliveryRadiusKm(store.delivery_radius_km)}
@@ -124,7 +140,7 @@ export default function BuyerVendorStoreScreen() {
             value={
               store.delivery_charge_cents > 0
                 ? formatMoney(store.delivery_charge_cents)
-                : 'Free delivery'
+                : "Free delivery"
             }
           />
         ) : null}
@@ -137,8 +153,8 @@ export default function BuyerVendorStoreScreen() {
         ) : null}
         {!store.offers_delivery ? (
           <Text style={[styles.pickupNote, { color: colors.textMuted }]}>
-            Collect your order directly from this vendor. No delivery address is required at
-            checkout.
+            Collect your order directly from this vendor. No delivery address is
+            required at checkout.
           </Text>
         ) : null}
       </GlassCard>
@@ -146,7 +162,9 @@ export default function BuyerVendorStoreScreen() {
       <SectionTitle>Gifts from this store</SectionTitle>
 
       {gifts.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.textSecondary }]}>No live gifts right now.</Text>
+        <Text style={[styles.empty, { color: colors.textSecondary }]}>
+          No live gifts right now.
+        </Text>
       ) : (
         <GiftView gifts={gifts} vendorStores={vendorStores} />
       )}
@@ -158,21 +176,21 @@ const styles = StyleSheet.create({
   heroCard: {
     borderWidth: 1,
     borderRadius: Spacing.four,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   heroLogo: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
   },
   heroLogoPlaceholder: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroLogoPlaceholderText: {
     fontSize: 48,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   detailCard: {
     padding: Spacing.four,

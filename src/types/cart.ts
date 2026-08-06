@@ -6,6 +6,8 @@ export type CartItem = {
   imageUrl: string | null;
   stock: number;
   quantity: number;
+  variantId?: string | null;
+  variantLabel?: string | null;
 };
 
 export type CartCheckoutDetails = {
@@ -29,7 +31,9 @@ export function cartItemsEqual(a: CartItem[], b: CartItem[]): boolean {
       left.stock !== right.stock ||
       left.title !== right.title ||
       left.imageUrl !== right.imageUrl ||
-      left.vendorId !== right.vendorId
+      left.vendorId !== right.vendorId ||
+      left.variantId !== right.variantId ||
+      left.variantLabel !== right.variantLabel
     ) {
       return false;
     }

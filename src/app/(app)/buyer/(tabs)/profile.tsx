@@ -41,6 +41,11 @@ export default function BuyerProfileTabScreen() {
       </View>
 
       <SectionTitle>Account</SectionTitle>
+      <MenuRow
+        title="Favorites"
+        description="Gifts you saved for later"
+        href="/buyer/favorites"
+      />
       <MenuRow title="App settings" description="Theme and preferences" href="/settings" />
 
       <PrimaryButton label="Sign out" loading={signingOut} onPress={handleSignOut} variant="secondary" />

@@ -7,16 +7,24 @@ import {
   PrimaryButton,
   ScreenShell,
 } from '@/components/dashboard';
-import { FormField, GiftImagePicker, GiftStatusPicker, type GiftImageSelection } from '@/components/vendor';
+import {
+  FormField,
+  GiftImagePicker,
+  GiftStatusPicker,
+  GiftVariantsEditor,
+  OccasionTagsField,
+  type GiftImageSelection,
+} from '@/components/vendor';
 import { GIFT_CATEGORIES } from '@/constants/vendor';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { createGift } from '@/lib/gifts';
 import { resolveGiftImageUrls } from '@/lib/gift-image-upload';
+import { replaceGiftVariants } from '@/lib/gift-variants';
 import { parsePriceToCents } from '@/lib/format';
 import { useAuth } from '@/providers/auth-provider';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
-import type { GiftCategory, GiftStatus } from '@/types/vendor';
+import type { GiftCategory, GiftOccasion, GiftStatus, GiftVariantInput } from '@/types/vendor';
 
 export default function VendorGiftNewScreen() {
   const { profile } = useAuth();
@@ -24,9 +32,14 @@ export default function VendorGiftNewScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [compareAtPrice, setCompareAtPrice] = useState('');
   const [stock, setStock] = useState('1');
+  const [prepTime, setPrepTime] = useState('');
+  const [featured, setFeatured] = useState(false);
+  const [variants, setVariants] = useState<GiftVariantInput[]>([]);
   const [images, setImages] = useState<GiftImageSelection[]>([]);
   const [category, setCategory] = useState<GiftCategory>('flowers');
+  const [occasionTags, setOccasionTags] = useState<GiftOccasion[]>([]);
   const [status, setStatus] = useState<GiftStatus>('draft');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +49,13 @@ export default function VendorGiftNewScreen() {
     if (!profile) return;
 
     const priceCents = parsePriceToCents(price);
+    const originalPriceCents = compareAtPrice.trim()
+      ? parsePriceToCents(compareAtPrice)
+      : null;
     const stockCount = Number.parseInt(stock, 10);
+    const prepTimeMinutes = prepTime.trim()
+      ? Number.parseInt(prepTime.replace(/[^0-9]/g, ''), 10)
+      : null;
 
     if (!title.trim()) {
       setError('Title is required.');
@@ -53,9 +72,35 @@ export default function VendorGiftNewScreen() {
       return;
     }
 
+    if (originalPriceCents === null && compareAtPrice.trim()) {
+      setError('Enter a valid compare-at price.');
+      return;
+    }
+
+    if (originalPriceCents != null && originalPriceCents < priceCents) {
+      setError('Compare-at price must be greater than or equal to the selling price.');
+      return;
+    }
+
     if (!Number.isFinite(stockCount) || stockCount < 0) {
       setError('Enter a valid stock count.');
       return;
+    }
+
+    if (prepTimeMinutes != null && (!Number.isFinite(prepTimeMinutes) || prepTimeMinutes <= 0)) {
+      setError('Enter a valid prep time in minutes.');
+      return;
+    }
+
+    for (const variant of variants) {
+      if (!variant.label.trim()) {
+        setError('Each option needs a label.');
+        return;
+      }
+      if (variant.priceCents < 0 || !Number.isFinite(variant.stock) || variant.stock < 0) {
+        setError('Each option needs a valid price and stock.');
+        return;
+      }
     }
 
     setLoading(true);
@@ -74,18 +119,32 @@ export default function VendorGiftNewScreen() {
       title,
       description,
       priceCents,
+      originalPriceCents,
       category,
       stock: stockCount,
       imageUrls: urls,
       status,
+      featured,
+      prepTimeMinutes,
+      occasionTags,
     });
 
-    setLoading(false);
-
     if (createError || !data) {
+      setLoading(false);
       setError(createError?.message ?? 'Could not create gift.');
       return;
     }
+
+    if (variants.length > 0) {
+      const { error: variantsError } = await replaceGiftVariants(data.id, variants);
+      if (variantsError) {
+        setLoading(false);
+        setError(variantsError.message);
+        return;
+      }
+    }
+
+    setLoading(false);
 
     Alert.alert('Gift created', 'Your gift listing has been saved.', [
       { text: 'View gift', onPress: () => router.replace(`/vendor/gift/${data.id}`) },
@@ -121,12 +180,44 @@ export default function VendorGiftNewScreen() {
         keyboardType="decimal-pad"
       />
       <FormField
+        label="Compare-at price (optional)"
+        value={compareAtPrice}
+        onChangeText={setCompareAtPrice}
+        placeholder="59.99"
+        keyboardType="decimal-pad"
+      />
+      <FormField
         label="Stock"
         value={stock}
         onChangeText={setStock}
         placeholder="10"
         keyboardType="number-pad"
       />
+      <FormField
+        label="Prep time in minutes (optional)"
+        value={prepTime}
+        onChangeText={setPrepTime}
+        placeholder="60"
+        keyboardType="number-pad"
+      />
+
+      <Pressable
+        onPress={() => setFeatured((current) => !current)}
+        style={[
+          styles.featuredToggle,
+          {
+            backgroundColor: featured ? theme.surfaceSelected : theme.surface,
+            borderColor: featured ? theme.surfaceSelectedBorder : theme.surfaceBorder,
+          },
+        ]}>
+        <Text style={styles.featuredLabel}>
+          {featured ? 'Featured on marketplace' : 'Mark as featured'}
+        </Text>
+      </Pressable>
+
+      <GiftVariantsEditor value={variants} onChange={setVariants} />
+
+      <OccasionTagsField value={occasionTags} onChange={setOccasionTags} />
 
       <View style={styles.field}>
         <Text style={styles.label}>Category</Text>
@@ -196,5 +287,16 @@ const styles = StyleSheet.create({
   error: {
     color: '#E05D5D',
     fontSize: 14,
+  },
+  featuredToggle: {
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+  },
+  featuredLabel: {
+    color: Colors.text,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

@@ -4,6 +4,8 @@ export type { DeliveryOptionsValue } from './delivery-options-field';
 export { FormField } from './form-field';
 export { GiftImagePicker, type GiftImageSelection } from './gift-image-picker';
 export { GiftStatusPicker } from './gift-status-picker';
+export { GiftVariantsEditor } from './gift-variants-editor';
+export { OccasionTagsField } from './occasion-tags-field';
 export { GiftListItem } from './gift-list-item';
 export { VendorGiftGridItem } from './gift-grid-item';
 export { VendorGiftGridView } from './gift-grid-view';

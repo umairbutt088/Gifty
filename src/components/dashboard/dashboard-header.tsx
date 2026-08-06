@@ -4,16 +4,16 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrandBanner } from '@/components/brand-banner';
-import { Colors } from '@/constants/colors';
-import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
+import { useColors } from '@/hooks/use-colors';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 import { RoleBadge } from './role-badge';
 
 /** Shared header metrics — keep tab and stack headers aligned. */
 const TOOLBAR_MIN_HEIGHT = 44;
-const SIDE_LEADING_WIDTH = 32;
-const SIDE_TRAILING_MIN_WIDTH = 32;
+const SIDE_LEADING_WIDTH = 40;
+const SIDE_TRAILING_MIN_WIDTH = 40;
 const TITLE_FONT_SIZE = 22;
 const TITLE_LINE_HEIGHT = 26;
 
@@ -41,6 +41,8 @@ export function DashboardHeader({
   trailing,
 }: DashboardHeaderProps) {
   const colors = useColors();
+  const theme = useScreenTheme();
+  const isStack = variant === 'default';
 
   function handleBack() {
     if (onBack) {
@@ -59,50 +61,65 @@ export function DashboardHeader({
   }
 
   const trailingContent =
-    variant === 'tab' ? (role ? <RoleBadge role={role} /> : null) : (trailing ?? null);
+    variant === 'tab' ? (
+      role ? (
+        <RoleBadge role={role} />
+      ) : null
+    ) : (
+      (trailing ?? null)
+    );
 
   return (
     <View style={styles.headerShell}>
-      {variant === 'default' && showBanner ? <BrandBanner showTagline={false} /> : null}
+      {isStack && showBanner ? <BrandBanner showTagline={false} /> : null}
 
       <View style={styles.toolbar}>
-        {variant === 'default' && showBack ? (
+        {isStack && showBack ? (
           <View style={styles.sideSlotLeading}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Go back"
+              hitSlop={8}
               onPress={handleBack}
-              style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
+              style={({ pressed }) => [
+                styles.iconButton,
+                {
+                  backgroundColor: theme.surfaceNested,
+                  borderColor: theme.surfaceBorder,
+                },
+                pressed && styles.iconButtonPressed,
+              ]}>
               <SymbolView
-                name="chevron.left"
-                tintColor={Colors.text}
-                size={22}
+                name={{
+                  ios: 'chevron.left',
+                  android: 'arrow_back',
+                  web: 'arrow_back',
+                }}
+                tintColor={colors.text}
+                size={20}
                 weight="semibold"
               />
             </Pressable>
           </View>
         ) : null}
 
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-          {title}
-        </Text>
+        <View style={styles.titleBlock}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+            {title}
+          </Text>
+          {isStack && subtitle ? (
+            <Text style={[styles.subtitleInline, { color: colors.textSecondary }]} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
 
         {trailingContent ? (
           <View style={styles.sideSlotTrailing}>{trailingContent}</View>
+        ) : isStack && showBack ? (
+          <View style={styles.sideSlotTrailing} />
         ) : null}
       </View>
-
-      {variant === 'default' && subtitle ? (
-        <Text
-          style={[
-            styles.subtitle,
-            { color: colors.textSecondary },
-            showBack && styles.subtitleWithBack,
-          ]}
-          numberOfLines={2}>
-          {subtitle}
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -116,7 +133,7 @@ const styles = StyleSheet.create({
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.two,
     minHeight: TOOLBAR_MIN_HEIGHT,
   },
   sideSlotLeading: {
@@ -134,27 +151,28 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     width: SIDE_LEADING_WIDTH,
-    height: TOOLBAR_MIN_HEIGHT,
+    height: SIDE_LEADING_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: Spacing.two,
-    marginLeft: -Spacing.one,
+    borderRadius: SIDE_LEADING_WIDTH / 2,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   iconButtonPressed: {
     opacity: 0.7,
   },
-  title: {
+  titleBlock: {
     flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    gap: 2,
+  },
+  title: {
     fontSize: TITLE_FONT_SIZE,
     fontWeight: '700',
     lineHeight: TITLE_LINE_HEIGHT,
   },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-    paddingLeft: Spacing.one,
-  },
-  subtitleWithBack: {
-    paddingLeft: SIDE_LEADING_WIDTH + Spacing.one,
+  subtitleInline: {
+    fontSize: 13,
+    lineHeight: 17,
   },
 });

@@ -2,13 +2,21 @@ import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
+import { useColors } from '@/hooks/use-colors';
 import { useCart } from '@/providers/cart-provider';
+import { useScreenTheme } from '@/providers/screen-theme-provider';
 
-export function CartHeaderButton() {
+type CartHeaderButtonProps = {
+  alwaysShowBadge?: boolean;
+};
+
+export function CartHeaderButton({ alwaysShowBadge = false }: CartHeaderButtonProps) {
   const { itemCount } = useCart();
+  const colors = useColors();
+  const theme = useScreenTheme();
   const badgeLabel = itemCount > 99 ? '99+' : String(itemCount);
+  const showBadge = alwaysShowBadge || itemCount > 0;
 
   return (
     <Pressable
@@ -16,9 +24,13 @@ export function CartHeaderButton() {
       accessibilityLabel={itemCount > 0 ? `Cart, ${itemCount} items` : 'Cart'}
       onPress={() => router.push('/buyer/cart')}
       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
-      <SymbolView name="cart.fill" tintColor={Colors.text} size={22} weight="semibold" />
-      {itemCount > 0 ? (
-        <View style={styles.badge}>
+      <SymbolView
+        name={{ ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' }}
+        tintColor={colors.text}
+        size={22}
+      />
+      {showBadge ? (
+        <View style={[styles.badge, { backgroundColor: theme.accent }]}>
           <Text style={styles.badgeText}>{badgeLabel}</Text>
         </View>
       ) : null}
@@ -28,33 +40,29 @@ export function CartHeaderButton() {
 
 const styles = StyleSheet.create({
   button: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: Spacing.two,
   },
   buttonPressed: {
     opacity: 0.7,
   },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#FF3B30',
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    paddingHorizontal: 4,
+    top: 2,
+    right: 0,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeText: {
     color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
-    lineHeight: 12,
+    fontSize: 9,
+    fontWeight: '800',
+    lineHeight: 11,
   },
 });

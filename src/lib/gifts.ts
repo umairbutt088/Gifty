@@ -2,6 +2,19 @@ import { deleteGiftImagesFromStorage } from '@/lib/gift-image-upload';
 import { supabase } from '@/lib/supabase';
 import type { GiftInput, GiftRow } from '@/types/vendor';
 
+function normalizeGift(row: GiftRow): GiftRow {
+  return {
+    ...row,
+    original_price_cents: row.original_price_cents ?? null,
+    featured: Boolean(row.featured),
+    sales_count: row.sales_count ?? 0,
+    prep_time_minutes: row.prep_time_minutes ?? null,
+    rating_avg: Number(row.rating_avg ?? 0),
+    rating_count: row.rating_count ?? 0,
+    occasion_tags: Array.isArray(row.occasion_tags) ? row.occasion_tags : [],
+  };
+}
+
 export async function fetchVendorGifts(vendorId: string): Promise<GiftRow[]> {
   const { data, error } = await supabase
     .from('gifts')
@@ -14,7 +27,7 @@ export async function fetchVendorGifts(vendorId: string): Promise<GiftRow[]> {
     return [];
   }
 
-  return data as GiftRow[];
+  return (data as GiftRow[]).map(normalizeGift);
 }
 
 export async function fetchDeletedVendorGifts(vendorId: string): Promise<GiftRow[]> {
@@ -29,7 +42,7 @@ export async function fetchDeletedVendorGifts(vendorId: string): Promise<GiftRow
     return [];
   }
 
-  return data as GiftRow[];
+  return (data as GiftRow[]).map(normalizeGift);
 }
 
 export async function fetchLiveGifts(): Promise<GiftRow[]> {
@@ -45,7 +58,7 @@ export async function fetchLiveGifts(): Promise<GiftRow[]> {
     return [];
   }
 
-  return data as GiftRow[];
+  return (data as GiftRow[]).map(normalizeGift);
 }
 
 export async function fetchLiveGiftsByVendor(vendorId: string): Promise<GiftRow[]> {
@@ -62,7 +75,7 @@ export async function fetchLiveGiftsByVendor(vendorId: string): Promise<GiftRow[
     return [];
   }
 
-  return data as GiftRow[];
+  return (data as GiftRow[]).map(normalizeGift);
 }
 
 export async function fetchLiveGiftById(giftId: string): Promise<GiftRow | null> {
@@ -79,7 +92,7 @@ export async function fetchLiveGiftById(giftId: string): Promise<GiftRow | null>
     return null;
   }
 
-  return data as GiftRow;
+  return normalizeGift(data as GiftRow);
 }
 
 export async function fetchGiftById(giftId: string): Promise<GiftRow | null> {
@@ -94,7 +107,7 @@ export async function fetchGiftById(giftId: string): Promise<GiftRow | null> {
     return null;
   }
 
-  return data as GiftRow;
+  return normalizeGift(data as GiftRow);
 }
 
 export async function createGift(
@@ -108,16 +121,20 @@ export async function createGift(
       title: input.title.trim(),
       description: input.description?.trim() || null,
       price_cents: input.priceCents,
+      original_price_cents: input.originalPriceCents ?? null,
       category: input.category,
       stock: input.stock,
       status: input.status ?? 'live',
       image_urls: input.imageUrls,
+      featured: input.featured ?? false,
+      prep_time_minutes: input.prepTimeMinutes ?? null,
+      occasion_tags: input.occasionTags ?? [],
     })
     .select('*')
     .single();
 
   return {
-    data: (data as GiftRow | null) ?? null,
+    data: data ? normalizeGift(data as GiftRow) : null,
     error: error ? new Error(error.message) : null,
   };
 }
@@ -131,10 +148,16 @@ export async function updateGift(
   if (input.title !== undefined) payload.title = input.title.trim();
   if (input.description !== undefined) payload.description = input.description?.trim() || null;
   if (input.priceCents !== undefined) payload.price_cents = input.priceCents;
+  if (input.originalPriceCents !== undefined) {
+    payload.original_price_cents = input.originalPriceCents;
+  }
   if (input.category !== undefined) payload.category = input.category;
   if (input.stock !== undefined) payload.stock = input.stock;
   if (input.status !== undefined) payload.status = input.status;
   if (input.imageUrls !== undefined) payload.image_urls = input.imageUrls;
+  if (input.featured !== undefined) payload.featured = input.featured;
+  if (input.prepTimeMinutes !== undefined) payload.prep_time_minutes = input.prepTimeMinutes;
+  if (input.occasionTags !== undefined) payload.occasion_tags = input.occasionTags;
 
   const { data, error } = await supabase
     .from('gifts')
@@ -144,8 +167,34 @@ export async function updateGift(
     .select('*')
     .single();
 
+  // If occasion_tags migration is not applied yet, retry without that column so
+  // the rest of the listing edits still save.
+  if (
+    error &&
+    input.occasionTags !== undefined &&
+    /occasion_tags/i.test(error.message)
+  ) {
+    const { occasion_tags: _ignored, ...withoutOccasions } = payload;
+    const retry = await supabase
+      .from('gifts')
+      .update(withoutOccasions)
+      .eq('id', giftId)
+      .is('deleted_at', null)
+      .select('*')
+      .single();
+
+    return {
+      data: retry.data ? normalizeGift(retry.data as GiftRow) : null,
+      error: retry.error
+        ? new Error(retry.error.message)
+        : new Error(
+            'Gift saved, but occasion tags need migration 20240619133921_gift_occasion_tags.sql applied in Supabase.',
+          ),
+    };
+  }
+
   return {
-    data: (data as GiftRow | null) ?? null,
+    data: data ? normalizeGift(data as GiftRow) : null,
     error: error ? new Error(error.message) : null,
   };
 }

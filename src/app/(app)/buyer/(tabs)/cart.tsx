@@ -17,6 +17,7 @@ import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import { fetchLiveGiftById } from '@/lib/gifts';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 import { useCart } from '@/providers/cart-provider';
 import type { CartItem } from '@/types/cart';
@@ -29,14 +30,34 @@ async function refreshCartItems(items: CartItem[]): Promise<CartItem[]> {
 
     if (!gift || gift.stock < 1) continue;
 
+    let priceCents = gift.price_cents;
+    let stock = gift.stock;
+    let variantLabel = item.variantLabel ?? null;
+
+    if (item.variantId) {
+      const { data: variant } = await supabase
+        .from('gift_variants')
+        .select('id, label, price_cents, stock')
+        .eq('id', item.variantId)
+        .eq('gift_id', gift.id)
+        .maybeSingle();
+
+      if (!variant || variant.stock < 1) continue;
+
+      priceCents = variant.price_cents;
+      stock = Math.min(gift.stock, variant.stock);
+      variantLabel = variant.label;
+    }
+
     refreshed.push({
       ...item,
       vendorId: gift.vendor_id,
       title: gift.title,
-      priceCents: gift.price_cents,
+      priceCents,
       imageUrl: gift.image_urls[0] ?? null,
-      stock: gift.stock,
-      quantity: Math.min(item.quantity, gift.stock),
+      stock,
+      quantity: Math.min(item.quantity, stock),
+      variantLabel,
     });
   }
 
@@ -92,10 +113,12 @@ export default function BuyerCartTabScreen() {
           <View style={styles.list}>
             {items.map((item) => (
               <CartLineItem
-                key={item.giftId}
+                key={`${item.giftId}:${item.variantId ?? 'base'}`}
                 item={item}
-                onChangeQuantity={(quantity) => setQuantity(item.giftId, quantity)}
-                onRemove={() => removeItem(item.giftId)}
+                onChangeQuantity={(quantity) =>
+                  setQuantity(item.giftId, quantity, item.variantId)
+                }
+                onRemove={() => removeItem(item.giftId, item.variantId)}
               />
             ))}
           </View>
