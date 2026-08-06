@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -29,6 +29,7 @@ export function GiftImagePicker({
   maxImages = MAX_IMAGES,
 }: GiftImagePickerProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const canAddMore = value.length < maxImages;
 
   function appendImages(assets: ImagePicker.ImagePickerAsset[]) {
@@ -111,8 +112,8 @@ export function GiftImagePicker({
   return (
     <View style={styles.field}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.count}>
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+        <Text style={[styles.count, { color: colors.textSecondary }]}>
           {value.length}/{maxImages}
         </Text>
       </View>
@@ -128,7 +129,7 @@ export function GiftImagePicker({
               accessibilityLabel="Remove photo"
               onPress={() => removeImage(index)}
               style={styles.removeButton}>
-              <Text style={styles.removeLabel}>×</Text>
+              <Text style={[styles.removeLabel, { color: colors.text }]}>×</Text>
             </Pressable>
           </View>
         ))}
@@ -144,15 +145,17 @@ export function GiftImagePicker({
               },
               pressed && styles.addTilePressed,
             ]}>
-            <Text style={styles.addIcon}>+</Text>
-            <Text style={styles.addText}>Add photos</Text>
+            <Text style={[styles.addIcon, { color: colors.text }]}>+</Text>
+            <Text style={[styles.addText, { color: colors.textSecondary }]}>Add photos</Text>
           </Pressable>
         ) : null}
       </ScrollView>
 
       {value.length === 0 ? (
         <Pressable onPress={showSourcePicker}>
-          <Text style={styles.hint}>Tap to pick from gallery or camera</Text>
+          <Text style={[styles.hint, { color: colors.textSecondary }]}>
+            Tap to pick from gallery or camera
+          </Text>
         </Pressable>
       ) : null}
 
@@ -171,12 +174,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   count: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -204,7 +205,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   removeLabel: {
-    color: Colors.text,
     fontSize: 18,
     lineHeight: 20,
     fontWeight: '700',
@@ -224,19 +224,16 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   addIcon: {
-    color: Colors.text,
     fontSize: 28,
     fontWeight: '300',
     lineHeight: 30,
   },
   addText: {
-    color: Colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   hint: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
   error: {

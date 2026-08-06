@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandBanner, GlassCard, RoleTabBar, ThemedActivityIndicator } from '@/components';
 import { ScreenBackground } from '@/components/screen-background';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
 import { getRoleHomeHref } from '@/lib/role-routes';
@@ -23,6 +23,7 @@ import type { UserRole } from '@/types/user';
 
 export default function SignupScreen() {
   const styles = useThemedAuthStyles();
+  const colors = useColors();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -109,7 +110,7 @@ export default function SignupScreen() {
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="Jane"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     autoCapitalize="words"
                     autoComplete="given-name"
                     editable={!loading}
@@ -123,7 +124,7 @@ export default function SignupScreen() {
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Doe"
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                     autoCapitalize="words"
                     autoComplete="family-name"
                     editable={!loading}
@@ -138,7 +139,7 @@ export default function SignupScreen() {
                   value={email}
                   onChangeText={setEmail}
                   placeholder="you@example.com"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
@@ -153,7 +154,7 @@ export default function SignupScreen() {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="At least 6 characters"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry
                   autoComplete="new-password"
                   editable={!loading}
@@ -167,7 +168,7 @@ export default function SignupScreen() {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Re-enter your password"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry
                   autoComplete="new-password"
                   editable={!loading}

@@ -13,7 +13,7 @@ import { GlassCard } from "@/components/glass-card";
 import { NativeDatePickerField } from "@/components/native-date-picker-field";
 import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
 import { FormField } from "@/components/vendor";
-import { Colors } from "@/constants/colors";
+import { useColors } from "@/hooks/use-colors";
 import { Spacing } from "@/constants/theme";
 import {
     calculateVendorDeliveryFees,
@@ -31,6 +31,7 @@ import type { VendorStorePublic } from "@/types/vendor";
 
 export default function BuyerCheckoutScreen() {
   const { profile } = useAuth();
+  const colors = useColors();
   const { items, isReady, subtotalCents, clearCart } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -182,19 +183,19 @@ export default function BuyerCheckoutScreen() {
           return (
             <View key={item.giftId} style={styles.summaryLine}>
               <View style={styles.summaryLineText}>
-                <Text style={styles.summaryTitle} numberOfLines={2}>
+                <Text style={[styles.summaryTitle, { color: colors.text }]} numberOfLines={2}>
                   {item.title}
                 </Text>
-                <Text style={styles.summaryMeta}>
+                <Text style={[styles.summaryMeta, { color: colors.textSecondary }]}>
                   {item.quantity} × {formatMoney(item.priceCents)}
                 </Text>
                 {store ? (
-                  <Text style={styles.summaryFulfillment}>
+                  <Text style={[styles.summaryFulfillment, { color: colors.textMuted }]}>
                     {getStoreFulfillmentSummary(store)}
                   </Text>
                 ) : null}
               </View>
-              <Text style={styles.summaryLineTotal}>
+              <Text style={[styles.summaryLineTotal, { color: colors.text }]}>
                 {formatMoney(item.priceCents * item.quantity)}
               </Text>
             </View>
@@ -203,18 +204,18 @@ export default function BuyerCheckoutScreen() {
 
         {deliveryFeeCents > 0 ? (
           <View style={styles.summaryLine}>
-            <Text style={styles.summaryMeta}>Delivery fees</Text>
-            <Text style={styles.summaryLineTotal}>
+            <Text style={[styles.summaryMeta, { color: colors.textSecondary }]}>Delivery fees</Text>
+            <Text style={[styles.summaryLineTotal, { color: colors.text }]}>
               {formatMoney(deliveryFeeCents)}
             </Text>
           </View>
         ) : null}
 
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: colors.surfaceBorder }]} />
 
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryTotalLabel}>Total</Text>
-          <Text style={styles.summaryTotalValue}>
+          <Text style={[styles.summaryTotalLabel, { color: colors.textSecondary }]}>Total</Text>
+          <Text style={[styles.summaryTotalValue, { color: colors.text }]}>
             {formatMoney(grandTotalCents)}
           </Text>
         </View>
@@ -222,8 +223,8 @@ export default function BuyerCheckoutScreen() {
 
       {pickupOnly ? (
         <GlassCard style={styles.pickupCard}>
-          <Text style={styles.pickupTitle}>Pickup / takeaway</Text>
-          <Text style={styles.pickupText}>
+          <Text style={[styles.pickupTitle, { color: colors.text }]}>Pickup / takeaway</Text>
+          <Text style={[styles.pickupText, { color: colors.textSecondary }]}>
             These vendors do not deliver. You or the recipient will collect the
             order from the store.
           </Text>
@@ -347,27 +348,22 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   summaryTitle: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   summaryMeta: {
-    color: Colors.textSecondary,
     fontSize: 13,
   },
   summaryFulfillment: {
-    color: Colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },
   summaryLineTotal: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: Colors.surfaceBorder,
   },
   summaryRow: {
     flexDirection: "row",
@@ -375,12 +371,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   summaryTotalLabel: {
-    color: Colors.textSecondary,
     fontSize: 15,
     fontWeight: "600",
   },
   summaryTotalValue: {
-    color: Colors.text,
     fontSize: 18,
     fontWeight: "700",
   },
@@ -389,12 +383,10 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   pickupTitle: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: "700",
   },
   pickupText: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },

@@ -23,7 +23,7 @@ import {
     OccasionTagsField,
     type GiftImageSelection,
 } from "@/components/vendor";
-import { Colors } from "@/constants/colors";
+import { useColors } from "@/hooks/use-colors";
 import { Spacing } from "@/constants/theme";
 import { GIFT_CATEGORIES } from "@/constants/vendor";
 import { parsePriceToCents } from "@/lib/format";
@@ -44,6 +44,7 @@ export default function VendorGiftEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const theme = useScreenTheme();
+  const colors = useColors();
   const [gift, setGift] = useState<GiftRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -350,7 +351,7 @@ export default function VendorGiftEditScreen() {
           },
         ]}
       >
-        <Text style={styles.featuredLabel}>
+        <Text style={[styles.featuredLabel, { color: colors.text }]}>
           {featured ? "Featured on marketplace" : "Mark as featured"}
         </Text>
       </Pressable>
@@ -360,7 +361,7 @@ export default function VendorGiftEditScreen() {
       <OccasionTagsField value={occasionTags} onChange={setOccasionTags} />
 
       <View style={styles.field}>
-        <Text style={styles.label}>Category</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Category</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -387,7 +388,7 @@ export default function VendorGiftEditScreen() {
                 <Text
                   style={[
                     styles.chipLabel,
-                    selected && styles.chipLabelSelected,
+                    { color: selected ? colors.text : colors.textSecondary },
                   ]}
                 >
                   {item.label}
@@ -425,7 +426,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -439,12 +439,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   chipLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
-  },
-  chipLabelSelected: {
-    color: Colors.text,
   },
   error: {
     color: "#E05D5D",
@@ -457,7 +453,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   featuredLabel: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: "700",
   },

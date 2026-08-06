@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandBanner, GlassCard, Spacer, ThemedActivityIndicator } from '@/components';
 import { ScreenBackground } from '@/components/screen-background';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage, isValidEmail } from '@/lib/auth-errors';
 import { getPasswordResetRedirectUrl, getSupabaseRedirectAllowList } from '@/lib/auth-linking';
@@ -24,6 +24,7 @@ import type { UserRole } from '@/types/user';
 
 export default function LoginScreen() {
   const styles = useThemedAuthStyles();
+  const colors = useColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -101,7 +102,7 @@ export default function LoginScreen() {
                   value={email}
                   onChangeText={setEmail}
                   placeholder="you@example.com"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
@@ -116,7 +117,7 @@ export default function LoginScreen() {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Enter your password"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry
                   autoComplete="current-password"
                   editable={!loading}

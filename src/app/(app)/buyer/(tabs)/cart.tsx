@@ -13,7 +13,7 @@ import {
 import { GlassCard } from '@/components/glass-card';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import { fetchLiveGiftById } from '@/lib/gifts';
@@ -66,6 +66,7 @@ async function refreshCartItems(items: CartItem[]): Promise<CartItem[]> {
 
 export default function BuyerCartTabScreen() {
   const { profile } = useAuth();
+  const colors = useColors();
   const { items, isReady, subtotalCents, setQuantity, removeItem, replaceItems, clearCart } =
     useCart();
   const itemsRef = useRef(items);
@@ -126,8 +127,10 @@ export default function BuyerCartTabScreen() {
           <SectionTitle>Summary</SectionTitle>
           <GlassCard style={styles.summaryCard}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>{formatMoney(subtotalCents)}</Text>
+              <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Subtotal</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formatMoney(subtotalCents)}
+              </Text>
             </View>
           </GlassCard>
 
@@ -161,11 +164,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   summaryLabel: {
-    color: Colors.textSecondary,
     fontSize: 15,
   },
   summaryValue: {
-    color: Colors.text,
     fontSize: 18,
     fontWeight: '700',
   },

@@ -1,6 +1,6 @@
 import { Switch, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 
 import { DeliveryCitiesField } from './delivery-cities-field';
@@ -20,6 +20,8 @@ type DeliveryOptionsFieldProps = {
 };
 
 export function DeliveryOptionsField({ value, onChange, error }: DeliveryOptionsFieldProps) {
+  const colors = useColors();
+
   function patch(next: Partial<DeliveryOptionsValue>) {
     onChange({ ...value, ...next });
   }
@@ -28,8 +30,8 @@ export function DeliveryOptionsField({ value, onChange, error }: DeliveryOptions
     <View style={styles.field}>
       <View style={styles.toggleRow}>
         <View style={styles.toggleCopy}>
-          <Text style={styles.toggleLabel}>Offer delivery</Text>
-          <Text style={styles.toggleHint}>
+          <Text style={[styles.toggleLabel, { color: colors.text }]}>Offer delivery</Text>
+          <Text style={[styles.toggleHint, { color: colors.textSecondary }]}>
             {value.offersDelivery
               ? 'Buyers can have gifts delivered within your radius.'
               : 'Pickup only — buyers collect orders from your store.'}
@@ -66,9 +68,16 @@ export function DeliveryOptionsField({ value, onChange, error }: DeliveryOptions
           />
         </>
       ) : (
-        <View style={styles.pickupCard}>
-          <Text style={styles.pickupTitle}>Pickup / takeaway</Text>
-          <Text style={styles.pickupText}>
+        <View
+          style={[
+            styles.pickupCard,
+            {
+              borderColor: colors.surfaceBorder,
+              backgroundColor: colors.surface,
+            },
+          ]}>
+          <Text style={[styles.pickupTitle, { color: colors.text }]}>Pickup / takeaway</Text>
+          <Text style={[styles.pickupText, { color: colors.textSecondary }]}>
             Buyers will be told to collect their order from you. No delivery address is required at
             checkout.
           </Text>
@@ -95,12 +104,10 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   toggleLabel: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   toggleHint: {
-    color: Colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -108,17 +115,13 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.four,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
     borderRadius: Spacing.four,
-    backgroundColor: Colors.surface,
   },
   pickupTitle: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: '700',
   },
   pickupText: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },

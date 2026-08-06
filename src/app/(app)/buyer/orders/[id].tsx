@@ -14,7 +14,7 @@ import {
 import { ImageGalleryViewer } from "@/components/image-gallery-viewer";
 import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
 import { FormField, StatusBadge } from "@/components/vendor";
-import { Colors } from "@/constants/colors";
+import { useColors } from "@/hooks/use-colors";
 import { Spacing } from "@/constants/theme";
 import {
     cancelBuyerOrder,
@@ -29,6 +29,7 @@ import type { VendorOrderWithGift } from "@/types/vendor";
 export default function BuyerOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
+  const colors = useColors();
   const [order, setOrder] = useState<VendorOrderWithGift | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingChat, setOpeningChat] = useState(false);
@@ -206,7 +207,7 @@ export default function BuyerOrderDetailScreen() {
         {order.status === "new" ? (
           showCancelForm ? (
             <View style={styles.cancelForm}>
-              <Text style={styles.cancelFormTitle}>
+              <Text style={[styles.cancelFormTitle, { color: colors.text }]}>
                 Why do you want to cancel this order?
               </Text>
               <FormField
@@ -278,7 +279,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cancelFormTitle: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: "600",
   },

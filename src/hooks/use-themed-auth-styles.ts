@@ -1,19 +1,22 @@
 import { useMemo } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 
-import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
-import { useScreenTheme } from '@/providers/screen-theme-provider';
+import { useColors } from '@/hooks/use-colors';
+import { useAppTheme, useScreenTheme } from '@/providers/screen-theme-provider';
 
 export function useThemedAuthStyles() {
   const theme = useScreenTheme();
+  const colors = useColors();
+  const { resolvedColorMode } = useAppTheme();
+  const isLight = resolvedColorMode === 'light';
 
   return useMemo(
     () =>
       StyleSheet.create({
         root: {
           flex: 1,
-          backgroundColor: Colors.background,
+          backgroundColor: colors.background,
         },
         flex: { flex: 1 },
         safeArea: { flex: 1 },
@@ -29,18 +32,18 @@ export function useThemedAuthStyles() {
           alignItems: 'stretch',
         },
         title: {
-          color: Colors.text,
+          color: colors.text,
           fontSize: 28,
           fontWeight: '700',
           lineHeight: 34,
         },
         subtitle: {
-          color: Colors.textSecondary,
+          color: colors.textSecondary,
           fontSize: 15,
           lineHeight: 22,
         },
         helpText: {
-          color: Colors.textMuted,
+          color: colors.textMuted,
           fontSize: 13,
           lineHeight: 20,
         },
@@ -59,7 +62,7 @@ export function useThemedAuthStyles() {
           flex: 1,
         },
         fieldLabel: {
-          color: Colors.textSecondary,
+          color: colors.textSecondary,
           fontSize: 13,
           fontWeight: '500',
         },
@@ -70,14 +73,14 @@ export function useThemedAuthStyles() {
           borderRadius: Spacing.two,
           paddingHorizontal: Spacing.three,
           paddingVertical: Platform.select({ ios: 14, default: 12 }),
-          color: Colors.text,
+          color: colors.text,
           fontSize: 16,
         },
         inputError: {
           borderColor: 'rgba(220, 100, 100, 0.6)',
         },
         errorText: {
-          color: 'rgba(220, 130, 130, 0.9)',
+          color: isLight ? '#C04040' : 'rgba(220, 130, 130, 0.9)',
           fontSize: 12,
         },
         button: {
@@ -96,32 +99,32 @@ export function useThemedAuthStyles() {
           backgroundColor: theme.buttonPressed,
         },
         buttonText: {
-          color: Colors.text,
+          color: '#FFFFFF',
           fontSize: 16,
           fontWeight: '600',
         },
         linkButtonText: {
-          color: theme.accentLight,
+          color: theme.accent,
           fontSize: 15,
           fontWeight: '600',
           marginTop: Spacing.two,
         },
         footerText: {
-          color: Colors.textSecondary,
+          color: colors.textSecondary,
           fontSize: 14,
           textAlign: 'center',
         },
         footerLink: {
-          color: theme.accentLight,
+          color: theme.accent,
           fontWeight: '600',
         },
         forgotPassword: {
-          color: theme.accentLight,
+          color: theme.accent,
           fontSize: 14,
           fontWeight: '600',
           alignSelf: 'flex-end',
         },
       }),
-    [theme],
+    [colors, theme, isLight],
   );
 }

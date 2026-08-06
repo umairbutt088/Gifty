@@ -10,7 +10,7 @@ import { GlassCard } from '@/components/glass-card';
 import { ScreenBackground } from '@/components/screen-background';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
 import { ORDER_STATUS_LABELS } from '@/constants/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import {
   confirmRecipientDelivery,
@@ -20,6 +20,7 @@ import {
 
 export default function RecipientGiftScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
+  const colors = useColors();
   const [gift, setGift] = useState<RecipientGiftView | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -72,7 +73,7 @@ export default function RecipientGiftScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScreenBackground />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
@@ -80,34 +81,44 @@ export default function RecipientGiftScreen() {
             <ThemedActivityIndicator style={styles.loader} />
           ) : !gift ? (
             <GlassCard style={styles.card}>
-              <Text style={styles.title}>Gift link not found</Text>
-              <Text style={styles.body}>
+              <Text style={[styles.title, { color: colors.text }]}>Gift link not found</Text>
+              <Text style={[styles.body, { color: colors.textSecondary }]}>
                 This delivery link may be invalid or expired. Ask the sender to share it again.
               </Text>
             </GlassCard>
           ) : (
             <>
-              <Text style={styles.eyebrow}>Gifty delivery</Text>
-              <Text style={styles.title}>Hi {gift.recipient_name}</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.eyebrow, { color: colors.textSecondary }]}>Gifty delivery</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Hi {gift.recipient_name}</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 {gift.gift_title} · {ORDER_STATUS_LABELS[gift.status]}
               </Text>
 
               {gift.gift_image_url ? (
-                <Image source={{ uri: gift.gift_image_url }} style={styles.image} contentFit="cover" />
+                <Image
+                  source={{ uri: gift.gift_image_url }}
+                  style={[styles.image, { backgroundColor: colors.surfaceNested }]}
+                  contentFit="cover"
+                />
               ) : null}
 
               <GlassCard style={styles.card}>
                 <SectionTitle>Gift details</SectionTitle>
-                <Text style={styles.body}>Quantity: {gift.quantity}</Text>
+                <Text style={[styles.body, { color: colors.textSecondary }]}>
+                  Quantity: {gift.quantity}
+                </Text>
                 {gift.delivery_date ? (
-                  <Text style={styles.body}>Preferred delivery: {gift.delivery_date}</Text>
+                  <Text style={[styles.body, { color: colors.textSecondary }]}>
+                    Preferred delivery: {gift.delivery_date}
+                  </Text>
                 ) : null}
                 {gift.gift_message ? (
-                  <Text style={styles.message}>“{gift.gift_message}”</Text>
+                  <Text style={[styles.message, { color: colors.text }]}>
+                    “{gift.gift_message}”
+                  </Text>
                 ) : null}
                 {gift.tracking_number ? (
-                  <Text style={styles.body}>
+                  <Text style={[styles.body, { color: colors.textSecondary }]}>
                     Tracking: {gift.tracking_number}
                     {gift.carrier ? ` (${gift.carrier})` : ''}
                   </Text>
@@ -116,8 +127,12 @@ export default function RecipientGiftScreen() {
 
               {confirmed || gift.recipient_confirmed_at ? (
                 <GlassCard style={styles.card}>
-                  <Text style={styles.confirmedTitle}>Delivery confirmed</Text>
-                  <Text style={styles.body}>Thanks for confirming you received your gift.</Text>
+                  <Text style={[styles.confirmedTitle, { color: colors.text }]}>
+                    Delivery confirmed
+                  </Text>
+                  <Text style={[styles.body, { color: colors.textSecondary }]}>
+                    Thanks for confirming you received your gift.
+                  </Text>
                 </GlassCard>
               ) : gift.status === 'delivered' ? (
                 <>
@@ -138,7 +153,7 @@ export default function RecipientGiftScreen() {
                 </>
               ) : (
                 <GlassCard style={styles.card}>
-                  <Text style={styles.body}>
+                  <Text style={[styles.body, { color: colors.textSecondary }]}>
                     {gift.status === 'shipped'
                       ? 'Your gift is on the way. You can confirm receipt here once it arrives.'
                       : 'Your gift is being prepared. We will notify you when it ships and when it is delivered.'}
@@ -156,7 +171,6 @@ export default function RecipientGiftScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   safeArea: {
     flex: 1,
@@ -172,19 +186,16 @@ const styles = StyleSheet.create({
     marginTop: Spacing.six,
   },
   eyebrow: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
   title: {
-    color: Colors.text,
     fontSize: 28,
     fontWeight: '700',
   },
   subtitle: {
-    color: Colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -192,25 +203,21 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 220,
     borderRadius: Spacing.three,
-    backgroundColor: Colors.surfaceNested,
   },
   card: {
     padding: Spacing.four,
     gap: Spacing.two,
   },
   body: {
-    color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
   },
   message: {
-    color: Colors.text,
     fontSize: 16,
     fontStyle: 'italic',
     lineHeight: 24,
   },
   confirmedTitle: {
-    color: Colors.text,
     fontSize: 18,
     fontWeight: '700',
   },

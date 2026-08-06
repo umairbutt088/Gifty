@@ -6,7 +6,7 @@ import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import type { VendorOrderWithGift } from '@/types/vendor';
 
@@ -21,6 +21,7 @@ type SwipeableOrderListItemProps = {
 };
 
 export function SwipeableOrderListItem({ order, href, onDelete }: SwipeableOrderListItemProps) {
+  const colors = useColors();
   const swipeableRef = useRef<SwipeableMethods>(null);
   const title = order.gift?.title ?? 'Gift order';
 
@@ -55,8 +56,8 @@ export function SwipeableOrderListItem({ order, href, onDelete }: SwipeableOrder
           accessibilityLabel={`Delete ${title}`}
           onPress={confirmDelete}
           style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
-          <SymbolView name="trash.fill" tintColor={Colors.text} size={22} />
-          <Text style={styles.deleteLabel}>Delete</Text>
+          <SymbolView name="trash.fill" tintColor={colors.text} size={22} />
+          <Text style={[styles.deleteLabel, { color: colors.text }]}>Delete</Text>
         </Pressable>
       )}>
       <OrderListItem order={order} href={href} />
@@ -78,7 +79,6 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   deleteLabel: {
-    color: Colors.text,
     fontSize: 12,
     fontWeight: '700',
   },

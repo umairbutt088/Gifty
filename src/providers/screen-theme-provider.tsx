@@ -22,6 +22,7 @@ import {
 } from '@/constants/color-mode';
 import {
   DefaultScreenTheme,
+  LightFirstThemes,
   ScreenThemes,
   type ScreenTheme,
   type ScreenThemeVariant,
@@ -89,6 +90,12 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const setThemeVariant = useCallback(async (next: ScreenThemeVariant) => {
     setVariant(next);
     await setStoredThemeVariant(next);
+
+    if (LightFirstThemes.has(next)) {
+      setColorModeState('light');
+      setBackgroundVariantState('minimal');
+      await Promise.all([setStoredColorMode('light'), setStoredBackgroundVariant('minimal')]);
+    }
   }, []);
 
   const setBackgroundVariant = useCallback(async (next: ScreenBackgroundVariant) => {
@@ -97,11 +104,19 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setColorMode = useCallback(async (next: ColorModePreference) => {
+    if (LightFirstThemes.has(variant) && next !== 'light') {
+      setColorModeState('light');
+      await setStoredColorMode('light');
+      return;
+    }
+
     setColorModeState(next);
     await setStoredColorMode(next);
-  }, []);
+  }, [variant]);
 
-  const resolvedColorMode = resolveColorMode(colorMode, systemScheme);
+  const resolvedColorMode = LightFirstThemes.has(variant)
+    ? 'light'
+    : resolveColorMode(colorMode, systemScheme);
   const baseTheme = ScreenThemes[variant];
   const theme = useMemo(
     () => applyColorModeToTheme(baseTheme, resolvedColorMode),
@@ -114,8 +129,8 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
       theme,
       colors,
       variant,
-      backgroundVariant,
-      colorMode,
+      backgroundVariant: LightFirstThemes.has(variant) ? 'minimal' : backgroundVariant,
+      colorMode: LightFirstThemes.has(variant) ? 'light' : colorMode,
       resolvedColorMode,
       isReady,
       setThemeVariant,

@@ -6,7 +6,7 @@ import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import type { GiftRow } from '@/types/vendor';
 
@@ -21,6 +21,7 @@ type SwipeableGiftGridItemProps = {
 };
 
 export function SwipeableGiftGridItem({ gift, href, onDelete }: SwipeableGiftGridItemProps) {
+  const colors = useColors();
   const swipeableRef = useRef<SwipeableMethods>(null);
 
   function confirmDelete() {
@@ -54,8 +55,8 @@ export function SwipeableGiftGridItem({ gift, href, onDelete }: SwipeableGiftGri
           accessibilityLabel={`Delete ${gift.title}`}
           onPress={confirmDelete}
           style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
-          <SymbolView name="trash.fill" tintColor={Colors.text} size={20} />
-          <Text style={styles.deleteLabel}>Delete</Text>
+          <SymbolView name="trash.fill" tintColor={colors.text} size={20} />
+          <Text style={[styles.deleteLabel, { color: colors.text }]}>Delete</Text>
         </Pressable>
       )}>
       <VendorGiftGridItem gift={gift} href={href} />
@@ -77,7 +78,6 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   deleteLabel: {
-    color: Colors.text,
     fontSize: 11,
     fontWeight: '700',
   },

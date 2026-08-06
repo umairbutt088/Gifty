@@ -32,7 +32,7 @@ const DarkNeutrals: NeutralColors = {
 };
 
 const LightNeutrals: NeutralColors = {
-  background: '#F4F6F9',
+  background: '#FFFFFF',
   text: '#141820',
   textSecondary: 'rgba(20, 24, 32, 0.72)',
   textMuted: 'rgba(20, 24, 32, 0.52)',
@@ -63,22 +63,22 @@ export function applyColorModeToTheme(
 
   return {
     ...theme,
-    surface: 'rgba(255, 255, 255, 0.84)',
-    surfaceNested: 'rgba(255, 255, 255, 0.96)',
-    surfaceBorder: 'rgba(20, 24, 32, 0.12)',
-    surfaceSelected: 'rgba(255, 255, 255, 0.98)',
+    surface: 'rgba(255, 255, 255, 0.92)',
+    surfaceNested: 'rgba(247, 248, 250, 0.98)',
+    surfaceBorder: 'rgba(20, 24, 32, 0.10)',
+    surfaceSelected: 'rgba(255, 255, 255, 1)',
     surfaceSelectedBorder: `${theme.accent}55`,
-    tabTrack: 'rgba(255, 255, 255, 0.9)',
+    tabTrack: 'rgba(255, 255, 255, 0.96)',
     tabActive: `${theme.accent}30`,
     tabActiveBorder: `${theme.accent}55`,
     tabActiveFillTop: theme.accentLight,
     tabActiveFillBottom: theme.accent,
-    input: 'rgba(255, 255, 255, 0.96)',
+    input: 'rgba(255, 255, 255, 0.98)',
     inputBorder: 'rgba(20, 24, 32, 0.12)',
-    button: `${theme.accent}CC`,
-    buttonBorder: `${theme.accent}44`,
-    buttonPressed: `${theme.accent}E6`,
-    buttonDisabled: `${theme.accent}44`,
+    button: theme.accent,
+    buttonBorder: `${theme.accent}66`,
+    buttonPressed: theme.accentDark,
+    buttonDisabled: `${theme.accent}55`,
     backgroundShapes: theme.backgroundShapes.map((shape) => ({
       ...shape,
       opacity: shape.opacity * 0.42,

@@ -16,7 +16,7 @@ import {
   type GiftImageSelection,
 } from '@/components/vendor';
 import { GIFT_CATEGORIES } from '@/constants/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { createGift } from '@/lib/gifts';
 import { resolveGiftImageUrls } from '@/lib/gift-image-upload';
@@ -29,6 +29,7 @@ import type { GiftCategory, GiftOccasion, GiftStatus, GiftVariantInput } from '@
 export default function VendorGiftNewScreen() {
   const { profile } = useAuth();
   const theme = useScreenTheme();
+  const colors = useColors();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -210,7 +211,7 @@ export default function VendorGiftNewScreen() {
             borderColor: featured ? theme.surfaceSelectedBorder : theme.surfaceBorder,
           },
         ]}>
-        <Text style={styles.featuredLabel}>
+        <Text style={[styles.featuredLabel, { color: colors.text }]}>
           {featured ? 'Featured on marketplace' : 'Mark as featured'}
         </Text>
       </Pressable>
@@ -220,7 +221,7 @@ export default function VendorGiftNewScreen() {
       <OccasionTagsField value={occasionTags} onChange={setOccasionTags} />
 
       <View style={styles.field}>
-        <Text style={styles.label}>Category</Text>
+        <Text style={[styles.label, { color: colors.text }]}>Category</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {GIFT_CATEGORIES.map((item) => {
             const selected = item.value === category;
@@ -236,7 +237,11 @@ export default function VendorGiftNewScreen() {
                     borderColor: selected ? theme.surfaceSelectedBorder : theme.surfaceBorder,
                   },
                 ]}>
-                <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
+                <Text
+                  style={[
+                    styles.chipLabel,
+                    { color: selected ? colors.text : colors.textSecondary },
+                  ]}>
                   {item.label}
                 </Text>
               </Pressable>
@@ -263,7 +268,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -277,12 +281,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   chipLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
-  },
-  chipLabelSelected: {
-    color: Colors.text,
   },
   error: {
     color: '#E05D5D',
@@ -295,7 +295,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
   },
   featuredLabel: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '700',
   },

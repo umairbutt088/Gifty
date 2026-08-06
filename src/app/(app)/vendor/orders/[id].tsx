@@ -13,7 +13,7 @@ import {
 import { ImageGalleryViewer } from "@/components/image-gallery-viewer";
 import { ThemedActivityIndicator } from "@/components/themed-activity-indicator";
 import { FormField, StatusBadge } from "@/components/vendor";
-import { Colors } from "@/constants/colors";
+import { useColors } from "@/hooks/use-colors";
 import { getOrCreateConversationForOrder, sendMessage } from "@/lib/chat";
 import {
     cancelVendorOrder,
@@ -31,6 +31,7 @@ type ReasonAction = "reject" | "cancel" | null;
 export default function VendorOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
+  const colors = useColors();
   const { refreshNewOrderCount } = useVendorStore();
   const [order, setOrder] = useState<VendorOrderWithGift | null>(null);
   const [loading, setLoading] = useState(true);
@@ -248,7 +249,9 @@ export default function VendorOrderDetailScreen() {
 
         {showShippingForm ? (
           <View style={styles.reasonForm}>
-            <Text style={styles.reasonTitle}>Add tracking info (optional)</Text>
+            <Text style={[styles.reasonTitle, { color: colors.text }]}>
+              Add tracking info (optional)
+            </Text>
             <FormField
               label="Tracking number"
               value={trackingNumber}
@@ -279,7 +282,7 @@ export default function VendorOrderDetailScreen() {
           </View>
         ) : reasonAction ? (
           <View style={styles.reasonForm}>
-            <Text style={styles.reasonTitle}>
+            <Text style={[styles.reasonTitle, { color: colors.text }]}>
               {reasonAction === "reject"
                 ? "Why are you rejecting this order?"
                 : "Why are you cancelling this order?"}
@@ -356,7 +359,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   reasonTitle: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: "600",
   },

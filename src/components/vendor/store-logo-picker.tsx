@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import type { GiftImageSelection } from '@/components/vendor/gift-image-picker';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
@@ -21,6 +21,7 @@ export function StoreLogoPicker({
   error,
 }: StoreLogoPickerProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   async function pickFromLibrary() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -70,7 +71,7 @@ export function StoreLogoPicker({
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
 
       <Pressable
         onPress={showSourcePicker}
@@ -86,13 +87,15 @@ export function StoreLogoPicker({
           <Image source={{ uri: value.uri }} style={styles.preview} contentFit="cover" />
         ) : (
           <View style={styles.placeholder}>
-            <Text style={styles.addIcon}>+</Text>
-            <Text style={styles.addText}>Add logo</Text>
+            <Text style={[styles.addIcon, { color: colors.text }]}>+</Text>
+            <Text style={[styles.addText, { color: colors.textSecondary }]}>Add logo</Text>
           </View>
         )}
       </Pressable>
 
-      <Text style={styles.hint}>Optional. Square image works best.</Text>
+      <Text style={[styles.hint, { color: colors.textSecondary }]}>
+        Optional. Square image works best.
+      </Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
@@ -103,7 +106,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -131,19 +133,16 @@ const styles = StyleSheet.create({
     padding: Spacing.two,
   },
   addIcon: {
-    color: Colors.text,
     fontSize: 28,
     fontWeight: '300',
     lineHeight: 30,
   },
   addText: {
-    color: Colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   hint: {
-    color: Colors.textSecondary,
     fontSize: 12,
     lineHeight: 18,
   },

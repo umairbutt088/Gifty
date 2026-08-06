@@ -5,7 +5,7 @@ import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 import type { VendorOrderWithGift } from '@/types/vendor';
@@ -30,6 +30,7 @@ export function SwipeableDeletedOrderListItem({
   onDeletePermanently,
 }: SwipeableDeletedOrderListItemProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const swipeableRef = useRef<SwipeableMethods>(null);
   const title = order.gift?.title ?? 'Gift order';
 
@@ -85,8 +86,8 @@ export function SwipeableDeletedOrderListItem({
               { backgroundColor: theme.accentDark },
               pressed && styles.actionPressed,
             ]}>
-            <SymbolView name="arrow.uturn.backward" tintColor={Colors.text} size={18} />
-            <Text style={styles.actionLabel} numberOfLines={1}>
+            <SymbolView name="arrow.uturn.backward" tintColor={colors.text} size={18} />
+            <Text style={[styles.actionLabel, { color: colors.text }]} numberOfLines={1}>
               Restore
             </Text>
           </Pressable>
@@ -102,8 +103,8 @@ export function SwipeableDeletedOrderListItem({
                 styles.deleteAction,
                 pressed && styles.actionPressed,
               ]}>
-              <SymbolView name="trash.fill" tintColor={Colors.text} size={18} />
-              <Text style={styles.actionLabel} numberOfLines={1}>
+              <SymbolView name="trash.fill" tintColor={colors.text} size={18} />
+              <Text style={[styles.actionLabel, { color: colors.text }]} numberOfLines={1}>
                 Delete
               </Text>
             </Pressable>
@@ -143,7 +144,6 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   actionLabel: {
-    color: Colors.text,
     fontSize: 10,
     fontWeight: '700',
   },

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -10,6 +10,7 @@ type RoleBadgeProps = {
 
 export function RoleBadge({ role }: RoleBadgeProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   return (
     <View
@@ -20,7 +21,7 @@ export function RoleBadge({ role }: RoleBadgeProps) {
           borderColor: theme.surfaceSelectedBorder,
         },
       ]}>
-      <Text style={[styles.label, { color: Colors.text }]}>{role}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{role}</Text>
     </View>
   );
 }

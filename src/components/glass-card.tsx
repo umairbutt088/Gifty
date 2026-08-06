@@ -1,6 +1,5 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
 
-import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 

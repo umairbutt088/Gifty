@@ -16,7 +16,7 @@ import {
   type DeliveryOptionsValue,
   type GiftImageSelection,
 } from '@/components/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { resolveStoreLogoUrl } from '@/lib/store-logo-upload';
 import { upsertVendorStore } from '@/lib/vendor-store';
@@ -38,6 +38,7 @@ type OnboardingPhase = 'welcome' | 'form' | 'success';
 export default function VendorOnboardingScreen() {
   const { profile } = useAuth();
   const { store, refreshStore } = useVendorStore();
+  const colors = useColors();
   const [phase, setPhase] = useState<OnboardingPhase>('welcome');
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -167,7 +168,7 @@ export default function VendorOnboardingScreen() {
         />
 
         <View style={styles.welcomeBody}>
-          <Text style={styles.welcomeText}>
+          <Text style={[styles.welcomeText, { color: colors.textSecondary }]}>
             You will add your store profile, pickup or delivery settings, and optional payout details.
           </Text>
         </View>
@@ -186,9 +187,16 @@ export default function VendorOnboardingScreen() {
           showBanner={false}
         />
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>{name}</Text>
-          <Text style={styles.summaryLine}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              borderColor: colors.surfaceBorder,
+              backgroundColor: colors.surface,
+            },
+          ]}>
+          <Text style={[styles.summaryTitle, { color: colors.text }]}>{name}</Text>
+          <Text style={[styles.summaryLine, { color: colors.textSecondary }]}>
             {deliveryOptions.offersDelivery
               ? getStoreFulfillmentSummary({
                   id: '',
@@ -204,7 +212,7 @@ export default function VendorOnboardingScreen() {
                 })
               : 'Pickup only'}
           </Text>
-          <Text style={styles.summaryLine}>
+          <Text style={[styles.summaryLine, { color: colors.textSecondary }]}>
             Payout:{' '}
             {bankAccountName.trim() && bankName.trim() && bankAccountNumber.trim()
               ? 'Added'
@@ -238,11 +246,19 @@ export default function VendorOnboardingScreen() {
           showBanner={false}
         />
 
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${((step + 1) / STEPS.length) * 100}%` }]} />
+        <View style={[styles.progressTrack, { backgroundColor: colors.surfaceBorder }]}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                width: `${((step + 1) / STEPS.length) * 100}%`,
+                backgroundColor: colors.accent,
+              },
+            ]}
+          />
         </View>
 
-        <Text style={styles.stepLabel}>{STEPS[step]}</Text>
+        <Text style={[styles.stepLabel, { color: colors.text }]}>{STEPS[step]}</Text>
 
         {step === 0 ? (
           <>
@@ -273,7 +289,7 @@ export default function VendorOnboardingScreen() {
 
         {step === 2 ? (
           <>
-            <Text style={styles.optionalCopy}>
+            <Text style={[styles.optionalCopy, { color: colors.textSecondary }]}>
               Payout details are optional. You can skip now and add them later from Profile.
             </Text>
             <FormField
@@ -346,28 +362,23 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.four,
   },
   welcomeText: {
-    color: Colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
   },
   progressTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.surfaceBorder,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     borderRadius: 3,
-    backgroundColor: Colors.accent,
   },
   stepLabel: {
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
   optionalCopy: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -379,17 +390,13 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     padding: Spacing.four,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
     borderRadius: Spacing.four,
-    backgroundColor: Colors.surface,
   },
   summaryTitle: {
-    color: Colors.text,
     fontSize: 20,
     fontWeight: '700',
   },
   summaryLine: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },

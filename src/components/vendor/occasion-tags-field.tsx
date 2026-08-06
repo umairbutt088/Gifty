@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
 import { GIFT_OCCASIONS } from '@/constants/vendor';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 import type { GiftOccasion } from '@/types/vendor';
@@ -13,6 +13,7 @@ type OccasionTagsFieldProps = {
 
 export function OccasionTagsField({ value, onChange }: OccasionTagsFieldProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
 
   function toggle(tag: GiftOccasion) {
     if (value.includes(tag)) {
@@ -24,8 +25,10 @@ export function OccasionTagsField({ value, onChange }: OccasionTagsFieldProps) {
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>Occasions</Text>
-      <Text style={styles.hint}>Help buyers find this gift for the right moment.</Text>
+      <Text style={[styles.label, { color: colors.text }]}>Occasions</Text>
+      <Text style={[styles.hint, { color: colors.textMuted }]}>
+        Help buyers find this gift for the right moment.
+      </Text>
       <View style={styles.chips}>
         {GIFT_OCCASIONS.map((item) => {
           const selected = value.includes(item.value);
@@ -44,7 +47,7 @@ export function OccasionTagsField({ value, onChange }: OccasionTagsFieldProps) {
               <Text
                 style={[
                   styles.chipText,
-                  { color: selected ? theme.accentLight : Colors.textSecondary },
+                  { color: selected ? theme.accentLight : colors.textSecondary },
                 ]}>
                 {item.label}
               </Text>
@@ -61,12 +64,10 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
   hint: {
-    color: Colors.textMuted,
     fontSize: 12,
     lineHeight: 17,
   },

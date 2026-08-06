@@ -12,7 +12,7 @@ import {
   StatGrid,
 } from '@/components/dashboard';
 import { StoreSetupChecklist } from '@/components/vendor';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatMoney } from '@/lib/format';
 import { fetchLiveGiftsByVendor } from '@/lib/gifts';
@@ -24,6 +24,7 @@ import { useVendorStore } from '@/providers/vendor-store-provider';
 export default function VendorProfileTabScreen() {
   const { profile, signOut } = useAuth();
   const { store, refreshStore } = useVendorStore();
+  const colors = useColors();
   const [signingOut, setSigningOut] = useState(false);
   const [earnings, setEarnings] = useState({
     totalOrders: 0,
@@ -60,23 +61,34 @@ export default function VendorProfileTabScreen() {
     <ScreenShell>
       <DashboardHeader title="Profile" variant="tab" role={profile?.role} />
 
-      <View style={styles.profileCard}>
+      <View
+        style={[
+          styles.profileCard,
+          {
+            borderColor: colors.surfaceBorder,
+            backgroundColor: colors.surface,
+          },
+        ]}>
         {store?.logo_url ? (
           <Image source={{ uri: store.logo_url }} style={styles.logo} contentFit="cover" />
         ) : (
-          <View style={styles.logoPlaceholder}>
-            <Text style={styles.logoPlaceholderText}>
+          <View style={[styles.logoPlaceholder, { backgroundColor: colors.surfaceNested }]}>
+            <Text style={[styles.logoPlaceholderText, { color: colors.text }]}>
               {(store?.name || profile?.fullName || 'S').slice(0, 1).toUpperCase()}
             </Text>
           </View>
         )}
         <View style={styles.profileText}>
-          <Text style={styles.storeName}>{store?.name || 'Your store'}</Text>
-          <Text style={styles.userName}>{profile?.fullName}</Text>
-          <Text style={styles.storeBio} numberOfLines={3}>
+          <Text style={[styles.storeName, { color: colors.text }]}>
+            {store?.name || 'Your store'}
+          </Text>
+          <Text style={[styles.userName, { color: colors.textSecondary }]}>
+            {profile?.fullName}
+          </Text>
+          <Text style={[styles.storeBio, { color: colors.textSecondary }]} numberOfLines={3}>
             {store?.bio || 'Add a short bio so buyers know what makes your gifts special.'}
           </Text>
-          <Text style={styles.cities}>
+          <Text style={[styles.cities, { color: colors.textMuted }]}>
             {store ? getStoreFulfillmentSummary(store) : 'Set pickup or delivery in Delivery settings'}
           </Text>
         </View>
@@ -124,9 +136,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     padding: Spacing.three,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
     borderRadius: Spacing.four,
-    backgroundColor: Colors.surface,
   },
   logo: {
     width: 72,
@@ -139,10 +149,8 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceNested,
   },
   logoPlaceholderText: {
-    color: Colors.text,
     fontSize: 28,
     fontWeight: '700',
   },
@@ -151,21 +159,17 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   storeName: {
-    color: Colors.text,
     fontSize: 20,
     fontWeight: '700',
   },
   userName: {
-    color: Colors.textSecondary,
     fontSize: 14,
   },
   storeBio: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
   cities: {
-    color: Colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },

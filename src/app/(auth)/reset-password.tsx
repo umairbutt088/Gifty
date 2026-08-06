@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandBanner, GlassCard, ThemedActivityIndicator } from '@/components';
 import { ScreenBackground } from '@/components/screen-background';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useThemedAuthStyles } from '@/hooks/use-themed-auth-styles';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { getRoleHomeHref } from '@/lib/role-routes';
@@ -23,6 +23,7 @@ import { useAuth } from '@/providers/auth-provider';
 
 export default function ResetPasswordScreen() {
   const styles = useThemedAuthStyles();
+  const colors = useColors();
   const { session, profile, isPasswordRecovery, recoveryLinkError, clearPasswordRecovery } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -131,7 +132,7 @@ export default function ResetPasswordScreen() {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="At least 6 characters"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry
                   autoComplete="new-password"
                   editable={!loading}
@@ -145,7 +146,7 @@ export default function ResetPasswordScreen() {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Re-enter your password"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry
                   autoComplete="new-password"
                   editable={!loading}

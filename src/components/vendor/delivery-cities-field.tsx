@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { normalizeDeliveryCities } from '@/lib/vendor-store-helpers';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
@@ -22,6 +22,7 @@ export function DeliveryCitiesField({
   error,
 }: DeliveryCitiesFieldProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const [draft, setDraft] = useState('');
 
   function addCity() {
@@ -40,7 +41,7 @@ export function DeliveryCitiesField({
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
 
       <View style={styles.chipRow}>
         {value.map((city) => (
@@ -48,9 +49,16 @@ export function DeliveryCitiesField({
             key={city}
             accessibilityLabel={`Remove ${city}`}
             onPress={() => removeCity(city)}
-            style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}>
-            <Text style={styles.chipText}>{city}</Text>
-            <Text style={styles.chipRemove}>×</Text>
+            style={({ pressed }) => [
+              styles.chip,
+              {
+                backgroundColor: colors.surfaceNested,
+                borderColor: colors.surfaceBorder,
+              },
+              pressed && styles.chipPressed,
+            ]}>
+            <Text style={[styles.chipText, { color: colors.text }]}>{city}</Text>
+            <Text style={[styles.chipRemove, { color: colors.textSecondary }]}>×</Text>
           </Pressable>
         ))}
       </View>
@@ -60,7 +68,7 @@ export function DeliveryCitiesField({
           value={draft}
           onChangeText={setDraft}
           placeholder="Karachi"
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           autoCapitalize="words"
           returnKeyType="done"
           onSubmitEditing={addCity}
@@ -69,6 +77,7 @@ export function DeliveryCitiesField({
             {
               backgroundColor: theme.input,
               borderColor: error ? '#E05D5D' : theme.inputBorder,
+              color: colors.text,
             },
           ]}
         />
@@ -78,14 +87,15 @@ export function DeliveryCitiesField({
           disabled={!draft.trim()}
           style={({ pressed }) => [
             styles.addButton,
+            { backgroundColor: colors.accent },
             !draft.trim() && styles.addButtonDisabled,
             pressed && draft.trim() ? styles.addButtonPressed : null,
           ]}>
-          <Text style={styles.addButtonText}>Add</Text>
+          <Text style={[styles.addButtonText, { color: colors.text }]}>Add</Text>
         </Pressable>
       </View>
 
-      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      {hint ? <Text style={[styles.hint, { color: colors.textSecondary }]}>{hint}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
@@ -96,7 +106,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -112,20 +121,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: 999,
-    backgroundColor: Colors.surfaceNested,
     borderWidth: 1,
-    borderColor: Colors.surfaceBorder,
   },
   chipPressed: {
     opacity: 0.85,
   },
   chipText: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   chipRemove: {
-    color: Colors.textSecondary,
     fontSize: 16,
     lineHeight: 18,
     fontWeight: '700',
@@ -139,7 +144,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderRadius: Spacing.two,
-    color: Colors.text,
     fontSize: 16,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
@@ -148,7 +152,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.two,
-    backgroundColor: Colors.accent,
   },
   addButtonDisabled: {
     opacity: 0.45,
@@ -157,12 +160,10 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   addButtonText: {
-    color: Colors.text,
     fontSize: 15,
     fontWeight: '700',
   },
   hint: {
-    color: Colors.textSecondary,
     fontSize: 12,
     lineHeight: 18,
   },

@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 
@@ -38,6 +38,7 @@ export function ImageGalleryViewer({
   emptyLabel = 'No photos',
 }: ImageGalleryViewerProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [layoutWidth, setLayoutWidth] = useState(0);
 
@@ -124,8 +125,12 @@ export function ImageGalleryViewer({
 
   if (images.length === 0) {
     return (
-      <View style={[styles.empty, { height: mainHeight }]}>
-        <Text style={styles.emptyText}>{emptyLabel}</Text>
+      <View
+        style={[
+          styles.empty,
+          { height: mainHeight, backgroundColor: colors.surfaceNested },
+        ]}>
+        <Text style={[styles.emptyText, { color: colors.textMuted }]}>{emptyLabel}</Text>
       </View>
     );
   }
@@ -171,7 +176,7 @@ export function ImageGalleryViewer({
                   styles.indicatorBar,
                   active
                     ? [styles.indicatorBarActive, { backgroundColor: theme.accent }]
-                    : styles.indicatorBarInactive,
+                    : [styles.indicatorBarInactive, { backgroundColor: colors.textMuted }],
                 ]}
               />
             );
@@ -225,18 +230,15 @@ const styles = StyleSheet.create({
   },
   indicatorBarInactive: {
     width: 8,
-    backgroundColor: Colors.textMuted,
     opacity: 0.45,
   },
   empty: {
     width: '100%',
     borderRadius: Spacing.four,
-    backgroundColor: Colors.surfaceNested,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyText: {
-    color: Colors.textMuted,
     fontSize: 14,
     fontWeight: '600',
   },

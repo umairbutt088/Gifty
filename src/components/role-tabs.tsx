@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LayoutChangeEvent, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { NotchedShape } from '@/components/notched-shape';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
 import type { UserRole } from '@/types/user';
 
@@ -24,9 +24,19 @@ type RoleTabProps = {
   tabWidth: number;
   onPress: () => void;
   theme: ReturnType<typeof useScreenTheme>;
+  labelColor: string;
+  selectedLabelColor: string;
 };
 
-function RoleTab({ label, selected, tabWidth, onPress, theme }: RoleTabProps) {
+function RoleTab({
+  label,
+  selected,
+  tabWidth,
+  onPress,
+  theme,
+  labelColor,
+  selectedLabelColor,
+}: RoleTabProps) {
   const shapeWidth = Math.max(tabWidth - TAB_INSET_H * 2, 0);
   const shapeHeight = BAR_HEIGHT - TAB_INSET_V * 2;
 
@@ -48,7 +58,13 @@ function RoleTab({ label, selected, tabWidth, onPress, theme }: RoleTabProps) {
           />
         </View>
       ) : null}
-      <Text style={[styles.tabLabel, selected && styles.tabLabelSelected]}>{label}</Text>
+      <Text
+        style={[
+          styles.tabLabel,
+          { color: selected ? selectedLabelColor : labelColor },
+        ]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -60,6 +76,7 @@ type RoleTabBarProps = {
 
 export function RoleTabBar({ selectedRole, onSelectRole }: RoleTabBarProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const [barWidth, setBarWidth] = useState(0);
 
   function handleLayout(event: LayoutChangeEvent) {
@@ -90,6 +107,8 @@ export function RoleTabBar({ selectedRole, onSelectRole }: RoleTabBarProps) {
                 selected={selectedRole === item.role}
                 onPress={() => onSelectRole(item.role)}
                 theme={theme}
+                labelColor={colors.textMuted}
+                selectedLabelColor="#FFFFFF"
               />
             ))}
           </View>
@@ -127,14 +146,10 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   tabLabel: {
-    color: Colors.textMuted,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 18,
     zIndex: 2,
     ...(Platform.OS === 'android' ? { includeFontPadding: false, textAlignVertical: 'center' } : {}),
-  },
-  tabLabelSelected: {
-    color: Colors.text,
   },
 });

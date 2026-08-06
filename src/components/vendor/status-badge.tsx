@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
 import { GIFT_STATUS_LABELS, ORDER_STATUS_LABELS } from '@/constants/vendor';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import type { GiftStatus, VendorOrderStatus } from '@/types/vendor';
 
@@ -29,15 +29,16 @@ const GIFT_TONE: Partial<Record<GiftStatus, string>> = {
 };
 
 export function StatusBadge({ status, kind = 'gift' }: StatusBadgeProps) {
+  const colors = useColors();
   const label = kind === 'order' ? ORDER_STATUS_LABELS[status as VendorOrderStatus] : GIFT_STATUS_LABELS[status as GiftStatus];
   const tone =
     kind === 'order'
-      ? ORDER_TONE[status as VendorOrderStatus] ?? Colors.accent
-      : GIFT_TONE[status as GiftStatus] ?? Colors.accent;
+      ? ORDER_TONE[status as VendorOrderStatus] ?? colors.accent
+      : GIFT_TONE[status as GiftStatus] ?? colors.accent;
 
   return (
     <View style={[styles.badge, { backgroundColor: tone, borderColor: tone }]}>
-      <Text style={[styles.label, { color: Colors.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
     </View>
   );
 }

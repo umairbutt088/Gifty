@@ -2,6 +2,7 @@ import type { BackgroundShape } from '@/constants/colors';
 
 export type ScreenThemeVariant =
   | 'gifty'
+  | 'snow'
   | 'teal'
   | 'rose'
   | 'blush'
@@ -17,6 +18,9 @@ export type ScreenThemeVariant =
   | 'midnight'
   | 'peach'
   | 'plum';
+
+/** Themes that read best with light mode + Minimal background. */
+export const LightFirstThemes: ReadonlySet<ScreenThemeVariant> = new Set(['snow']);
 
 export type ScreenTheme = {
   variant: ScreenThemeVariant;
@@ -338,6 +342,23 @@ const plumPalette: ThemePalette = {
   anchor: { 100: '#281040', 200: '#180828', 300: '#0C0418', 400: '#06020C', 500: '#030106', 600: '#000000' },
 };
 
+/** Clean white marketplace — soft mist + coral accent */
+const snowPalette: ThemePalette = {
+  hero: { 100: '#F28A78', 200: '#E25B48', 300: '#C84838', 400: '#A03830', 500: '#782820', 600: '#501818' },
+  depth: { 100: '#E8ECF0', 200: '#D8DEE6', 300: '#C4CCD8', 400: '#A8B2C0', 500: '#8892A0', 600: '#687078' },
+  accent: { 100: '#FFB0A0', 200: '#F08070', 300: '#D06050', 400: '#A84840', 500: '#803030', 600: '#582020' },
+  shadow: { 100: '#F4F6F8', 200: '#E8ECF0', 300: '#D4DAE2', 400: '#B8C0CC', 500: '#98A0AC', 600: '#788088' },
+  anchor: { 100: '#F0F2F5', 200: '#E4E8EE', 300: '#D0D6DE', 400: '#B8C0CA', 500: '#98A0AA', 600: '#E4E9F0' },
+};
+
+const snowSurfaces: SurfaceTokens = {
+  surface: 'rgba(255, 255, 255, 0.92)',
+  surfaceNested: 'rgba(247, 248, 250, 0.98)',
+  surfaceSelected: 'rgba(255, 255, 255, 1)',
+  tabTrack: 'rgba(255, 255, 255, 0.96)',
+  input: 'rgba(255, 255, 255, 0.98)',
+};
+
 /** Gifty signature pink #FF2A68 — background-only palette */
 export const hotPinkPalette: ThemePalette = {
   hero: { 100: '#FF6A98', 200: '#FF2A68', 300: '#E81878', 400: '#C01068', 500: '#900850', 600: '#600438' },
@@ -349,6 +370,7 @@ export const hotPinkPalette: ThemePalette = {
 
 export const ThemePalettes: Record<ScreenThemeVariant, ThemePalette> = {
   gifty: giftyPalette,
+  snow: snowPalette,
   teal: tealPalette,
   rose: rosePalette,
   blush: blushPalette,
@@ -382,6 +404,24 @@ export const ScreenThemes: Record<ScreenThemeVariant, ScreenTheme> = {
       tagline: 'rgba(255, 160, 180, 0.75)',
     },
     '#FF5E3A',
+  ),
+
+  snow: buildTheme(
+    'snow',
+    snowPalette,
+    {
+      gradientStart: '#FFFFFF',
+      gradientEnd: '#F0F2F5',
+      wordmarkGradientStart: '#1A1C20',
+      wordmarkGradientEnd: '#E25B48',
+      taglineGradientStart: '#687078',
+      taglineGradientEnd: '#E25B48',
+      accent: 'rgba(226, 91, 72, 0.18)',
+      ring: 'rgba(226, 91, 72, 0.14)',
+      tagline: 'rgba(104, 112, 120, 0.85)',
+    },
+    '#E25B48',
+    snowSurfaces,
   ),
 
   teal: buildTheme(
@@ -661,6 +701,12 @@ export const ThemeOptions: readonly ThemeOption[] = [
     label: 'Gifty',
     description: 'App icon — coral, pink & purple',
     preview: ['#FF5E3A', '#FF2A68', '#7B2CBF'],
+  },
+  {
+    variant: 'snow',
+    label: 'Snow',
+    description: 'Clean white with soft coral accent',
+    preview: ['#FFFFFF', '#F0F2F5', '#E25B48'],
   },
   {
     variant: 'teal',

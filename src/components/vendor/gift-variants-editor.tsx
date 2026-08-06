@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FormField } from '@/components/vendor/form-field';
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import type { GiftVariantInput } from '@/types/vendor';
 
@@ -11,6 +11,8 @@ type GiftVariantsEditorProps = {
 };
 
 export function GiftVariantsEditor({ value, onChange }: GiftVariantsEditorProps) {
+  const colors = useColors();
+
   function updateVariant(index: number, patch: Partial<GiftVariantInput>) {
     onChange(value.map((variant, i) => (i === index ? { ...variant, ...patch } : variant)));
   }
@@ -34,12 +36,12 @@ export function GiftVariantsEditor({ value, onChange }: GiftVariantsEditorProps)
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Options / variants</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Options / variants</Text>
         <Pressable onPress={addVariant} style={({ pressed }) => pressed && styles.pressed}>
-          <Text style={styles.add}>Add option</Text>
+          <Text style={[styles.add, { color: colors.text }]}>Add option</Text>
         </Pressable>
       </View>
-      <Text style={styles.hint}>
+      <Text style={[styles.hint, { color: colors.textSecondary }]}>
         Optional sizes or flavors. Leave empty if the gift has one fixed price.
       </Text>
 
@@ -98,17 +100,14 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   title: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
   add: {
-    color: Colors.text,
     fontSize: 13,
     fontWeight: '700',
   },
   hint: {
-    color: Colors.textSecondary,
     fontSize: 12,
     lineHeight: 18,
   },

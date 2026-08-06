@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useColors } from '@/hooks/use-colors';
 import { Spacing } from '@/constants/theme';
 import { formatDateForDisplay, formatDateToIso } from '@/lib/format';
 import { useScreenTheme } from '@/providers/screen-theme-provider';
@@ -42,6 +42,7 @@ export function NativeDatePickerField({
   placeholder = 'Select date (optional)',
 }: NativeDatePickerFieldProps) {
   const theme = useScreenTheme();
+  const colors = useColors();
   const [showPicker, setShowPicker] = useState(false);
   const [draftDate, setDraftDate] = useState<Date>(() => startOfDay(new Date()));
 
@@ -80,7 +81,7 @@ export function NativeDatePickerField({
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
 
       <Pressable
         onPress={openPicker}
@@ -92,16 +93,24 @@ export function NativeDatePickerField({
           },
           pressed && styles.inputPressed,
         ]}>
-        <Text style={[styles.value, !value && styles.placeholder]}>{displayValue}</Text>
+        <Text
+          style={[
+            styles.value,
+            { color: value ? colors.text : colors.textMuted },
+          ]}>
+          {displayValue}
+        </Text>
       </Pressable>
 
       {value && !showPicker ? (
         <Pressable onPress={handleClear} hitSlop={8}>
-          <Text style={styles.clearLabel}>Clear date</Text>
+          <Text style={[styles.clearLabel, { color: colors.textSecondary }]}>Clear date</Text>
         </Pressable>
       ) : null}
 
-      {hint && !showPicker ? <Text style={styles.hint}>{hint}</Text> : null}
+      {hint && !showPicker ? (
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>{hint}</Text>
+      ) : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {Platform.OS === 'android' && showPicker ? (
@@ -128,7 +137,7 @@ export function NativeDatePickerField({
               style={[
                 styles.dialog,
                 {
-                  backgroundColor: Colors.background,
+                  backgroundColor: colors.background,
                   borderColor: theme.surfaceBorder,
                 },
               ]}>
@@ -139,8 +148,12 @@ export function NativeDatePickerField({
                 </Pressable>
               </View>
 
-              <Text style={styles.dialogTitle}>Preferred delivery date</Text>
-              <Text style={styles.dialogSubtitle}>Choose when the gift should arrive.</Text>
+              <Text style={[styles.dialogTitle, { color: colors.text }]}>
+                Preferred delivery date
+              </Text>
+              <Text style={[styles.dialogSubtitle, { color: colors.textSecondary }]}>
+                Choose when the gift should arrive.
+              </Text>
 
               <DateTimePicker
                 value={draftDate}
@@ -168,7 +181,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: Colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -182,19 +194,13 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   value: {
-    color: Colors.text,
     fontSize: 16,
   },
-  placeholder: {
-    color: Colors.textMuted,
-  },
   clearLabel: {
-    color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
   },
   hint: {
-    color: Colors.textSecondary,
     fontSize: 12,
     lineHeight: 18,
   },
@@ -240,13 +246,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   dialogTitle: {
-    color: Colors.text,
     fontSize: 20,
     fontWeight: '700',
     textAlign: 'center',
   },
   dialogSubtitle: {
-    color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
