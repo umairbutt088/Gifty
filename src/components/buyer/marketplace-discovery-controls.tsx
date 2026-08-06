@@ -67,6 +67,7 @@ export function MarketplaceDiscoveryControls({
             autoCapitalize="none"
             autoCorrect={false}
             clearButtonMode="while-editing"
+            textAlign="left"
             style={[styles.searchInput, { color: colors.text }]}
           />
           {query ? (
@@ -138,9 +139,13 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    flexGrow: 1,
     minWidth: 0,
+    width: '100%',
     paddingVertical: Spacing.two,
     fontSize: 15,
+    textAlign: 'left',
+    writingDirection: 'ltr',
   },
   sortRow: {
     gap: Spacing.four,

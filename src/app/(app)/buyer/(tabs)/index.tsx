@@ -75,6 +75,7 @@ export default function BuyerGiftsTabScreen() {
   const [deliveryCity, setDeliveryCity] = useState<string | null>(null);
   const [cityReady, setCityReady] = useState(false);
   const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [category, setCategory] = useState<MarketplaceCategory>('all');
   const [occasion, setOccasion] = useState<MarketplaceOccasion>('all');
   const [sort, setSort] = useState<MarketplaceSort>('newest');
@@ -141,7 +142,8 @@ export default function BuyerGiftsTabScreen() {
   const hasActiveFilters =
     normalizedQuery.length > 0 || category !== 'all' || occasion !== 'all';
 
-  const feedScrollKey = `${category}|${occasion}|${normalizedQuery}|${hasActiveFilters ? 'f' : 'h'}`;
+  // Remount only when ribbon filters change — not on each search keystroke (keeps focus).
+  const feedScrollKey = `${category}|${occasion}`;
 
   const curated = useMemo(() => {
     const featured = cityFilteredGifts.filter((gift) => gift.featured);
@@ -222,11 +224,28 @@ export default function BuyerGiftsTabScreen() {
     setCategory('all');
   }
 
+  useEffect(() => {
+    if (!searchOpen) return;
+    const id = requestAnimationFrame(() => searchRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [searchOpen]);
+
   function clearFilters() {
     setQuery('');
+    setSearchOpen(false);
     setCategory('all');
     setOccasion('all');
     setSort('newest');
+  }
+
+  function handleSearchIconPress() {
+    if (searchOpen) {
+      setSearchOpen(false);
+      setQuery('');
+      return;
+    }
+
+    setSearchOpen(true);
   }
 
   async function handleDeliveryCityChange(city: string | null) {
@@ -351,9 +370,8 @@ export default function BuyerGiftsTabScreen() {
       }}>
       <MarketplaceHomeHeader
         favoriteCount={favoriteIds.size}
-        onSearchPress={() => {
-          requestAnimationFrame(() => searchRef.current?.focus());
-        }}
+        searchActive={searchOpen}
+        onSearchPress={handleSearchIconPress}
       />
 
       {cityReady ? (
@@ -361,6 +379,18 @@ export default function BuyerGiftsTabScreen() {
           city={deliveryCity}
           extraCities={storeCities}
           onCityChange={(city) => void handleDeliveryCityChange(city)}
+        />
+      ) : null}
+
+      {searchOpen ? (
+        <MarketplaceDiscoveryControls
+          query={query}
+          sort={sort}
+          onQueryChange={setQuery}
+          onSortChange={setSort}
+          searchInputRef={searchRef}
+          showSearch
+          showSort={false}
         />
       ) : null}
 
@@ -373,16 +403,6 @@ export default function BuyerGiftsTabScreen() {
         />
       ) : (
         <>
-          <MarketplaceDiscoveryControls
-            query={query}
-            sort={sort}
-            onQueryChange={setQuery}
-            onSortChange={setSort}
-            searchInputRef={searchRef}
-            showSearch
-            showSort={false}
-          />
-
           {hasActiveFilters ? (
             <View style={styles.filteredFeed}>
               <MarketplaceIconRibbon

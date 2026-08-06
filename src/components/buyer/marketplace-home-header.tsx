@@ -9,11 +9,13 @@ import { useScreenTheme } from '@/providers/screen-theme-provider';
 
 type MarketplaceHomeHeaderProps = {
   favoriteCount?: number;
+  searchActive?: boolean;
   onSearchPress?: () => void;
 };
 
 export function MarketplaceHomeHeader({
   favoriteCount = 0,
+  searchActive = false,
   onSearchPress,
 }: MarketplaceHomeHeaderProps) {
   const colors = useColors();
@@ -33,12 +35,16 @@ export function MarketplaceHomeHeader({
         {onSearchPress ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Search"
+            accessibilityLabel={searchActive ? 'Close search' : 'Search'}
             onPress={onSearchPress}
             style={({ pressed }) => [styles.iconHit, pressed && styles.pressed]}>
             <SymbolView
-              name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-              tintColor={colors.text}
+              name={
+                searchActive
+                  ? { ios: 'xmark', android: 'close', web: 'close' }
+                  : { ios: 'magnifyingglass', android: 'search', web: 'search' }
+              }
+              tintColor={searchActive ? theme.accent : colors.text}
               size={22}
             />
           </Pressable>
