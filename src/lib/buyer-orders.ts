@@ -378,6 +378,8 @@ export type CartOrderLine = {
   giftId: string;
   quantity: number;
   title?: string;
+  priceCents?: number;
+  variantId?: string | null;
 };
 
 export async function createBuyerOrders(
@@ -399,6 +401,8 @@ export async function createBuyerOrders(
   const validatedLines: {
     gift: NonNullable<Awaited<ReturnType<typeof fetchLiveGiftById>>>;
     quantity: number;
+    priceCents: number;
+    variantId: string | null;
   }[] = [];
 
   for (const item of items) {
@@ -411,14 +415,42 @@ export async function createBuyerOrders(
       };
     }
 
-    if (item.quantity < 1 || item.quantity > gift.stock) {
+    let availableStock = gift.stock;
+    let unitPrice = item.priceCents ?? gift.price_cents;
+    const variantId = item.variantId ?? null;
+
+    if (variantId) {
+      const { data: variant } = await supabase
+        .from('gift_variants')
+        .select('id, price_cents, stock')
+        .eq('id', variantId)
+        .eq('gift_id', gift.id)
+        .maybeSingle();
+
+      if (!variant) {
+        return {
+          orders: [],
+          error: new Error(`An option for "${gift.title}" is no longer available.`),
+        };
+      }
+
+      availableStock = Math.min(gift.stock, variant.stock);
+      unitPrice = variant.price_cents;
+    }
+
+    if (item.quantity < 1 || item.quantity > availableStock) {
       return {
         orders: [],
         error: new Error(`Not enough stock for "${gift.title}".`),
       };
     }
 
-    validatedLines.push({ gift, quantity: item.quantity });
+    validatedLines.push({
+      gift,
+      quantity: item.quantity,
+      priceCents: unitPrice,
+      variantId,
+    });
   }
 
   const vendorIds = [...new Set(validatedLines.map((line) => line.gift.vendor_id))];
@@ -442,13 +474,14 @@ export async function createBuyerOrders(
       store,
       vendorsCharged,
     );
-    const lineTotal = line.gift.price_cents * line.quantity + deliveryChargeCents;
+    const lineTotal = line.priceCents * line.quantity + deliveryChargeCents;
 
     const { data, error } = await supabase
       .from('vendor_orders')
       .insert({
         vendor_id: line.gift.vendor_id,
         gift_id: line.gift.id,
+        gift_variant_id: line.variantId,
         buyer_id: buyerId,
         quantity: line.quantity,
         total_cents: lineTotal,

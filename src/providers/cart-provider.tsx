@@ -18,25 +18,44 @@ type CartContextValue = {
   isReady: boolean;
   itemCount: number;
   subtotalCents: number;
-  addGift: (gift: GiftRow, quantity?: number) => void;
-  setQuantity: (giftId: string, quantity: number) => void;
-  removeItem: (giftId: string) => void;
+  addGift: (
+    gift: GiftRow,
+    quantity?: number,
+    options?: { variantId?: string | null; variantLabel?: string | null; priceCents?: number; stock?: number },
+  ) => void;
+  setQuantity: (giftId: string, quantity: number, variantId?: string | null) => void;
+  removeItem: (giftId: string, variantId?: string | null) => void;
   replaceItems: (items: CartItem[]) => void;
   clearCart: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function giftToCartItem(gift: GiftRow, quantity: number): CartItem {
+function giftToCartItem(
+  gift: GiftRow,
+  quantity: number,
+  options?: {
+    variantId?: string | null;
+    variantLabel?: string | null;
+    priceCents?: number;
+    stock?: number;
+  },
+): CartItem {
   return {
     giftId: gift.id,
     vendorId: gift.vendor_id,
     title: gift.title,
-    priceCents: gift.price_cents,
+    priceCents: options?.priceCents ?? gift.price_cents,
     imageUrl: gift.image_urls[0] ?? null,
-    stock: gift.stock,
+    stock: options?.stock ?? gift.stock,
     quantity,
+    variantId: options?.variantId ?? null,
+    variantLabel: options?.variantLabel ?? null,
   };
+}
+
+function sameCartLine(item: CartItem, giftId: string, variantId?: string | null) {
+  return item.giftId === giftId && (item.variantId ?? null) === (variantId ?? null);
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -51,18 +70,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addGift = useCallback(
-    (gift: GiftRow, quantity = 1) => {
+    (
+      gift: GiftRow,
+      quantity = 1,
+      options?: {
+        variantId?: string | null;
+        variantLabel?: string | null;
+        priceCents?: number;
+        stock?: number;
+      },
+    ) => {
       const addAmount = Math.max(1, quantity);
-      setItems((current) => {
-        const existing = current.find((item) => item.giftId === gift.id);
-        const nextQuantity = Math.min(
-          gift.stock,
-          existing ? existing.quantity + addAmount : addAmount,
-        );
+      const stock = options?.stock ?? gift.stock;
+      const variantId = options?.variantId ?? null;
 
-        const nextItem = giftToCartItem(gift, nextQuantity);
+      setItems((current) => {
+        const existing = current.find((item) => sameCartLine(item, gift.id, variantId));
+        const nextQuantity = Math.min(stock, existing ? existing.quantity + addAmount : addAmount);
+
+        const nextItem = giftToCartItem(gift, nextQuantity, {
+          ...options,
+          stock,
+          variantId,
+        });
         const nextItems = existing
-          ? current.map((item) => (item.giftId === gift.id ? nextItem : item))
+          ? current.map((item) =>
+              sameCartLine(item, gift.id, variantId) ? nextItem : item,
+            )
           : [...current, nextItem];
 
         void setStoredCart(nextItems);
@@ -72,11 +106,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const setQuantity = useCallback((giftId: string, quantity: number) => {
+  const setQuantity = useCallback((giftId: string, quantity: number, variantId?: string | null) => {
     setItems((current) => {
       const nextItems = current
         .map((item) => {
-          if (item.giftId !== giftId) return item;
+          if (!sameCartLine(item, giftId, variantId)) return item;
           const nextQuantity = Math.min(item.stock, Math.max(1, quantity));
           return { ...item, quantity: nextQuantity };
         })
@@ -87,9 +121,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((giftId: string) => {
+  const removeItem = useCallback((giftId: string, variantId?: string | null) => {
     setItems((current) => {
-      const nextItems = current.filter((item) => item.giftId !== giftId);
+      const nextItems = current.filter((item) => !sameCartLine(item, giftId, variantId));
       void setStoredCart(nextItems);
       return nextItems;
     });

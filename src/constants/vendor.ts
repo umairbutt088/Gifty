@@ -1,4 +1,4 @@
-import type { GiftCategory, GiftStatus, VendorOrderStatus } from '@/types/vendor';
+import type { GiftCategory, GiftOccasion, GiftStatus, VendorOrderStatus } from '@/types/vendor';
 
 export const GIFT_CATEGORIES: { value: GiftCategory; label: string }[] = [
   { value: 'flowers', label: 'Flowers' },
@@ -7,6 +7,15 @@ export const GIFT_CATEGORIES: { value: GiftCategory; label: string }[] = [
   { value: 'experience', label: 'Experience' },
   { value: 'custom', label: 'Custom' },
   { value: 'other', label: 'Other' },
+];
+
+export const GIFT_OCCASIONS: { value: GiftOccasion; label: string }[] = [
+  { value: 'birthday', label: 'Birthday' },
+  { value: 'anniversary', label: 'Anniversary' },
+  { value: 'thank_you', label: 'Thank you' },
+  { value: 'get_well', label: 'Get well' },
+  { value: 'congrats', label: 'Congrats' },
+  { value: 'just_because', label: 'Just because' },
 ];
 
 export const GIFT_STATUS_LABELS: Record<GiftStatus, string> = {

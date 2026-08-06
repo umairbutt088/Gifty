@@ -6,6 +6,14 @@ export type GiftCategory =
   | 'custom'
   | 'other';
 
+export type GiftOccasion =
+  | 'birthday'
+  | 'anniversary'
+  | 'thank_you'
+  | 'get_well'
+  | 'congrats'
+  | 'just_because';
+
 export type GiftStatus = 'draft' | 'pending_review' | 'live' | 'paused' | 'out_of_stock';
 
 export type VendorOrderStatus =
@@ -43,11 +51,46 @@ export type GiftRow = {
   title: string;
   description: string | null;
   price_cents: number;
+  original_price_cents: number | null;
   category: GiftCategory;
   stock: number;
   status: GiftStatus;
   image_urls: string[];
+  featured: boolean;
+  sales_count: number;
+  prep_time_minutes: number | null;
+  rating_avg: number;
+  rating_count: number;
+  occasion_tags: GiftOccasion[];
   deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GiftVariantRow = {
+  id: string;
+  gift_id: string;
+  label: string;
+  price_cents: number;
+  stock: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GiftVariantInput = {
+  label: string;
+  priceCents: number;
+  stock: number;
+  sortOrder?: number;
+};
+
+export type GiftReviewRow = {
+  id: string;
+  gift_id: string;
+  buyer_id: string;
+  rating: number;
+  comment: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -56,6 +99,7 @@ export type VendorOrderRow = {
   id: string;
   vendor_id: string;
   gift_id: string;
+  gift_variant_id: string | null;
   buyer_id: string | null;
   status: VendorOrderStatus;
   quantity: number;
@@ -138,8 +182,12 @@ export type GiftInput = {
   title: string;
   description?: string | null;
   priceCents: number;
+  originalPriceCents?: number | null;
   category: GiftCategory;
   stock: number;
   status?: GiftStatus;
   imageUrls: string[];
+  featured?: boolean;
+  prepTimeMinutes?: number | null;
+  occasionTags?: GiftOccasion[];
 };

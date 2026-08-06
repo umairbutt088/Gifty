@@ -22,11 +22,11 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -Spacing.one,
+    marginHorizontal: -6,
   },
   cell: {
     width: '50%',
-    paddingHorizontal: Spacing.one,
-    paddingBottom: Spacing.two,
+    paddingHorizontal: 6,
+    paddingBottom: Spacing.three,
   },
 });

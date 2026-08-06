@@ -169,6 +169,51 @@ export function addressMatchesDeliveryCities(
   return cities.some((city) => normalized.includes(city.trim().toLowerCase()));
 }
 
+export function storeDeliversToCity(
+  store: VendorStorePublic | VendorStoreRow | null | undefined,
+  city: string | null | undefined,
+): boolean {
+  if (!store || !city?.trim()) return false;
+  if (!store.offers_delivery) return false;
+
+  const target = city.trim().toLowerCase();
+  return store.delivery_cities.some((item) => item.trim().toLowerCase() === target);
+}
+
+export function giftAvailableInDeliveryCity(
+  store: VendorStorePublic | VendorStoreRow | null | undefined,
+  city: string | null | undefined,
+): boolean {
+  if (!city?.trim()) return true;
+  if (!store) return false;
+  if (!store.offers_delivery) return true;
+  return storeDeliversToCity(store, city);
+}
+
+export function getGiftDeliveryCue(
+  store: VendorStorePublic | VendorStoreRow | null | undefined,
+  preferredCity?: string | null,
+): string | null {
+  if (!store) return null;
+
+  if (!store.offers_delivery) {
+    return 'Pickup only';
+  }
+
+  if (preferredCity?.trim() && storeDeliversToCity(store, preferredCity)) {
+    return `Delivers to ${preferredCity.trim()}`;
+  }
+
+  const firstCity = store.delivery_cities[0];
+  if (firstCity) {
+    return store.delivery_cities.length > 1
+      ? `Delivers to ${firstCity} +`
+      : `Delivers to ${firstCity}`;
+  }
+
+  return 'Delivery available';
+}
+
 export function getDeliveryCityValidationError(
   address: string,
   store: VendorStorePublic | null,

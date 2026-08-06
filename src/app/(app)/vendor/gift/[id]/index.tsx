@@ -11,20 +11,23 @@ import {
 import { GlassCard } from '@/components/glass-card';
 import { ImageGalleryViewer } from '@/components/image-gallery-viewer';
 import { ThemedActivityIndicator } from '@/components/themed-activity-indicator';
-import { StatusBadge, GiftStatusPicker } from '@/components/vendor';
-import { GIFT_CATEGORIES } from '@/constants/vendor';
-import { useColors } from '@/hooks/use-colors';
+import { GiftStatusPicker, StatusBadge } from '@/components/vendor';
 import { Spacing } from '@/constants/theme';
+import { GIFT_CATEGORIES, GIFT_OCCASIONS } from '@/constants/vendor';
+import { useColors } from '@/hooks/use-colors';
 import { formatMoney } from '@/lib/format';
-import { softDeleteGift, fetchGiftById, updateGift } from '@/lib/gifts';
+import { formatPrepTime } from '@/lib/gift-marketplace';
+import { fetchGiftVariants } from '@/lib/gift-variants';
+import { fetchGiftById, softDeleteGift, updateGift } from '@/lib/gifts';
 import { useAuth } from '@/providers/auth-provider';
-import type { GiftRow, GiftStatus } from '@/types/vendor';
+import type { GiftRow, GiftStatus, GiftVariantRow } from '@/types/vendor';
 
 export default function VendorGiftDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const colors = useColors();
   const [gift, setGift] = useState<GiftRow | null>(null);
+  const [variants, setVariants] = useState<GiftVariantRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
@@ -32,9 +35,12 @@ export default function VendorGiftDetailScreen() {
   const loadGift = useCallback(async () => {
     if (!id) return;
 
-    setLoading(true);
-    const row = await fetchGiftById(id);
+    const [row, giftVariants] = await Promise.all([
+      fetchGiftById(id),
+      fetchGiftVariants(id),
+    ]);
     setGift(row);
+    setVariants(giftVariants);
     setLoading(false);
   }, [id]);
 
@@ -51,26 +57,27 @@ export default function VendorGiftDetailScreen() {
       'Delete gift',
       'Move this gift to Deleted gifts? You can restore it later with photos intact.',
       [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            setDeleting(true);
-            const { error } = await softDeleteGift(gift.id);
-            setDeleting(false);
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setDeleting(true);
+              const { error } = await softDeleteGift(gift.id);
+              setDeleting(false);
 
-            if (error) {
-              Alert.alert('Could not delete', error.message);
-              return;
-            }
+              if (error) {
+                Alert.alert('Could not delete', error.message);
+                return;
+              }
 
-            router.replace('/vendor');
-          })();
+              router.replace('/vendor');
+            })();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
 
   async function handleStatusChange(nextStatus: GiftStatus) {
@@ -88,7 +95,7 @@ export default function VendorGiftDetailScreen() {
     setGift(data);
   }
 
-  if (loading) {
+  if (loading && !gift) {
     return (
       <ScreenShell scroll={false}>
         <ThemedActivityIndicator style={{ marginTop: 48 }} />
@@ -99,13 +106,27 @@ export default function VendorGiftDetailScreen() {
   if (!gift || gift.vendor_id !== profile?.id) {
     return (
       <ScreenShell>
-        <DashboardHeader title="Gift not found" showBanner={false} showBack backHref="/vendor" />
+        <DashboardHeader
+          title="Gift not found"
+          showBanner={false}
+          showBack
+          backHref="/vendor"
+        />
       </ScreenShell>
     );
   }
 
   const categoryLabel =
-    GIFT_CATEGORIES.find((item) => item.value === gift.category)?.label ?? gift.category;
+    GIFT_CATEGORIES.find((item) => item.value === gift.category)?.label ??
+    gift.category;
+  const occasionLabel =
+    (gift.occasion_tags ?? [])
+      .map(
+        (tag) => GIFT_OCCASIONS.find((item) => item.value === tag)?.label ?? tag,
+      )
+      .join(', ') || 'None';
+  const prepLabel = formatPrepTime(gift.prep_time_minutes) ?? 'Not set';
+  const galleryKey = `${gift.id}:${gift.updated_at}:${gift.image_urls.join('|')}`;
 
   return (
     <ScreenShell scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
@@ -117,14 +138,39 @@ export default function VendorGiftDetailScreen() {
         trailing={<StatusBadge status={gift.status} kind="gift" />}
       />
 
-      <ImageGalleryViewer images={gift.image_urls} />
+      <ImageGalleryViewer key={galleryKey} images={gift.image_urls} />
 
       <SectionTitle>Details</SectionTitle>
       <GlassCard style={styles.infoCard}>
         <InfoRow label="Price" value={formatMoney(gift.price_cents)} />
+        {gift.original_price_cents != null &&
+        gift.original_price_cents > gift.price_cents ? (
+          <InfoRow
+            label="Compare-at"
+            value={formatMoney(gift.original_price_cents)}
+          />
+        ) : null}
         <InfoRow label="Category" value={categoryLabel} />
+        <InfoRow label="Occasions" value={occasionLabel} />
         <InfoRow label="Stock" value={String(gift.stock)} />
+        <InfoRow label="Prep time" value={prepLabel} />
+        <InfoRow label="Featured" value={gift.featured ? 'Yes' : 'No'} />
       </GlassCard>
+
+      {variants.length > 0 ? (
+        <>
+          <SectionTitle>Options</SectionTitle>
+          <GlassCard style={styles.infoCard}>
+            {variants.map((variant) => (
+              <InfoRow
+                key={variant.id}
+                label={variant.label}
+                value={`${formatMoney(variant.price_cents)} · ${variant.stock} left`}
+              />
+            ))}
+          </GlassCard>
+        </>
+      ) : null}
 
       <GiftStatusPicker
         value={gift.status}
@@ -136,7 +182,9 @@ export default function VendorGiftDetailScreen() {
         <>
           <SectionTitle>Description</SectionTitle>
           <GlassCard style={styles.infoCard}>
-            <Text style={[styles.description, { color: colors.textSecondary }]}>{gift.description}</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>
+              {gift.description}
+            </Text>
           </GlassCard>
         </>
       ) : null}
@@ -174,16 +222,18 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.three,
   },
   infoLabel: {
+    flexShrink: 0,
     fontSize: 14,
   },
   infoValue: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    textTransform: 'capitalize',
+    textAlign: 'right',
   },
   description: {
     fontSize: 15,
